@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Сравнение полисов Контур и Альфы, ИИС-3 и брокерского счета после комиссий, досрочного выхода и НДФЛ.">
-  <title>Контур, Альфа, ИИС-3 или брокерский счет — калькулятор</title>
+  <meta name="description" content="Сравнение полиса Контур, ИИС-3 и брокерского счета после комиссий, досрочного выхода и НДФЛ.">
+  <title>Контур, ИИС-3 или брокерский счет — калькулятор</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1b2a'/%3E%3Cpath d='M15 44 27 17h10l12 27h-9l-2.4-6H25.9l-2.4 6zm13.5-13h6.7l-3.3-8.4z' fill='%23f04b3f'/%3E%3C/svg%3E">
   <style>
     :root {
@@ -14,10 +14,6 @@
       --paper: #f4f6f8;
       --card: #ffffff;
       --line: #dce2e8;
-      --alpha: #e63f35;
-      --alpha-soft: #fff0ed;
-      --alpha-taxed: #a44b18;
-      --alpha-taxed-soft: #fff3e8;
       --current: #156f6a;
       --current-soft: #e9f6f3;
       --future: #2a5bb8;
@@ -28,6 +24,7 @@
       --iis-future-soft: #fbf1ff;
       --kontur: #b51f4d;
       --kontur-soft: #fff0f4;
+      --negative: #c0392b;
       --warning: #9c6300;
       --warning-soft: #fff6df;
       --shadow: 0 16px 50px rgba(13, 27, 42, .08);
@@ -93,7 +90,7 @@
 
     .eyebrow {
       margin: 0 0 7px;
-      color: var(--alpha);
+      color: var(--kontur);
       font-size: .78rem;
       font-weight: 800;
       letter-spacing: .11em;
@@ -282,7 +279,7 @@
       height: 18px;
       flex: 0 0 auto;
       margin: 1px 0 0;
-      accent-color: var(--alpha);
+      accent-color: var(--kontur);
     }
 
     .advanced {
@@ -374,7 +371,7 @@
 
     .comparison-table {
       width: 100%;
-      min-width: 820px;
+      min-width: 700px;
       border-collapse: separate;
       border-spacing: 0;
       table-layout: fixed;
@@ -406,8 +403,6 @@
       text-transform: uppercase;
     }
 
-    .comparison-table thead th.alpha-col { --accent: var(--alpha); --soft: var(--alpha-soft); }
-    .comparison-table thead th.alpha-taxed-col { --accent: var(--alpha-taxed); --soft: var(--alpha-taxed-soft); }
     .comparison-table thead th.iis-col { --accent: var(--iis); --soft: var(--iis-soft); }
     .comparison-table thead th.iis-future-col { --accent: var(--iis-future); --soft: var(--iis-future-soft); }
     .comparison-table thead th.kontur-col { --accent: var(--kontur); --soft: var(--kontur-soft); }
@@ -463,8 +458,6 @@
       letter-spacing: -.035em;
     }
 
-    .comparison-table .total-row td.alpha-col { color: var(--alpha); background: var(--alpha-soft); }
-    .comparison-table .total-row td.alpha-taxed-col { color: var(--alpha-taxed); background: var(--alpha-taxed-soft); }
     .comparison-table .total-row td.iis-col { color: var(--iis); background: var(--iis-soft); }
     .comparison-table .total-row td.iis-future-col { color: var(--iis-future); background: var(--iis-future-soft); }
     .comparison-table .total-row td.kontur-col { color: var(--kontur); background: var(--kontur-soft); }
@@ -639,13 +632,13 @@
 <body>
   <main class="shell">
     <nav class="page-tabs" aria-label="Страницы калькулятора">
-      <a href="https://alfa-policy-calculator.kocmocahet.chatgpt.site/">Страница 1 · базовое сравнение</a>
+      <a href="../alfa-policy-calculator/">Страница 1 · базовое сравнение</a>
       <a href="./" aria-current="page">Страница 2 · с Контуром</a>
     </nav>
     <header class="topline">
       <div>
         <p class="eyebrow">Капитал после комиссий и налогов</p>
-        <h1>Контур, Альфа, ИИС-3 или брокерский счет</h1>
+        <h1>Контур, ИИС-3 или брокерский счет</h1>
       </div>
       <div class="asof">Страница 2 · условия Контур по документам от 01.07.2026</div>
     </header>
@@ -678,23 +671,6 @@
         </div>
 
         <div class="field">
-          <label for="otherFee">Другие комиссии Альфы</label>
-          <div class="input-wrap">
-            <input class="number-input" id="otherFee" type="number" min="0" max="10" step="0.05" value="0.20" inputmode="decimal">
-            <span class="suffix">% / год</span>
-          </div>
-          <p class="hint">Брокерские, депозитарные и другие расходы сверх базовых 1%.</p>
-        </div>
-
-        <div class="fee-box" aria-label="Совокупная ежегодная комиссия Альфы">
-          <div class="fee-item"><small>Обслуживание</small><strong>1,00%</strong></div>
-          <span class="fee-sign">+</span>
-          <div class="fee-item"><small>Другие</small><strong id="otherFeeLabel">0,20%</strong></div>
-          <span class="fee-sign">=</span>
-          <div class="fee-item"><small>Всего</small><strong id="totalFeeLabel">1,20%</strong></div>
-        </div>
-
-        <div class="field">
           <label for="konturOtherFee">Другие комиссии Контура</label>
           <div class="input-wrap">
             <input class="number-input" id="konturOtherFee" type="number" min="0" max="10" step="0.05" value="0" inputmode="decimal">
@@ -712,11 +688,6 @@
         </div>
 
         <label class="toggle-row">
-          <input id="entryCost" type="checkbox" checked>
-          <span>Учесть 0,15% первоначальной премии, не поступающей на инвестиционный счет</span>
-        </label>
-
-        <label class="toggle-row">
           <input id="konturRf" type="checkbox" checked>
           <span>Учесть удержание Контура при выходе в первые два года</span>
         </label>
@@ -728,7 +699,7 @@
 
         <div class="warning" id="termWarning" role="note">
           <span aria-hidden="true">!</span>
-          <span>Срок меньше пяти лет. Модель сохраняет льготу 30 млн ₽ как допущение, но право на льготы Альфы и ИИС-3 требует отдельной проверки.</span>
+          <span>Срок меньше пяти лет. Модель сохраняет льготу 30 млн ₽ как допущение, но право на льготу ИИС-3 требует отдельной проверки.</span>
         </div>
 
         <details class="advanced">
@@ -753,8 +724,6 @@
           </div>
           <div class="comparisons">
             <div class="comparison"><span>Контур vs брокер с той же шкалой</span><strong id="diffKontur">—</strong></div>
-            <div class="comparison"><span>Альфа 13/15% vs брокер 13/15%</span><strong id="diffCurrent">—</strong></div>
-            <div class="comparison"><span>Альфа 13–22% vs брокер 13–22%</span><strong id="diffFuture">—</strong></div>
             <div class="comparison"><span>ИИС-3 13/15% vs брокер 13/15%</span><strong id="diffIisCurrent">—</strong></div>
             <div class="comparison"><span>ИИС-3 13–22% vs брокер 13–22%</span><strong id="diffIisFuture">—</strong></div>
           </div>
@@ -764,22 +733,14 @@
           <h2 class="sr-only" id="comparisonTableTitle">Сравнение итогов по продуктам</h2>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица сравнения продуктов; на узком экране прокручивается по горизонтали">
             <table class="comparison-table">
-              <caption class="sr-only">Итоговый капитал, прибыль, комиссии, налог и эффективная годовая доходность для полисов Контур и Альфы, ИИС-3 и брокерского счета</caption>
+              <caption class="sr-only">Итоговый капитал, прибыль, комиссии, налог и эффективная годовая доходность для полиса Контур, ИИС-3 и брокерского счета</caption>
               <colgroup>
                 <col class="metric-column">
-                <col><col><col><col><col><col><col>
+                <col><col><col><col><col>
               </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Показатель</th>
-                  <th scope="col" class="alpha-col">
-                    <span class="product-title">Альфа 13/15%</span>
-                    <span class="badge">льгота до 30 млн ₽</span>
-                  </th>
-                  <th scope="col" class="alpha-taxed-col">
-                    <span class="product-title">Альфа 13–22%</span>
-                    <span class="badge">льгота до 30 млн ₽</span>
-                  </th>
                   <th scope="col" class="kontur-col">
                     <span class="product-title">Полис Контур</span>
                     <span class="badge" id="konturBadge">по КИД · 13/15%</span>
@@ -805,8 +766,6 @@
               <tbody>
                 <tr class="total-row">
                   <th scope="row">Итоговый капитал</th>
-                  <td class="alpha-col" id="alphaNet">—</td>
-                  <td class="alpha-taxed-col" id="alphaFutureNet">—</td>
                   <td class="kontur-col" id="konturNet">—</td>
                   <td class="iis-col" id="iisNet">—</td>
                   <td class="iis-future-col" id="iisFutureNet">—</td>
@@ -815,8 +774,6 @@
                 </tr>
                 <tr>
                   <th scope="row">Прибыль после налога</th>
-                  <td id="alphaProfit">—</td>
-                  <td id="alphaFutureProfit">—</td>
                   <td id="konturProfit">—</td>
                   <td id="iisProfit">—</td>
                   <td id="iisFutureProfit">—</td>
@@ -825,8 +782,6 @@
                 </tr>
                 <tr>
                   <th scope="row">Комиссии и вход</th>
-                  <td id="alphaFees">—</td>
-                  <td id="alphaFutureFees">—</td>
                   <td id="konturFees">—</td>
                   <td>0 ₽</td>
                   <td>0 ₽</td>
@@ -835,8 +790,6 @@
                 </tr>
                 <tr>
                   <th scope="row">НДФЛ</th>
-                  <td id="alphaTax">—</td>
-                  <td id="alphaFutureTax">—</td>
                   <td id="konturTax">—</td>
                   <td id="iisTax">—</td>
                   <td id="iisFutureTax">—</td>
@@ -845,8 +798,6 @@
                 </tr>
                 <tr>
                   <th scope="row">Эффективно в год</th>
-                  <td id="alphaCagr">—</td>
-                  <td id="alphaFutureCagr">—</td>
                   <td id="konturCagr">—</td>
                   <td id="iisCagr">—</td>
                   <td id="iisFutureCagr">—</td>
@@ -866,8 +817,6 @@
               <p>Налог считается с накопленной прибыли в год реализации.</p>
             </div>
             <div class="legend" aria-label="Легенда графика">
-              <span><i style="--color:var(--alpha)"></i>Альфа 13/15%</span>
-              <span><i style="--color:var(--alpha-taxed)"></i>Альфа 13–22%</span>
               <span><i style="--color:var(--kontur)"></i>Контур</span>
               <span><i style="--color:var(--iis)"></i>ИИС-3 13/15%</span>
               <span><i style="--color:var(--iis-future)"></i>ИИС-3 13–22%</span>
@@ -877,21 +826,13 @@
           </div>
           <svg id="chart" viewBox="0 0 900 310" role="img" aria-labelledby="chartTitle chartDesc">
             <title id="chartTitle">Изменение итогового капитала по годам</title>
-            <desc id="chartDesc">Линии показывают сумму после комиссий и налогов для Контура, Альфы, ИИС-3 и брокерского счета при действующей и сценарной шкалах НДФЛ.</desc>
+            <desc id="chartDesc">Линии показывают сумму после комиссий и налогов для Контура, ИИС-3 и брокерского счета при действующей и сценарной шкалах НДФЛ.</desc>
           </svg>
         </section>
 
         <section class="detail-card">
           <h2>Цена оболочки и налогов</h2>
           <div class="loss-grid">
-            <div class="loss-item">
-              <header><span>Альфа 13/15%: комиссии + НДФЛ</span><strong id="lossAlphaText">—</strong></header>
-              <div class="track"><i id="lossAlphaBar" style="--c:var(--alpha);--w:0%"></i></div>
-            </div>
-            <div class="loss-item">
-              <header><span>Альфа 13–22%: комиссии + НДФЛ</span><strong id="lossAlphaFutureText">—</strong></header>
-              <div class="track"><i id="lossAlphaFutureBar" style="--c:var(--alpha-taxed);--w:0%"></i></div>
-            </div>
             <div class="loss-item">
               <header><span>Контур: расходы + НДФЛ</span><strong id="lossKonturText">—</strong></header>
               <div class="track"><i id="lossKonturBar" style="--c:var(--kontur);--w:0%"></i></div>
@@ -917,9 +858,6 @@
           <details class="method">
             <summary>Что именно считает модель</summary>
             <ul>
-              <li>Доходность капитализируется ежемесячно. Комиссия Альфы 1% плюс указанная дополнительная комиссия списывается ежемесячно с текущей стоимости счета.</li>
-              <li>По умолчанию учитывается стартовый расход 0,15%: на инвестиционный счет поступает 99,85% взноса.</li>
-              <li>В обоих сценариях Альфы первые 30 млн ₽ положительного результата исключаются из налоговой базы. С превышения применяется действующая шкала 13/15% либо сценарная шкала 13/15/18/20/22%.</li>
               <li>Для Контура из взноса вычитается 0,6% входных расходов, затем ежемесячно списывается максимальная MF 1,5% годовых плюс указанная дополнительная комиссия. НДФЛ считается по выбранной шкале без неподтвержденной документами льготы 30 млн ₽.</li>
               <li>При включенном удержании Контура модель дополнительно уменьшает капитал на 3,9% при выходе в первый год и на 1,9% во второй. Реальный коэффициент зависит от числа дней с даты включения каждой части актива.</li>
               <li>Для ИИС-3 первые 30 млн ₽ положительного финансового результата также исключаются из налоговой базы, комиссии приняты равными нулю. Показаны отдельные результаты по шкалам 13/15% и 13–22%.</li>
@@ -942,7 +880,7 @@
         </section>
 
         <p class="footnote">
-          Это финансовая модель, а не налоговое или инвестиционное заключение. Льготы Альфы и ИИС-3 зависят от соответствия требованиям НК РФ, срока и других условий. Документы «Контура» не подтверждают льготу 30 млн ₽, поэтому она к нему не применяется. Лимит ИИС-3 в 30 млн ₽ применяется совокупно по всем ИИС, прекращенным в одном налоговом периоде — <a href="https://www.nalog.gov.ru/rn44/news/activities_fts/16571744/" target="_blank" rel="noopener">разъяснение ФНС</a>. Переход инвестиционных доходов на шкалу 13–22% — сценарий по предложению Минфина от 24.09.2026, а не действующее правило.
+          Это финансовая модель, а не налоговое или инвестиционное заключение. Льгота ИИС-3 зависит от соответствия требованиям НК РФ, срока и других условий. Документы «Контура» не подтверждают льготу 30 млн ₽, поэтому она к нему не применяется. Лимит ИИС-3 в 30 млн ₽ применяется совокупно по всем ИИС, прекращенным в одном налоговом периоде — <a href="https://www.nalog.gov.ru/rn44/news/activities_fts/16571744/" target="_blank" rel="noopener">разъяснение ФНС</a>. Переход инвестиционных доходов на шкалу 13–22% — сценарий по предложению Минфина от 24.09.2026, а не действующее правило.
         </p>
       </div>
     </section>
@@ -956,16 +894,14 @@
         amount: 45000000,
         years: 5,
         returnRate: 8,
-        otherFee: 0.20,
         konturOtherFee: 0,
-        entryCost: true,
         konturRf: true,
         konturFutureTax: false,
         otherIncome: 0
       };
 
       const $ = (id) => document.getElementById(id);
-      const controls = ['amount', 'years', 'returnRate', 'otherFee', 'konturOtherFee', 'entryCost', 'konturRf', 'konturFutureTax', 'otherIncome'];
+      const controls = ['amount', 'years', 'returnRate', 'konturOtherFee', 'konturRf', 'konturFutureTax', 'otherIncome'];
       const money = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
       const oneDecimal = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
@@ -1027,21 +963,6 @@
         return progressiveTax(base + x) - progressiveTax(base);
       }
 
-      function alphaBeforeTax(amount, years, returnRate, totalFee, withEntryCost) {
-        const entryCharge = withEntryCost ? amount * 0.0015 : 0;
-        let balance = amount - entryCharge;
-        let feePaid = entryCharge;
-        const monthlyGrowth = Math.pow(Math.max(0.000001, 1 + returnRate / 100), 1 / 12);
-        const monthlyFee = Math.max(0, totalFee) / 1200;
-        for (let month = 0; month < years * 12; month++) {
-          balance *= monthlyGrowth;
-          const charge = balance * monthlyFee;
-          balance -= charge;
-          feePaid += charge;
-        }
-        return { balance: Math.max(0, balance), feePaid };
-      }
-
       function konturBeforeTax(amount, years, returnRate, totalFee, withRf) {
         const entryCharge = amount * 0.006;
         let balance = amount - entryCharge;
@@ -1065,19 +986,9 @@
         const amount = clamp(value('amount'), 100000, 10000000000);
         const years = yearOverride ?? clamp(value('years'), 1, 20);
         const returnRate = clamp(value('returnRate'), -20, 30);
-        const otherFee = clamp(value('otherFee'), 0, 10);
-        const totalFee = 1 + otherFee;
         const konturOtherFee = clamp(value('konturOtherFee'), 0, 10);
         const konturTotalFee = 1.5 + konturOtherFee;
         const otherIncome = clamp(value('otherIncome'), 0, 10000000000);
-        const exemption = 30000000;
-        const alphaPre = alphaBeforeTax(amount, years, returnRate, totalFee, value('entryCost'));
-        const alphaProfitPreTax = Math.max(0, alphaPre.balance - amount);
-        const alphaTaxable = Math.max(0, alphaProfitPreTax - exemption);
-        const alphaTaxCurrent = currentTax(alphaTaxable);
-        const alphaTaxFuture = futureTax(alphaTaxable, otherIncome);
-        const alphaNetCurrent = alphaPre.balance - alphaTaxCurrent;
-        const alphaNetFuture = alphaPre.balance - alphaTaxFuture;
 
         const konturPre = konturBeforeTax(amount, years, returnRate, konturTotalFee, value('konturRf'));
         const konturProfitPreTax = Math.max(0, konturPre.balance - amount);
@@ -1102,13 +1013,7 @@
         const iisFuture = gross - iisTaxFuture;
 
         return {
-          amount, years, returnRate, otherFee, totalFee, konturOtherFee, konturTotalFee, gross, otherIncome,
-          alphaPre: alphaPre.balance,
-          alphaFees: alphaPre.feePaid,
-          alphaTaxCurrent,
-          alphaTaxFuture,
-          alphaNetCurrent,
-          alphaNetFuture,
+          amount, years, returnRate, konturOtherFee, konturTotalFee, gross, otherIncome,
           konturPre: konturPre.balance,
           konturFees: konturPre.feePaid,
           konturRfRate: konturPre.rfRate,
@@ -1149,11 +1054,11 @@
         const pad = { left: 72, right: 24, top: 22, bottom: 42 };
         const years = Array.from({ length: data.years + 1 }, (_, i) => i);
         const rows = years.map(y => {
-          if (y === 0) return { y, alphaCurrent: data.amount, alphaFuture: data.amount, kontur: data.amount, iisCurrent: data.amount, iisFuture: data.amount, current: data.amount, future: data.amount };
+          if (y === 0) return { y, kontur: data.amount, iisCurrent: data.amount, iisFuture: data.amount, current: data.amount, future: data.amount };
           const m = model(y);
-          return { y, alphaCurrent: m.alphaNetCurrent, alphaFuture: m.alphaNetFuture, kontur: m.konturNet, iisCurrent: m.iisCurrent, iisFuture: m.iisFuture, current: m.brokerCurrent, future: m.brokerFuture };
+          return { y, kontur: m.konturNet, iisCurrent: m.iisCurrent, iisFuture: m.iisFuture, current: m.brokerCurrent, future: m.brokerFuture };
         });
-        const all = rows.flatMap(r => [r.alphaCurrent, r.alphaFuture, r.kontur, r.iisCurrent, r.iisFuture, r.current, r.future, data.amount]);
+        const all = rows.flatMap(r => [r.kontur, r.iisCurrent, r.iisFuture, r.current, r.future, data.amount]);
         let min = Math.min(...all);
         let max = Math.max(...all);
         const spread = Math.max(max - min, data.amount * 0.12, 1);
@@ -1178,8 +1083,6 @@
         });
 
         const series = [
-          ['alphaCurrent', '#e63f35', ''],
-          ['alphaFuture', '#a44b18', ' taxed'],
           ['kontur', '#b51f4d', ''],
           ['iisCurrent', '#8150a8', ''],
           ['iisFuture', '#a26ac2', ' taxed'],
@@ -1200,24 +1103,11 @@
         const m = model();
         $('yearsOut').textContent = m.years + ' ' + (m.years === 1 ? 'год' : m.years < 5 ? 'года' : 'лет');
         $('returnOut').textContent = percent(m.returnRate, 1) + ' в год';
-        $('otherFeeLabel').textContent = percent(m.otherFee, 2);
-        $('totalFeeLabel').textContent = percent(m.totalFee, 2);
         $('konturOtherFeeLabel').textContent = percent(m.konturOtherFee, 2);
         $('konturTotalFeeLabel').textContent = percent(m.konturTotalFee, 2);
         $('termWarning').classList.toggle('show', m.years < 5);
         setRangeFill($('years'));
         setRangeFill($('returnRate'));
-
-        $('alphaNet').textContent = rub(m.alphaNetCurrent);
-        $('alphaProfit').textContent = rub(m.alphaNetCurrent - m.amount, true);
-        $('alphaFees').textContent = rub(m.alphaFees);
-        $('alphaTax').textContent = rub(m.alphaTaxCurrent);
-        $('alphaCagr').textContent = percent(cagr(m.alphaNetCurrent, m.amount, m.years), 2);
-        $('alphaFutureNet').textContent = rub(m.alphaNetFuture);
-        $('alphaFutureProfit').textContent = rub(m.alphaNetFuture - m.amount, true);
-        $('alphaFutureFees').textContent = rub(m.alphaFees);
-        $('alphaFutureTax').textContent = rub(m.alphaTaxFuture);
-        $('alphaFutureCagr').textContent = percent(cagr(m.alphaNetFuture, m.amount, m.years), 2);
 
         $('konturNet').textContent = rub(m.konturNet);
         $('konturProfit').textContent = rub(m.konturNet - m.amount, true);
@@ -1245,33 +1135,25 @@
         $('brokerFutureTax').textContent = rub(m.brokerTaxFuture);
         $('brokerFutureCagr').textContent = percent(cagr(m.brokerFuture, m.amount, m.years), 2);
 
-        const diffCurrent = m.alphaNetCurrent - m.brokerCurrent;
-        const diffFuture = m.alphaNetFuture - m.brokerFuture;
         const diffIisCurrent = m.iisCurrent - m.brokerCurrent;
         const diffIisFuture = m.iisFuture - m.brokerFuture;
         const konturBenchmark = m.konturUsesFutureTax ? m.brokerFuture : m.brokerCurrent;
         const diffKontur = m.konturNet - konturBenchmark;
-        $('diffCurrent').textContent = rub(diffCurrent, true);
-        $('diffFuture').textContent = rub(diffFuture, true);
         $('diffIisCurrent').textContent = rub(diffIisCurrent, true);
         $('diffIisFuture').textContent = rub(diffIisFuture, true);
         $('diffKontur').textContent = rub(diffKontur, true);
-        $('diffCurrent').style.color = diffCurrent >= 0 ? 'var(--current)' : 'var(--alpha)';
-        $('diffFuture').style.color = diffFuture >= 0 ? 'var(--current)' : 'var(--alpha)';
-        $('diffIisCurrent').style.color = diffIisCurrent >= 0 ? 'var(--iis)' : 'var(--alpha)';
-        $('diffIisFuture').style.color = diffIisFuture >= 0 ? 'var(--iis)' : 'var(--alpha)';
-        $('diffKontur').style.color = diffKontur >= 0 ? 'var(--kontur)' : 'var(--alpha)';
+        $('diffIisCurrent').style.color = diffIisCurrent >= 0 ? 'var(--iis)' : 'var(--negative)';
+        $('diffIisFuture').style.color = diffIisFuture >= 0 ? 'var(--iis)' : 'var(--negative)';
+        $('diffKontur').style.color = diffKontur >= 0 ? 'var(--kontur)' : 'var(--negative)';
 
         const leadersCurrent = [
           ['ИИС-3', m.iisCurrent],
           ['полис Контур', m.konturNetCurrent],
-          ['полис Альфы', m.alphaNetCurrent],
           ['брокерский счет', m.brokerCurrent]
         ].sort((a, b) => b[1] - a[1]);
         const leadersFuture = [
           ['ИИС-3', m.iisFuture],
           ['полис Контур', m.konturNetFuture],
-          ['полис Альфы', m.alphaNetFuture],
           ['брокерский счет', m.brokerFuture]
         ].sort((a, b) => b[1] - a[1]);
         const sameLeader = leadersCurrent[0][0] === leadersFuture[0][0];
@@ -1283,11 +1165,9 @@
           $('verdictNote').textContent = `Сейчас лидирует ${leadersCurrent[0][0]}, а при шкале 13–22% — ${leadersFuture[0][0]}.`;
         }
 
-        const costs = [m.alphaFees + m.alphaTaxCurrent, m.alphaFees + m.alphaTaxFuture, m.konturFees + m.konturTax, m.iisTaxCurrent, m.iisTaxFuture, m.brokerTaxCurrent, m.brokerTaxFuture];
+        const costs = [m.konturFees + m.konturTax, m.iisTaxCurrent, m.iisTaxFuture, m.brokerTaxCurrent, m.brokerTaxFuture];
         const maxCost = Math.max(...costs, 1);
         const ids = [
-          ['lossAlphaText', 'lossAlphaBar'],
-          ['lossAlphaFutureText', 'lossAlphaFutureBar'],
           ['lossKonturText', 'lossKonturBar'],
           ['lossIisText', 'lossIisBar'],
           ['lossIisFutureText', 'lossIisFutureBar'],
