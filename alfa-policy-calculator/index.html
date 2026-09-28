@@ -1,0 +1,1184 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Калькулятор сравнения страхового полиса Альфы, ИИС-3 и брокерского счета после комиссий и НДФЛ.">
+  <title>Альфа, ИИС-3 или брокерский счет — калькулятор</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1b2a'/%3E%3Cpath d='M15 44 27 17h10l12 27h-9l-2.4-6H25.9l-2.4 6zm13.5-13h6.7l-3.3-8.4z' fill='%23f04b3f'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #0d1b2a;
+      --muted: #637083;
+      --paper: #f4f6f8;
+      --card: #ffffff;
+      --line: #dce2e8;
+      --alpha: #e63f35;
+      --alpha-soft: #fff0ed;
+      --alpha-taxed: #a44b18;
+      --alpha-taxed-soft: #fff3e8;
+      --current: #156f6a;
+      --current-soft: #e9f6f3;
+      --future: #2a5bb8;
+      --future-soft: #edf3ff;
+      --iis: #8150a8;
+      --iis-soft: #f5eefb;
+      --iis-future: #a26ac2;
+      --iis-future-soft: #fbf1ff;
+      --warning: #9c6300;
+      --warning-soft: #fff6df;
+      --shadow: 0 16px 50px rgba(13, 27, 42, .08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 88% 5%, rgba(42, 91, 184, .08), transparent 26rem),
+        linear-gradient(180deg, #fafbfc 0, var(--paper) 32rem);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    button, input { font: inherit; }
+
+    .shell {
+      width: min(1460px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .page-tabs {
+      display: inline-flex;
+      gap: 4px;
+      margin-bottom: 18px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.82);
+      box-shadow: 0 8px 24px rgba(13,27,42,.05);
+    }
+
+    .page-tabs a {
+      border-radius: 999px;
+      padding: 7px 12px;
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .page-tabs a[aria-current="page"] {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .topline {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--alpha);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 880px;
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 4.6rem);
+      line-height: .98;
+      letter-spacing: -.055em;
+    }
+
+    .asof {
+      flex: 0 0 auto;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(300px, 410px) minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel, .comparison-table-card, .chart-card, .detail-card, .verdict {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .94);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      position: sticky;
+      top: 16px;
+      padding: 22px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .section-title h2, .chart-head h2, .detail-card h2 {
+      margin: 0;
+      font-size: 1.12rem;
+      letter-spacing: -.02em;
+    }
+
+    .reset {
+      border: 0;
+      border-bottom: 1px solid currentColor;
+      padding: 0;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .78rem;
+    }
+
+    .field { margin-bottom: 20px; }
+
+    .field label, .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: #2a3543;
+      font-size: .88rem;
+      font-weight: 750;
+    }
+
+    .field output {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    .input-wrap { position: relative; }
+
+    .number-input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid #cfd7df;
+      border-radius: 13px;
+      padding: 10px 52px 10px 13px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 700;
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+    }
+
+    .number-input:focus {
+      border-color: var(--future);
+      box-shadow: 0 0 0 4px rgba(42, 91, 184, .12);
+    }
+
+    .suffix {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      font-size: .88rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      margin: 8px 0;
+      appearance: none;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--ink) var(--fill, 50%), #dfe4e9 var(--fill, 50%));
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 22px;
+      height: 22px;
+      appearance: none;
+      border: 4px solid white;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow: 0 1px 7px rgba(13,27,42,.3);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      border: 4px solid white;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow: 0 1px 7px rgba(13,27,42,.3);
+    }
+
+    .range-ends {
+      display: flex;
+      justify-content: space-between;
+      color: #8a95a3;
+      font-size: .72rem;
+    }
+
+    .fee-box {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 20px;
+    }
+
+    .fee-item {
+      min-width: 0;
+      border-radius: 14px;
+      padding: 10px;
+      background: #f5f7f9;
+      text-align: center;
+    }
+
+    .fee-item small { display: block; color: var(--muted); font-size: .68rem; }
+    .fee-item strong { display: block; margin-top: 2px; font-size: 1rem; }
+    .fee-sign { color: #8e98a5; font-weight: 800; }
+
+    .toggle-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      margin: 12px 0;
+      color: #364251;
+      font-size: .84rem;
+      cursor: pointer;
+    }
+
+    .toggle-row input {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      margin: 1px 0 0;
+      accent-color: var(--alpha);
+    }
+
+    .advanced {
+      margin-top: 16px;
+      border-top: 1px solid var(--line);
+      padding-top: 15px;
+    }
+
+    .advanced summary, .method summary {
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    .advanced .field { margin: 16px 0 4px; }
+
+    .hint {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: .75rem;
+      line-height: 1.4;
+    }
+
+    .results { min-width: 0; }
+
+    .verdict {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr);
+      gap: 22px;
+      padding: 22px 24px;
+      margin-bottom: 16px;
+      background:
+        linear-gradient(120deg, rgba(255,255,255,.98), rgba(246,249,252,.97)),
+        white;
+    }
+
+    .verdict-kicker {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .verdict h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 2.5vw, 2.45rem);
+      line-height: 1.05;
+      letter-spacing: -.035em;
+    }
+
+    .verdict-note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    .comparisons {
+      display: grid;
+      gap: 8px;
+      align-content: center;
+    }
+
+    .comparison {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-radius: 13px;
+      padding: 10px 12px;
+      background: #f2f5f7;
+      font-size: .79rem;
+    }
+
+    .comparison strong { font-size: .93rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    .comparison-table-card {
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(13, 27, 42, .06);
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scrollbar-color: #c3ccd6 transparent;
+    }
+
+    .comparison-table {
+      width: 100%;
+      min-width: 820px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .comparison-table col.metric-column { width: 126px; }
+
+    .comparison-table th,
+    .comparison-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 11px 10px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .comparison-table thead th {
+      border-top: 5px solid var(--accent, transparent);
+      background: #fff;
+      vertical-align: top;
+    }
+
+    .comparison-table thead th:first-child {
+      border-top-color: transparent;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 750;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .comparison-table thead th.alpha-col { --accent: var(--alpha); --soft: var(--alpha-soft); }
+    .comparison-table thead th.alpha-taxed-col { --accent: var(--alpha-taxed); --soft: var(--alpha-taxed-soft); }
+    .comparison-table thead th.iis-col { --accent: var(--iis); --soft: var(--iis-soft); }
+    .comparison-table thead th.iis-future-col { --accent: var(--iis-future); --soft: var(--iis-future-soft); }
+    .comparison-table thead th.current-col { --accent: var(--current); --soft: var(--current-soft); }
+    .comparison-table thead th.future-col { --accent: var(--future); --soft: var(--future-soft); }
+
+    .product-title {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--ink);
+      font-size: .82rem;
+      line-height: 1.15;
+    }
+
+    .badge {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 4px 6px;
+      background: var(--soft);
+      color: var(--accent);
+      font-size: .51rem;
+      font-weight: 850;
+      letter-spacing: .02em;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .comparison-table tbody th {
+      color: var(--muted);
+      font-size: .68rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .comparison-table tbody td {
+      color: var(--ink);
+      font-size: .78rem;
+      font-weight: 780;
+      white-space: nowrap;
+    }
+
+    .comparison-table .total-row th,
+    .comparison-table .total-row td {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      background: #fafbfd;
+    }
+
+    .comparison-table .total-row td {
+      font-size: clamp(.92rem, 1.2vw, 1.1rem);
+      font-weight: 900;
+      letter-spacing: -.035em;
+    }
+
+    .comparison-table .total-row td.alpha-col { color: var(--alpha); background: var(--alpha-soft); }
+    .comparison-table .total-row td.alpha-taxed-col { color: var(--alpha-taxed); background: var(--alpha-taxed-soft); }
+    .comparison-table .total-row td.iis-col { color: var(--iis); background: var(--iis-soft); }
+    .comparison-table .total-row td.iis-future-col { color: var(--iis-future); background: var(--iis-future-soft); }
+    .comparison-table .total-row td.current-col { color: var(--current); background: var(--current-soft); }
+    .comparison-table .total-row td.future-col { color: var(--future); background: var(--future-soft); }
+
+    .comparison-table tbody tr:last-child th,
+    .comparison-table tbody tr:last-child td { border-bottom: 0; }
+
+    .comparison-table thead th:first-child,
+    .comparison-table tbody th {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #fff;
+      box-shadow: 8px 0 16px -16px rgba(13, 27, 42, .65);
+    }
+
+    .comparison-table thead th:first-child { z-index: 3; }
+    .comparison-table .total-row th { background: #fafbfd; }
+
+    .table-scroll-note {
+      display: none;
+      margin: 0;
+      padding: 10px 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      background: #fafbfd;
+      font-size: .72rem;
+    }
+
+    .chart-card, .detail-card { padding: 20px; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(13, 27, 42, .05); }
+
+    .chart-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .chart-head p { margin: 5px 0 0; color: var(--muted); font-size: .77rem; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px 13px;
+      color: var(--muted);
+      font-size: .72rem;
+    }
+
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 9px; height: 9px; border-radius: 50%; background: var(--color); }
+
+    #chart {
+      width: 100%;
+      min-height: 290px;
+      display: block;
+      overflow: visible;
+    }
+
+    .axis-label { fill: #7a8795; font-size: 11px; }
+    .grid-line { stroke: #e7ebef; stroke-width: 1; }
+    .series-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .series-line.taxed { stroke-dasharray: 8 6; }
+    .series-dot { stroke: white; stroke-width: 2; }
+
+    .loss-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .loss-item { min-width: 0; }
+    .loss-item header { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 7px; font-size: .73rem; }
+    .loss-item strong { font-variant-numeric: tabular-nums; }
+    .track { height: 9px; overflow: hidden; border-radius: 99px; background: #edf0f3; }
+    .track > i { display: block; height: 100%; width: var(--w); border-radius: inherit; background: var(--c); }
+
+    .method {
+      border-top: 1px solid var(--line);
+      margin-top: 18px;
+      padding-top: 15px;
+    }
+
+    .method ul { margin: 12px 0 0; padding-left: 20px; color: #4f5c6b; font-size: .82rem; }
+    .method li + li { margin-top: 7px; }
+
+    .warning {
+      display: none;
+      align-items: flex-start;
+      gap: 9px;
+      border: 1px solid #ecd69d;
+      border-radius: 13px;
+      padding: 11px 12px;
+      margin: 14px 0 0;
+      background: var(--warning-soft);
+      color: #6f4b08;
+      font-size: .77rem;
+    }
+
+    .warning.show { display: flex; }
+
+    .footnote {
+      margin: 18px 2px 0;
+      color: var(--muted);
+      font-size: .72rem;
+      line-height: 1.5;
+    }
+
+    .footnote a { color: var(--future); text-underline-offset: 3px; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 1180px) {
+      .workspace { grid-template-columns: 1fr; }
+      .panel { position: static; }
+    }
+
+    @media (max-width: 790px) {
+      .shell { width: min(100% - 24px, 680px); padding-top: 18px; }
+      .topline { align-items: flex-start; flex-direction: column; }
+      .workspace { grid-template-columns: 1fr; }
+      .panel { position: static; }
+      .verdict { grid-template-columns: 1fr; }
+      .loss-grid { grid-template-columns: 1fr; }
+      .chart-head { flex-direction: column; }
+      .legend { justify-content: flex-start; }
+      #chart { min-height: 250px; }
+      .comparison-table { min-width: 760px; }
+      .table-scroll-note { display: block; }
+    }
+
+    @media (max-width: 430px) {
+      .shell { width: min(100% - 16px, 680px); }
+      .panel, .verdict, .comparison-table-card, .chart-card, .detail-card { border-radius: 17px; }
+      .panel, .verdict, .chart-card, .detail-card { padding: 16px; }
+      .asof { font-size: .74rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="page-tabs" aria-label="Страницы калькулятора">
+      <a href="./" aria-current="page">Страница 1 · базовое сравнение</a>
+      <a href="../alfa-kontur-calculator/">Страница 2 · с Контуром</a>
+    </nav>
+    <header class="topline">
+      <div>
+        <p class="eyebrow">Капитал после комиссий и налогов</p>
+        <h1>Альфа, ИИС-3 или брокерский счет</h1>
+      </div>
+      <div class="asof">Налоговые правила и сценарии на 28.09.2026</div>
+    </header>
+
+    <section class="workspace" aria-label="Калькулятор эффективности">
+      <aside class="panel">
+        <div class="section-title">
+          <h2>Параметры</h2>
+          <button class="reset" id="reset" type="button">Сбросить</button>
+        </div>
+
+        <div class="field">
+          <label for="amount">Сумма инвестирования</label>
+          <div class="input-wrap">
+            <input class="number-input" id="amount" type="number" min="100000" max="10000000000" step="100000" value="45000000" inputmode="numeric">
+            <span class="suffix">₽</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="years">Срок <output id="yearsOut">5 лет</output></label>
+          <input id="years" type="range" min="1" max="20" step="1" value="5">
+          <div class="range-ends"><span>1 год</span><span>20 лет</span></div>
+        </div>
+
+        <div class="field">
+          <label for="returnRate">Ожидаемая доходность <output id="returnOut">8,0% в год</output></label>
+          <input id="returnRate" type="range" min="-20" max="30" step="0.5" value="8">
+          <div class="range-ends"><span>−20%</span><span>30%</span></div>
+        </div>
+
+        <div class="field">
+          <label for="otherFee">Другие комиссии Альфы</label>
+          <div class="input-wrap">
+            <input class="number-input" id="otherFee" type="number" min="0" max="10" step="0.05" value="0.20" inputmode="decimal">
+            <span class="suffix">% / год</span>
+          </div>
+          <p class="hint">Брокерские, депозитарные и другие расходы сверх базовых 1%.</p>
+        </div>
+
+        <div class="fee-box" aria-label="Совокупная ежегодная комиссия Альфы">
+          <div class="fee-item"><small>Обслуживание</small><strong>1,00%</strong></div>
+          <span class="fee-sign">+</span>
+          <div class="fee-item"><small>Другие</small><strong id="otherFeeLabel">0,20%</strong></div>
+          <span class="fee-sign">=</span>
+          <div class="fee-item"><small>Всего</small><strong id="totalFeeLabel">1,20%</strong></div>
+        </div>
+
+        <label class="toggle-row">
+          <input id="entryCost" type="checkbox" checked>
+          <span>Учесть 0,15% первоначальной премии, не поступающей на инвестиционный счет</span>
+        </label>
+
+        <div class="warning" id="termWarning" role="note">
+          <span aria-hidden="true">!</span>
+          <span>Срок меньше пяти лет. Модель сохраняет льготу 30 млн ₽ как допущение, но право на льготы Альфы и ИИС-3 требует отдельной проверки.</span>
+        </div>
+
+        <details class="advanced">
+          <summary>Налоговые допущения</summary>
+          <div class="field">
+            <label for="otherIncome">Прочая налоговая база в год выхода</label>
+            <div class="input-wrap">
+              <input class="number-input" id="otherIncome" type="number" min="0" max="10000000000" step="100000" value="0" inputmode="numeric">
+              <span class="suffix">₽</span>
+            </div>
+            <p class="hint">Влияет только на сценарий 13–22%, если инвестиционный доход будет объединяться с основной базой.</p>
+          </div>
+        </details>
+      </aside>
+
+      <div class="results" aria-live="polite">
+        <section class="verdict">
+          <div>
+            <p class="verdict-kicker">Результат сравнения</p>
+            <h2 id="verdictTitle">Рассчитываем…</h2>
+            <p class="verdict-note" id="verdictNote"></p>
+          </div>
+          <div class="comparisons">
+            <div class="comparison"><span>Альфа 13/15% vs брокер 13/15%</span><strong id="diffCurrent">—</strong></div>
+            <div class="comparison"><span>Альфа 13–22% vs брокер 13–22%</span><strong id="diffFuture">—</strong></div>
+            <div class="comparison"><span>ИИС-3 13/15% vs брокер 13/15%</span><strong id="diffIisCurrent">—</strong></div>
+            <div class="comparison"><span>ИИС-3 13–22% vs брокер 13–22%</span><strong id="diffIisFuture">—</strong></div>
+          </div>
+        </section>
+
+        <section class="comparison-table-card" aria-labelledby="comparisonTableTitle">
+          <h2 class="sr-only" id="comparisonTableTitle">Сравнение итогов по продуктам</h2>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица сравнения продуктов; на узком экране прокручивается по горизонтали">
+            <table class="comparison-table">
+              <caption class="sr-only">Итоговый капитал, прибыль, комиссии, налог и эффективная годовая доходность для полиса Альфы, ИИС-3 и брокерского счета при действующей и сценарной шкалах НДФЛ</caption>
+              <colgroup>
+                <col class="metric-column">
+                <col><col><col><col><col><col>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">Показатель</th>
+                  <th scope="col" class="alpha-col">
+                    <span class="product-title">Альфа 13/15%</span>
+                    <span class="badge">льгота до 30 млн ₽</span>
+                  </th>
+                  <th scope="col" class="alpha-taxed-col">
+                    <span class="product-title">Альфа 13–22%</span>
+                    <span class="badge">льгота до 30 млн ₽</span>
+                  </th>
+                  <th scope="col" class="iis-col">
+                    <span class="product-title">ИИС-3 13/15%</span>
+                    <span class="badge">льгота до 30 млн ₽</span>
+                  </th>
+                  <th scope="col" class="iis-future-col">
+                    <span class="product-title">ИИС-3 13–22%</span>
+                    <span class="badge">льгота до 30 млн ₽</span>
+                  </th>
+                  <th scope="col" class="current-col">
+                    <span class="product-title">Брокерский счет</span>
+                    <span class="badge">сейчас 13/15%</span>
+                  </th>
+                  <th scope="col" class="future-col">
+                    <span class="product-title">Брокерский счет</span>
+                    <span class="badge">сценарий 13–22%</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="total-row">
+                  <th scope="row">Итоговый капитал</th>
+                  <td class="alpha-col" id="alphaNet">—</td>
+                  <td class="alpha-taxed-col" id="alphaFutureNet">—</td>
+                  <td class="iis-col" id="iisNet">—</td>
+                  <td class="iis-future-col" id="iisFutureNet">—</td>
+                  <td class="current-col" id="brokerCurrentNet">—</td>
+                  <td class="future-col" id="brokerFutureNet">—</td>
+                </tr>
+                <tr>
+                  <th scope="row">Прибыль после налога</th>
+                  <td id="alphaProfit">—</td>
+                  <td id="alphaFutureProfit">—</td>
+                  <td id="iisProfit">—</td>
+                  <td id="iisFutureProfit">—</td>
+                  <td id="brokerCurrentProfit">—</td>
+                  <td id="brokerFutureProfit">—</td>
+                </tr>
+                <tr>
+                  <th scope="row">Комиссии и вход</th>
+                  <td id="alphaFees">—</td>
+                  <td id="alphaFutureFees">—</td>
+                  <td>0 ₽</td>
+                  <td>0 ₽</td>
+                  <td>0 ₽</td>
+                  <td>0 ₽</td>
+                </tr>
+                <tr>
+                  <th scope="row">НДФЛ</th>
+                  <td id="alphaTax">—</td>
+                  <td id="alphaFutureTax">—</td>
+                  <td id="iisTax">—</td>
+                  <td id="iisFutureTax">—</td>
+                  <td id="brokerCurrentTax">—</td>
+                  <td id="brokerFutureTax">—</td>
+                </tr>
+                <tr>
+                  <th scope="row">Эффективно в год</th>
+                  <td id="alphaCagr">—</td>
+                  <td id="alphaFutureCagr">—</td>
+                  <td id="iisCagr">—</td>
+                  <td id="iisFutureCagr">—</td>
+                  <td id="brokerCurrentCagr">—</td>
+                  <td id="brokerFutureCagr">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-scroll-note" aria-hidden="true">Проведите по таблице влево, чтобы увидеть все варианты →</p>
+        </section>
+
+        <section class="chart-card">
+          <div class="chart-head">
+            <div>
+              <h2>Капитал при выходе в каждый год</h2>
+              <p>Налог считается с накопленной прибыли в год реализации.</p>
+            </div>
+            <div class="legend" aria-label="Легенда графика">
+              <span><i style="--color:var(--alpha)"></i>Альфа 13/15%</span>
+              <span><i style="--color:var(--alpha-taxed)"></i>Альфа 13–22%</span>
+              <span><i style="--color:var(--iis)"></i>ИИС-3 13/15%</span>
+              <span><i style="--color:var(--iis-future)"></i>ИИС-3 13–22%</span>
+              <span><i style="--color:var(--current)"></i>Брокер 13/15%</span>
+              <span><i style="--color:var(--future)"></i>Брокер 13–22%</span>
+            </div>
+          </div>
+          <svg id="chart" viewBox="0 0 900 310" role="img" aria-labelledby="chartTitle chartDesc">
+            <title id="chartTitle">Изменение итогового капитала по годам</title>
+            <desc id="chartDesc">Линии показывают сумму после комиссий и налогов для Альфы, ИИС-3 и брокерского счета при действующей и сценарной шкалах НДФЛ.</desc>
+          </svg>
+        </section>
+
+        <section class="detail-card">
+          <h2>Цена оболочки и налогов</h2>
+          <div class="loss-grid">
+            <div class="loss-item">
+              <header><span>Альфа 13/15%: комиссии + НДФЛ</span><strong id="lossAlphaText">—</strong></header>
+              <div class="track"><i id="lossAlphaBar" style="--c:var(--alpha);--w:0%"></i></div>
+            </div>
+            <div class="loss-item">
+              <header><span>Альфа 13–22%: комиссии + НДФЛ</span><strong id="lossAlphaFutureText">—</strong></header>
+              <div class="track"><i id="lossAlphaFutureBar" style="--c:var(--alpha-taxed);--w:0%"></i></div>
+            </div>
+            <div class="loss-item">
+              <header><span>НДФЛ ИИС-3 13/15%</span><strong id="lossIisText">—</strong></header>
+              <div class="track"><i id="lossIisBar" style="--c:var(--iis);--w:0%"></i></div>
+            </div>
+            <div class="loss-item">
+              <header><span>НДФЛ ИИС-3 13–22%</span><strong id="lossIisFutureText">—</strong></header>
+              <div class="track"><i id="lossIisFutureBar" style="--c:var(--iis-future);--w:0%"></i></div>
+            </div>
+            <div class="loss-item">
+              <header><span>НДФЛ 13/15%</span><strong id="lossCurrentText">—</strong></header>
+              <div class="track"><i id="lossCurrentBar" style="--c:var(--current);--w:0%"></i></div>
+            </div>
+            <div class="loss-item">
+              <header><span>НДФЛ 13–22%</span><strong id="lossFutureText">—</strong></header>
+              <div class="track"><i id="lossFutureBar" style="--c:var(--future);--w:0%"></i></div>
+            </div>
+          </div>
+
+          <details class="method">
+            <summary>Что именно считает модель</summary>
+            <ul>
+              <li>Доходность капитализируется ежемесячно. Комиссия Альфы 1% плюс указанная дополнительная комиссия списывается ежемесячно с текущей стоимости счета.</li>
+              <li>По умолчанию учитывается стартовый расход 0,15%: на инвестиционный счет поступает 99,85% взноса.</li>
+              <li>В обоих сценариях Альфы первые 30 млн ₽ положительного результата исключаются из налоговой базы. С превышения применяется действующая шкала 13/15% либо сценарная шкала 13/15/18/20/22%.</li>
+              <li>Для ИИС-3 первые 30 млн ₽ положительного финансового результата также исключаются из налоговой базы, комиссии приняты равными нулю. Показаны отдельные результаты по шкалам 13/15% и 13–22%.</li>
+              <li>На брокерском счете комиссии приняты равными нулю. НДФЛ возникает один раз при выходе: действующая шкала 13% до 2,4 млн ₽ и 15% выше либо сценарная шкала 13/15/18/20/22%.</li>
+              <li>Не учитываются вычет на взносы ИИС-3, ЛДВ, дивидендные особенности, ежегодное налогообложение купонов, валютная переоценка, убытки прошлых лет, страховая защита и возможные выкупные удержания.</li>
+            </ul>
+          </details>
+        </section>
+
+        <p class="footnote">
+          Это финансовая модель, а не налоговое или инвестиционное заключение. Льготы Альфы и ИИС-3 зависят от соответствия требованиям НК РФ, срока и других условий. Лимит ИИС-3 в 30 млн ₽ применяется совокупно по всем ИИС, прекращенным в одном налоговом периоде — <a href="https://www.nalog.gov.ru/rn44/news/activities_fts/16571744/" target="_blank" rel="noopener">разъяснение ФНС</a>. Переход инвестиционных доходов на шкалу 13–22% — сценарий по предложению Минфина от 24.09.2026, а не действующее правило.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const defaults = {
+        amount: 45000000,
+        years: 5,
+        returnRate: 8,
+        otherFee: 0.20,
+        entryCost: true,
+        otherIncome: 0
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const controls = ['amount', 'years', 'returnRate', 'otherFee', 'entryCost', 'otherIncome'];
+      const money = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+      const oneDecimal = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, Number.isFinite(value) ? value : min));
+      }
+
+      function value(id) {
+        const node = $(id);
+        return node.type === 'checkbox' ? node.checked : Number(node.value);
+      }
+
+      function rub(n, signed = false) {
+        const safe = Math.abs(n) < 0.5 ? 0 : n;
+        const sign = signed && safe > 0 ? '+' : '';
+        return sign + money.format(safe) + ' ₽';
+      }
+
+      function compactRub(n) {
+        const a = Math.abs(n);
+        if (a >= 1e9) return oneDecimal.format(n / 1e9) + ' млрд ₽';
+        if (a >= 1e6) return oneDecimal.format(n / 1e6) + ' млн ₽';
+        if (a >= 1e3) return oneDecimal.format(n / 1e3) + ' тыс. ₽';
+        return money.format(n) + ' ₽';
+      }
+
+      function percent(n, digits = 1) {
+        return new Intl.NumberFormat('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n) + '%';
+      }
+
+      function progressiveTax(base) {
+        const x = Math.max(0, base);
+        const bands = [
+          [2400000, 0.13],
+          [5000000, 0.15],
+          [20000000, 0.18],
+          [50000000, 0.20],
+          [Infinity, 0.22]
+        ];
+        let tax = 0;
+        let floor = 0;
+        for (const [ceiling, rate] of bands) {
+          const slice = Math.max(0, Math.min(x, ceiling) - floor);
+          tax += slice * rate;
+          if (x <= ceiling) break;
+          floor = ceiling;
+        }
+        return tax;
+      }
+
+      function currentTax(profit) {
+        const x = Math.max(0, profit);
+        return Math.min(x, 2400000) * 0.13 + Math.max(0, x - 2400000) * 0.15;
+      }
+
+      function futureTax(profit, otherIncome) {
+        const x = Math.max(0, profit);
+        const base = Math.max(0, otherIncome);
+        return progressiveTax(base + x) - progressiveTax(base);
+      }
+
+      function alphaBeforeTax(amount, years, returnRate, totalFee, withEntryCost) {
+        const entryCharge = withEntryCost ? amount * 0.0015 : 0;
+        let balance = amount - entryCharge;
+        let feePaid = entryCharge;
+        const monthlyGrowth = Math.pow(Math.max(0.000001, 1 + returnRate / 100), 1 / 12);
+        const monthlyFee = Math.max(0, totalFee) / 1200;
+        for (let month = 0; month < years * 12; month++) {
+          balance *= monthlyGrowth;
+          const charge = balance * monthlyFee;
+          balance -= charge;
+          feePaid += charge;
+        }
+        return { balance: Math.max(0, balance), feePaid };
+      }
+
+      function model(yearOverride) {
+        const amount = clamp(value('amount'), 100000, 10000000000);
+        const years = yearOverride ?? clamp(value('years'), 1, 20);
+        const returnRate = clamp(value('returnRate'), -20, 30);
+        const otherFee = clamp(value('otherFee'), 0, 10);
+        const totalFee = 1 + otherFee;
+        const otherIncome = clamp(value('otherIncome'), 0, 10000000000);
+        const exemption = 30000000;
+        const alphaPre = alphaBeforeTax(amount, years, returnRate, totalFee, value('entryCost'));
+        const alphaProfitPreTax = Math.max(0, alphaPre.balance - amount);
+        const alphaTaxable = Math.max(0, alphaProfitPreTax - exemption);
+        const alphaTaxCurrent = currentTax(alphaTaxable);
+        const alphaTaxFuture = futureTax(alphaTaxable, otherIncome);
+        const alphaNetCurrent = alphaPre.balance - alphaTaxCurrent;
+        const alphaNetFuture = alphaPre.balance - alphaTaxFuture;
+
+        const gross = amount * Math.pow(1 + returnRate / 100, years);
+        const brokerProfitPreTax = Math.max(0, gross - amount);
+        const brokerTaxCurrent = currentTax(brokerProfitPreTax);
+        const brokerTaxFuture = futureTax(brokerProfitPreTax, otherIncome);
+        const brokerCurrent = gross - brokerTaxCurrent;
+        const brokerFuture = gross - brokerTaxFuture;
+        const iisTaxable = Math.max(0, brokerProfitPreTax - 30000000);
+        const iisTaxCurrent = currentTax(iisTaxable);
+        const iisTaxFuture = futureTax(iisTaxable, otherIncome);
+        const iisCurrent = gross - iisTaxCurrent;
+        const iisFuture = gross - iisTaxFuture;
+
+        return {
+          amount, years, returnRate, otherFee, totalFee, gross, otherIncome,
+          alphaPre: alphaPre.balance,
+          alphaFees: alphaPre.feePaid,
+          alphaTaxCurrent,
+          alphaTaxFuture,
+          alphaNetCurrent,
+          alphaNetFuture,
+          brokerTaxCurrent,
+          brokerTaxFuture,
+          brokerCurrent,
+          brokerFuture,
+          iisTaxCurrent,
+          iisTaxFuture,
+          iisCurrent,
+          iisFuture
+        };
+      }
+
+      function cagr(finalValue, initial, years) {
+        if (finalValue <= 0 || initial <= 0) return -100;
+        return (Math.pow(finalValue / initial, 1 / years) - 1) * 100;
+      }
+
+      function setRangeFill(node) {
+        const min = Number(node.min);
+        const max = Number(node.max);
+        const val = Number(node.value);
+        node.style.setProperty('--fill', ((val - min) / (max - min) * 100) + '%');
+      }
+
+      function renderChart(data) {
+        const svg = $('chart');
+        const width = 900;
+        const height = 310;
+        const pad = { left: 72, right: 24, top: 22, bottom: 42 };
+        const years = Array.from({ length: data.years + 1 }, (_, i) => i);
+        const rows = years.map(y => {
+          if (y === 0) return { y, alphaCurrent: data.amount, alphaFuture: data.amount, iisCurrent: data.amount, iisFuture: data.amount, current: data.amount, future: data.amount };
+          const m = model(y);
+          return { y, alphaCurrent: m.alphaNetCurrent, alphaFuture: m.alphaNetFuture, iisCurrent: m.iisCurrent, iisFuture: m.iisFuture, current: m.brokerCurrent, future: m.brokerFuture };
+        });
+        const all = rows.flatMap(r => [r.alphaCurrent, r.alphaFuture, r.iisCurrent, r.iisFuture, r.current, r.future, data.amount]);
+        let min = Math.min(...all);
+        let max = Math.max(...all);
+        const spread = Math.max(max - min, data.amount * 0.12, 1);
+        min = Math.max(0, min - spread * .12);
+        max += spread * .12;
+        const x = y => pad.left + (y / data.years) * (width - pad.left - pad.right);
+        const y = v => pad.top + (max - v) / (max - min) * (height - pad.top - pad.bottom);
+        const path = key => rows.map((r, i) => `${i ? 'L' : 'M'} ${x(r.y).toFixed(1)} ${y(r[key]).toFixed(1)}`).join(' ');
+
+        let html = '<title id="chartTitle">Изменение итогового капитала по годам</title><desc id="chartDesc">Сравнение капитала после комиссий и налогов.</desc>';
+        for (let i = 0; i <= 4; i++) {
+          const val = min + (max - min) * (i / 4);
+          const yy = y(val);
+          html += `<line class="grid-line" x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}"></line>`;
+          html += `<text class="axis-label" x="${pad.left - 10}" y="${yy + 4}" text-anchor="end">${compactRub(val).replace(' ₽','')}</text>`;
+        }
+        const labelEvery = data.years <= 10 ? 1 : Math.ceil(data.years / 8);
+        rows.forEach(r => {
+          if (r.y % labelEvery === 0 || r.y === data.years) {
+            html += `<text class="axis-label" x="${x(r.y)}" y="${height - 13}" text-anchor="middle">${r.y === 0 ? 'Старт' : r.y + ' г.'}</text>`;
+          }
+        });
+
+        const series = [
+          ['alphaCurrent', '#e63f35', ''],
+          ['alphaFuture', '#a44b18', ' taxed'],
+          ['iisCurrent', '#8150a8', ''],
+          ['iisFuture', '#a26ac2', ' taxed'],
+          ['current', '#156f6a', ''],
+          ['future', '#2a5bb8', '']
+        ];
+        series.forEach(([key, color, className]) => {
+          html += `<path class="series-line${className}" d="${path(key)}" stroke="${color}"></path>`;
+          rows.forEach(r => {
+            const title = `${r.y === 0 ? 'Старт' : r.y + ' год'}: ${rub(r[key])}`;
+            html += `<circle class="series-dot" cx="${x(r.y)}" cy="${y(r[key])}" r="4" fill="${color}"><title>${title}</title></circle>`;
+          });
+        });
+        svg.innerHTML = html;
+      }
+
+      function render() {
+        const m = model();
+        $('yearsOut').textContent = m.years + ' ' + (m.years === 1 ? 'год' : m.years < 5 ? 'года' : 'лет');
+        $('returnOut').textContent = percent(m.returnRate, 1) + ' в год';
+        $('otherFeeLabel').textContent = percent(m.otherFee, 2);
+        $('totalFeeLabel').textContent = percent(m.totalFee, 2);
+        $('termWarning').classList.toggle('show', m.years < 5);
+        setRangeFill($('years'));
+        setRangeFill($('returnRate'));
+
+        $('alphaNet').textContent = rub(m.alphaNetCurrent);
+        $('alphaProfit').textContent = rub(m.alphaNetCurrent - m.amount, true);
+        $('alphaFees').textContent = rub(m.alphaFees);
+        $('alphaTax').textContent = rub(m.alphaTaxCurrent);
+        $('alphaCagr').textContent = percent(cagr(m.alphaNetCurrent, m.amount, m.years), 2);
+        $('alphaFutureNet').textContent = rub(m.alphaNetFuture);
+        $('alphaFutureProfit').textContent = rub(m.alphaNetFuture - m.amount, true);
+        $('alphaFutureFees').textContent = rub(m.alphaFees);
+        $('alphaFutureTax').textContent = rub(m.alphaTaxFuture);
+        $('alphaFutureCagr').textContent = percent(cagr(m.alphaNetFuture, m.amount, m.years), 2);
+
+        $('iisNet').textContent = rub(m.iisCurrent);
+        $('iisProfit').textContent = rub(m.iisCurrent - m.amount, true);
+        $('iisTax').textContent = rub(m.iisTaxCurrent);
+        $('iisCagr').textContent = percent(cagr(m.iisCurrent, m.amount, m.years), 2);
+        $('iisFutureNet').textContent = rub(m.iisFuture);
+        $('iisFutureProfit').textContent = rub(m.iisFuture - m.amount, true);
+        $('iisFutureTax').textContent = rub(m.iisTaxFuture);
+        $('iisFutureCagr').textContent = percent(cagr(m.iisFuture, m.amount, m.years), 2);
+
+        $('brokerCurrentNet').textContent = rub(m.brokerCurrent);
+        $('brokerCurrentProfit').textContent = rub(m.brokerCurrent - m.amount, true);
+        $('brokerCurrentTax').textContent = rub(m.brokerTaxCurrent);
+        $('brokerCurrentCagr').textContent = percent(cagr(m.brokerCurrent, m.amount, m.years), 2);
+
+        $('brokerFutureNet').textContent = rub(m.brokerFuture);
+        $('brokerFutureProfit').textContent = rub(m.brokerFuture - m.amount, true);
+        $('brokerFutureTax').textContent = rub(m.brokerTaxFuture);
+        $('brokerFutureCagr').textContent = percent(cagr(m.brokerFuture, m.amount, m.years), 2);
+
+        const diffCurrent = m.alphaNetCurrent - m.brokerCurrent;
+        const diffFuture = m.alphaNetFuture - m.brokerFuture;
+        const diffIisCurrent = m.iisCurrent - m.brokerCurrent;
+        const diffIisFuture = m.iisFuture - m.brokerFuture;
+        $('diffCurrent').textContent = rub(diffCurrent, true);
+        $('diffFuture').textContent = rub(diffFuture, true);
+        $('diffIisCurrent').textContent = rub(diffIisCurrent, true);
+        $('diffIisFuture').textContent = rub(diffIisFuture, true);
+        $('diffCurrent').style.color = diffCurrent >= 0 ? 'var(--current)' : 'var(--alpha)';
+        $('diffFuture').style.color = diffFuture >= 0 ? 'var(--current)' : 'var(--alpha)';
+        $('diffIisCurrent').style.color = diffIisCurrent >= 0 ? 'var(--iis)' : 'var(--alpha)';
+        $('diffIisFuture').style.color = diffIisFuture >= 0 ? 'var(--iis)' : 'var(--alpha)';
+
+        const leadersCurrent = [
+          ['ИИС-3', m.iisCurrent],
+          ['полис Альфы', m.alphaNetCurrent],
+          ['брокерский счет', m.brokerCurrent]
+        ].sort((a, b) => b[1] - a[1]);
+        const leadersFuture = [
+          ['ИИС-3', m.iisFuture],
+          ['полис Альфы', m.alphaNetFuture],
+          ['брокерский счет', m.brokerFuture]
+        ].sort((a, b) => b[1] - a[1]);
+        const sameLeader = leadersCurrent[0][0] === leadersFuture[0][0];
+        if (sameLeader) {
+          $('verdictTitle').textContent = `Лучший результат дает ${leadersCurrent[0][0]}`;
+          $('verdictNote').textContent = `Лидер сохраняется при действующей шкале и сценарии 13–22%. Преимущество над вторым вариантом — от ${compactRub(Math.min(leadersCurrent[0][1] - leadersCurrent[1][1], leadersFuture[0][1] - leadersFuture[1][1]))}.`;
+        } else {
+          $('verdictTitle').textContent = 'Выбор зависит от налогового сценария';
+          $('verdictNote').textContent = `Сейчас лидирует ${leadersCurrent[0][0]}, а при шкале 13–22% — ${leadersFuture[0][0]}.`;
+        }
+
+        const costs = [m.alphaFees + m.alphaTaxCurrent, m.alphaFees + m.alphaTaxFuture, m.iisTaxCurrent, m.iisTaxFuture, m.brokerTaxCurrent, m.brokerTaxFuture];
+        const maxCost = Math.max(...costs, 1);
+        const ids = [
+          ['lossAlphaText', 'lossAlphaBar'],
+          ['lossAlphaFutureText', 'lossAlphaFutureBar'],
+          ['lossIisText', 'lossIisBar'],
+          ['lossIisFutureText', 'lossIisFutureBar'],
+          ['lossCurrentText', 'lossCurrentBar'],
+          ['lossFutureText', 'lossFutureBar']
+        ];
+        costs.forEach((cost, i) => {
+          $(ids[i][0]).textContent = rub(cost);
+          $(ids[i][1]).style.setProperty('--w', (cost / maxCost * 100).toFixed(1) + '%');
+        });
+
+        renderChart(m);
+      }
+
+      controls.forEach(id => {
+        $(id).addEventListener('input', render);
+        $(id).addEventListener('change', render);
+      });
+
+      $('reset').addEventListener('click', () => {
+        Object.entries(defaults).forEach(([id, val]) => {
+          const node = $(id);
+          if (node.type === 'checkbox') node.checked = val;
+          else node.value = val;
+        });
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
