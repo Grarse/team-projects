@@ -370,6 +370,39 @@
       scrollbar-color: #c3ccd6 transparent;
     }
 
+    .heat-legend {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px 11px;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafb;
+      color: var(--muted);
+      font-size: .7rem;
+      line-height: 1.35;
+    }
+
+    .heat-legend strong {
+      color: var(--ink);
+      font-size: .73rem;
+    }
+
+    .heat-ramp {
+      width: 116px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #f8696b 0%, #ffeb84 50%, #63be7b 100%);
+      box-shadow: inset 0 0 0 1px rgba(13, 27, 42, .1);
+    }
+
+    .heat-legend-note { margin-left: auto; }
+
+    .comparison-table td.conditional-cell {
+      color: #142130;
+      transition: background-color .18s ease, box-shadow .18s ease;
+    }
+
     .comparison-table {
       width: 100%;
       min-width: 820px;
@@ -730,6 +763,11 @@
 
         <section class="comparison-table-card" aria-labelledby="comparisonTableTitle">
           <h2 class="sr-only" id="comparisonTableTitle">Сравнение итогов по продуктам</h2>
+          <div class="heat-legend" aria-label="Легенда условного форматирования">
+            <strong>Условная шкала</strong>
+            <span>хуже</span><span class="heat-ramp" aria-hidden="true"></span><span>лучше</span>
+            <span class="heat-legend-note">Сравниваются итоговые капиталы всех продуктов: чем больше результат, тем зеленее ячейка.</span>
+          </div>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица сравнения продуктов; на узком экране прокручивается по горизонтали">
             <table class="comparison-table">
               <caption class="sr-only">Итоговый капитал, прибыль, комиссии, налог и эффективная годовая доходность для полиса Контур, ИИС-3 и брокерского счета</caption>
@@ -1051,6 +1089,46 @@
         node.style.setProperty('--fill', ((val - min) / (max - min) * 100) + '%');
       }
 
+      function mixColor(start, end, amount) {
+        return start.map((channel, index) => Math.round(channel + (end[index] - channel) * amount));
+      }
+
+      function heatColor(score) {
+        const worst = [248, 105, 107];
+        const middle = [255, 235, 132];
+        const best = [99, 190, 123];
+        const rgb = score <= .5
+          ? mixColor(worst, middle, score * 2)
+          : mixColor(middle, best, (score - .5) * 2);
+        return `rgb(${rgb.join(', ')})`;
+      }
+
+      function applyHeatRow(ids, values, higherIsBetter) {
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const tied = Math.abs(max - min) < .000001;
+        ids.forEach((id, index) => {
+          const node = $(id);
+          node.classList.add('conditional-cell');
+          if (tied) {
+            node.style.backgroundColor = '#eef2f5';
+            node.style.boxShadow = 'inset 0 0 0 1px rgba(13, 27, 42, .08)';
+            node.title = 'Все варианты дают одинаковый результат';
+            return;
+          }
+          const normalized = (values[index] - min) / (max - min);
+          const score = higherIsBetter ? normalized : 1 - normalized;
+          node.style.backgroundColor = heatColor(score);
+          node.style.boxShadow = 'inset 0 0 0 1px rgba(13, 27, 42, .1)';
+          node.title = score >= .999 ? 'Лучший результат' : score <= .001 ? 'Худший результат' : 'Промежуточный результат';
+        });
+      }
+
+      function applyCapitalFormatting(m) {
+        const capital = [m.konturNetCurrent, m.konturNetFuture, m.iisCurrent, m.iisFuture, m.brokerCurrent, m.brokerFuture];
+        applyHeatRow(['konturNet', 'konturFutureNet', 'iisNet', 'iisFutureNet', 'brokerCurrentNet', 'brokerFutureNet'], capital, true);
+      }
+
       function renderChart(data) {
         const svg = $('chart');
         const width = 900;
@@ -1191,6 +1269,7 @@
           $(ids[i][1]).style.setProperty('--w', (cost / maxCost * 100).toFixed(1) + '%');
         });
 
+        applyCapitalFormatting(m);
         renderChart(m);
       }
 
