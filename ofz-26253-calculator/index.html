@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Интерактивный калькулятор портфеля и доходности по ОФЗ 26253 (RU000A10D517) с реинвестированием купонов.">
+  <title>ОФЗ 26253 — калькулятор доходности</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=PT+Mono&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a1d1b'/%3E%3Cpath d='M15 45V20h8v25zm13 0V13h8v32zm13 0V27h8v18z' fill='%236ce5b1'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07110f;
+      --bg-soft: #0a1715;
+      --panel: #0d1e1b;
+      --panel-2: #102522;
+      --line: rgba(166, 219, 202, .15);
+      --line-strong: rgba(166, 219, 202, .26);
+      --text: #eefbf6;
+      --muted: #91a9a1;
+      --accent: #69e4af;
+      --accent-soft: rgba(105, 228, 175, .13);
+      --gold: #efca76;
+      --blue: #6dbbe8;
+      --danger: #ff8d84;
+      --radius: 22px;
+      --shadow: 0 28px 80px rgba(0, 0, 0, .27);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 84% 3%, rgba(105, 228, 175, .1), transparent 30rem),
+        linear-gradient(180deg, #07110f 0, #081411 60%, #06100e 100%);
+      color: var(--text);
+      font: 16px/1.5 "Manrope", system-ui, sans-serif;
+    }
+    button, input { font: inherit; }
+    a { color: inherit; }
+    button, input, summary { -webkit-tap-highlight-color: transparent; }
+
+    .shell { width: min(1440px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; letter-spacing: -.03em; }
+    .brand-mark {
+      width: 32px; height: 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
+      align-items: end; padding: 7px; border: 1px solid var(--line-strong); border-radius: 10px;
+      background: var(--panel);
+    }
+    .brand-mark i { display: block; background: var(--accent); border-radius: 2px 2px 0 0; }
+    .brand-mark i:nth-child(1) { height: 11px; }
+    .brand-mark i:nth-child(2) { height: 17px; }
+    .brand-mark i:nth-child(3) { height: 8px; }
+    .top-meta { color: var(--muted); font-size: .82rem; text-align: right; }
+
+    .bond-head { padding: 38px 0 24px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: end; }
+    .eyebrow { color: var(--accent); font: 600 .78rem/1.2 "PT Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { font-size: clamp(2.15rem, 5vw, 4.35rem); line-height: .98; letter-spacing: -.06em; margin: 12px 0 16px; max-width: 820px; }
+    .lede { margin: 0; max-width: 760px; color: var(--muted); font-size: 1rem; }
+    .bond-id { display: inline-flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid var(--line); border-radius: 999px; color: #b9cdc6; background: rgba(255,255,255,.02); white-space: nowrap; }
+    .bond-id::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 5px var(--accent-soft); }
+    .bond-id code { font: 500 .8rem "PT Mono", monospace; }
+
+    .facts { display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: rgba(255,255,255,.018); }
+    .fact { padding: 18px 20px; min-width: 0; }
+    .fact + .fact { border-left: 1px solid var(--line); }
+    .fact span { display: block; color: var(--muted); font-size: .76rem; margin-bottom: 6px; }
+    .fact strong { font-size: 1.05rem; letter-spacing: -.02em; white-space: nowrap; }
+
+    main { padding: 24px 0 72px; }
+    .workspace { display: grid; grid-template-columns: minmax(330px, .82fr) minmax(0, 1.35fr); gap: 20px; align-items: start; }
+    .panel { background: linear-gradient(160deg, rgba(16,37,34,.94), rgba(10,24,21,.96)); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .controls { padding: 26px; position: sticky; top: 14px; }
+    .section-kicker { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+    .section-kicker b { font-size: 1.08rem; letter-spacing: -.025em; }
+    .step { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; color: #07110f; background: var(--accent); font: 700 .76rem "PT Mono", monospace; }
+
+    .field { margin-bottom: 22px; }
+    .label-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin-bottom: 9px; }
+    label { font-size: .85rem; color: #c8dbd4; font-weight: 600; }
+    .hint { font-size: .72rem; color: var(--muted); }
+    .input-wrap { position: relative; }
+    input[type="number"] {
+      width: 100%; height: 49px; padding: 0 56px 0 14px; color: var(--text); background: rgba(3,12,10,.55);
+      border: 1px solid var(--line-strong); border-radius: 13px; outline: none; font-weight: 700; font-variant-numeric: tabular-nums;
+      transition: border-color .18s, box-shadow .18s;
+    }
+    input[type="number"]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(105,228,175,.1); }
+    .suffix { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .82rem; pointer-events: none; }
+    input[type="range"] { width: 100%; margin: 11px 0 0; accent-color: var(--accent); cursor: pointer; }
+    .subnote { display: flex; justify-content: space-between; margin-top: 5px; color: #6f8980; font-size: .68rem; }
+
+    details.advanced { margin: 6px 0 22px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    details.advanced summary { cursor: pointer; list-style: none; padding: 17px 0; display: flex; align-items: center; justify-content: space-between; font-size: .84rem; font-weight: 700; color: #c8dbd4; }
+    details.advanced summary::-webkit-details-marker { display: none; }
+    details.advanced summary::after { content: "+"; color: var(--accent); font-size: 1.1rem; }
+    details[open].advanced summary::after { content: "−"; }
+    .advanced-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 18px; }
+    .advanced-grid .field { margin: 0; }
+    .advanced-grid input { padding-right: 44px; }
+
+    .mini-info { padding: 13px 14px; border-radius: 13px; background: var(--accent-soft); color: #acd7c7; font-size: .76rem; }
+    .mini-info strong { color: var(--text); }
+
+    .results { padding: 26px; overflow: hidden; }
+    .result-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 22px; margin-bottom: 24px; }
+    .result-head h2 { margin: 0 0 5px; font-size: 1.08rem; letter-spacing: -.025em; }
+    .result-head p { margin: 0; color: var(--muted); font-size: .78rem; }
+    .date-chip { padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; color: #afc4bc; font: .72rem "PT Mono", monospace; white-space: nowrap; }
+
+    .hero-result { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(210px, .7fr); gap: 16px; margin-bottom: 16px; }
+    .big-card, .metric { border: 1px solid var(--line); background: rgba(3,12,10,.42); border-radius: 17px; }
+    .big-card { padding: 23px; min-height: 148px; display: flex; flex-direction: column; justify-content: space-between; }
+    .big-card span, .metric span { color: var(--muted); font-size: .76rem; }
+    .big-value { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; letter-spacing: -.055em; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .delta { display: flex; align-items: center; gap: 7px; color: var(--accent); font-size: .82rem; font-weight: 700; }
+    .delta.negative { color: var(--danger); }
+    .side-metric { display: grid; grid-template-rows: 1fr 1fr; gap: 12px; }
+    .metric { padding: 17px; display: flex; flex-direction: column; justify-content: space-between; }
+    .metric strong { font-size: 1.28rem; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .metrics .metric { min-height: 102px; }
+
+    .viz { padding: 20px; border: 1px solid var(--line); border-radius: 17px; background: rgba(3,12,10,.3); }
+    .viz-head { display: flex; justify-content: space-between; gap: 18px; align-items: center; margin-bottom: 14px; }
+    .viz-head strong { font-size: .9rem; }
+    .legend { display: flex; gap: 13px; color: var(--muted); font-size: .7rem; }
+    .legend i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; }
+    .legend .l1 { background: var(--accent); } .legend .l2 { background: rgba(145,169,161,.7); }
+    #chart { display: block; width: 100%; height: 210px; overflow: visible; }
+    .chart-grid { stroke: rgba(166,219,202,.09); stroke-width: 1; }
+    .chart-line { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-area { fill: url(#areaFill); }
+    .chart-base { fill: none; stroke: rgba(145,169,161,.55); stroke-width: 1.5; stroke-dasharray: 5 6; }
+    .chart-label { fill: #799087; font: 10px "PT Mono", monospace; }
+
+    .allocation { margin-top: 17px; }
+    .bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #172b27; }
+    .bar i { display: block; height: 100%; transition: width .25s ease; }
+    .bar .p { background: var(--blue); } .bar .c { background: var(--gold); } .bar .r { background: var(--accent); } .bar .cash { background: #526760; }
+    .alloc-legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 13px; }
+    .alloc-item span { display: block; color: var(--muted); font-size: .68rem; }
+    .alloc-item b { font-size: .78rem; font-variant-numeric: tabular-nums; }
+
+    .lower { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+    .lower .panel { padding: 24px; box-shadow: none; }
+    .lower h3 { margin: 0 0 17px; font-size: 1rem; letter-spacing: -.025em; }
+    .breakdown { display: grid; gap: 0; }
+    .breakdown-row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); font-size: .8rem; }
+    .breakdown-row:first-child { border-top: 0; }
+    .breakdown-row span { color: var(--muted); }
+    .breakdown-row b { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .schedule-wrap { overflow-x: auto; scrollbar-color: #2a443c transparent; }
+    table { width: 100%; border-collapse: collapse; font-size: .76rem; }
+    th { color: var(--muted); font-weight: 600; text-align: left; border-bottom: 1px solid var(--line-strong); padding: 0 8px 10px 0; white-space: nowrap; }
+    td { padding: 10px 8px 10px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    th:last-child, td:last-child { text-align: right; padding-right: 0; }
+    .table-foot { margin: 12px 0 0; color: var(--muted); font-size: .68rem; }
+
+    .method { margin-top: 20px; padding: 22px 24px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--muted); background: rgba(255,255,255,.014); font-size: .76rem; }
+    .method strong { color: #cbded7; }
+    .method p { margin: 0; }
+    .method p + p { margin-top: 9px; }
+    .method a { color: #a8d9c7; text-underline-offset: 3px; }
+
+    @media (max-width: 1050px) {
+      .workspace { grid-template-columns: 1fr; }
+      .controls { position: static; }
+      .facts { grid-template-columns: repeat(3, 1fr); }
+      .fact:nth-child(4) { border-left: 0; border-top: 1px solid var(--line); }
+      .fact:nth-child(5) { border-top: 1px solid var(--line); }
+    }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 24px, 680px); }
+      .topbar { min-height: 60px; }
+      .top-meta { display: none; }
+      .bond-head { grid-template-columns: 1fr; padding-top: 28px; }
+      .bond-id { width: fit-content; }
+      .facts { grid-template-columns: 1fr 1fr; }
+      .fact:nth-child(3), .fact:nth-child(5) { border-left: 0; }
+      .fact:nth-child(n+3) { border-top: 1px solid var(--line); }
+      .fact:nth-child(4) { border-left: 1px solid var(--line); }
+      .hero-result { grid-template-columns: 1fr; }
+      .side-metric { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .lower { grid-template-columns: 1fr; }
+      .alloc-legend { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 460px) {
+      .controls, .results, .lower .panel { padding: 19px; }
+      .facts { grid-template-columns: 1fr; }
+      .fact + .fact, .fact:nth-child(4) { border-left: 0; border-top: 1px solid var(--line); }
+      .big-value { font-size: 2rem; }
+      .metrics { grid-template-columns: 1fr; }
+      .result-head { display: block; }
+      .date-chip { display: inline-block; margin-top: 12px; }
+      .viz-head { display: block; }
+      .legend { margin-top: 7px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>BondLab</div>
+    <div class="top-meta">Расчётная модель · данные выпуска на 29.09.2026</div>
+  </header>
+
+  <div class="shell">
+    <section class="bond-head" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow">ОФЗ с постоянным доходом</div>
+        <h1 id="page-title">ОФЗ 26253</h1>
+        <p class="lede">Сценарий инвестиции с купонами, реинвестированием и оценкой портфеля на выбранном горизонте.</p>
+      </div>
+      <div class="bond-id"><code>RU000A10D517</code></div>
+    </section>
+
+    <section class="facts" aria-label="Параметры выпуска">
+      <div class="fact"><span>Номинал</span><strong>1 000 ₽</strong></div>
+      <div class="fact"><span>Купон</span><strong>64,82 ₽</strong></div>
+      <div class="fact"><span>Ставка купона</span><strong>13,00%</strong></div>
+      <div class="fact"><span>Выплаты</span><strong>2 раза в год</strong></div>
+      <div class="fact"><span>Погашение</span><strong>06.10.2038</strong></div>
+    </section>
+
+    <main>
+      <div class="workspace">
+        <aside class="panel controls" aria-label="Параметры расчёта">
+          <div class="section-kicker"><span class="step">01</span><b>Параметры сценария</b></div>
+
+          <div class="field">
+            <div class="label-row"><label for="investment">Сумма инвестирования</label><span class="hint">доступный капитал</span></div>
+            <div class="input-wrap"><input id="investment" type="number" min="1000" step="10000" value="1000000"><span class="suffix">₽</span></div>
+          </div>
+
+          <div class="field">
+            <div class="label-row"><label for="buyPrice">Цена покупки</label><span class="hint">без НКД</span></div>
+            <div class="input-wrap"><input id="buyPrice" type="number" min="1" max="200" step="0.01" value="83.66"><span class="suffix">%</span></div>
+            <input id="buyPriceRange" type="range" min="60" max="120" step="0.01" value="83.66" aria-label="Цена покупки, ползунок">
+            <div class="subnote"><span>60%</span><span>120%</span></div>
+          </div>
+
+          <div class="field">
+            <div class="label-row"><label for="reinvestRate">Ставка реинвестирования</label><span class="hint">эффективная годовая</span></div>
+            <div class="input-wrap"><input id="reinvestRate" type="number" min="0" max="50" step="0.1" value="14"><span class="suffix">%</span></div>
+            <input id="reinvestRateRange" type="range" min="0" max="30" step="0.1" value="14" aria-label="Ставка реинвестирования, ползунок">
+            <div class="subnote"><span>0%</span><span>30%</span></div>
+          </div>
+
+          <div class="field">
+            <div class="label-row"><label for="years">Срок инвестирования</label><span class="hint" id="horizonHint"></span></div>
+            <div class="input-wrap"><input id="years" type="number" min="0.5" max="12.02" step="0.1" value="5"><span class="suffix">лет</span></div>
+            <input id="yearsRange" type="range" min="0.5" max="12.02" step="0.1" value="5" aria-label="Срок инвестирования, ползунок">
+            <div class="subnote"><span>6 месяцев</span><span>до погашения</span></div>
+          </div>
+
+          <div class="field">
+            <div class="label-row"><label for="sellPrice">Ожидаемая цена продажи</label><span class="hint" id="sellHint">на горизонте</span></div>
+            <div class="input-wrap"><input id="sellPrice" type="number" min="1" max="200" step="0.01" value="90"><span class="suffix">%</span></div>
+            <input id="sellPriceRange" type="range" min="60" max="120" step="0.01" value="90" aria-label="Цена продажи, ползунок">
+            <div class="subnote"><span>60%</span><span>120%</span></div>
+          </div>
+
+          <details class="advanced">
+            <summary>НКД, налог и комиссии</summary>
+            <div class="advanced-grid">
+              <div class="field">
+                <div class="label-row"><label for="accrued">НКД при покупке</label></div>
+                <div class="input-wrap"><input id="accrued" type="number" min="0" max="64.82" step="0.01" value="57.34"><span class="suffix">₽</span></div>
+              </div>
+              <div class="field">
+                <div class="label-row"><label for="taxRate">Налоговая ставка</label></div>
+                <div class="input-wrap"><input id="taxRate" type="number" min="0" max="50" step="0.1" value="0"><span class="suffix">%</span></div>
+              </div>
+              <div class="field">
+                <div class="label-row"><label for="commission">Комиссия сделки</label></div>
+                <div class="input-wrap"><input id="commission" type="number" min="0" max="5" step="0.01" value="0"><span class="suffix">%</span></div>
+              </div>
+            </div>
+          </details>
+
+          <div class="mini-info"><strong id="unitCost">893,94 ₽</strong> за одну бумагу с НКД и комиссией. Покупаются только целые бумаги.</div>
+        </aside>
+
+        <section class="panel results" aria-live="polite" aria-label="Результаты расчёта">
+          <div class="result-head">
+            <div><h2>Портфель на горизонте</h2><p>Облигации + реинвестированные купоны + остаток денежных средств</p></div>
+            <div class="date-chip" id="horizonDate">29.09.2031</div>
+          </div>
+
+          <div class="hero-result">
+            <div class="big-card">
+              <span>Итоговая стоимость портфеля</span>
+              <div class="big-value" id="finalValue">—</div>
+              <div class="delta" id="profitDelta">—</div>
+            </div>
+            <div class="side-metric">
+              <div class="metric"><span>Доходность сценария</span><strong id="totalReturn">—</strong></div>
+              <div class="metric"><span>Среднегодовая</span><strong id="annualReturn">—</strong></div>
+            </div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><span>Количество бумаг</span><strong id="bondCount">—</strong></div>
+            <div class="metric"><span>Купонных выплат</span><strong id="couponCount">—</strong></div>
+            <div class="metric"><span>Текущая доходность</span><strong id="currentYield">—</strong></div>
+            <div class="metric"><span>YTM, до погашения</span><strong id="ytm">—</strong></div>
+          </div>
+
+          <div class="viz">
+            <div class="viz-head"><strong>Динамика стоимости</strong><div class="legend"><span><i class="l1"></i>Портфель</span><span><i class="l2"></i>Вложенная сумма</span></div></div>
+            <svg id="chart" viewBox="0 0 760 210" role="img" aria-label="График прогнозной стоимости портфеля">
+              <defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#69e4af" stop-opacity=".26"/><stop offset="1" stop-color="#69e4af" stop-opacity="0"/></linearGradient></defs>
+              <g id="chartGrid"></g><path id="chartArea" class="chart-area"></path><path id="chartBase" class="chart-base"></path><path id="chartLine" class="chart-line"></path><g id="chartLabels"></g>
+            </svg>
+            <div class="allocation">
+              <div class="bar" aria-label="Состав итогового портфеля"><i class="p" id="barPrincipal"></i><i class="c" id="barCoupons"></i><i class="r" id="barReinvest"></i><i class="cash" id="barCash"></i></div>
+              <div class="alloc-legend">
+                <div class="alloc-item"><span>Стоимость облигаций</span><b id="allocPrincipal">—</b></div>
+                <div class="alloc-item"><span>Чистые купоны</span><b id="allocCoupons">—</b></div>
+                <div class="alloc-item"><span>Доход реинвестирования</span><b id="allocReinvest">—</b></div>
+                <div class="alloc-item"><span>Остаток + НКД</span><b id="allocCash">—</b></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="lower">
+        <article class="panel">
+          <h3>Структура расчёта</h3>
+          <div class="breakdown">
+            <div class="breakdown-row"><span>Инвестировано в бумаги</span><b id="investedBonds">—</b></div>
+            <div class="breakdown-row"><span>Остаток после покупки</span><b id="cashLeft">—</b></div>
+            <div class="breakdown-row"><span>Получено купонов, до реинвестирования</span><b id="couponsReceived">—</b></div>
+            <div class="breakdown-row"><span>Доход от реинвестирования</span><b id="reinvestIncome">—</b></div>
+            <div class="breakdown-row"><span>Оценка пакета на горизонте</span><b id="exitValue">—</b></div>
+            <div class="breakdown-row"><span>НКД при продаже / погашении</span><b id="exitAccrued">—</b></div>
+            <div class="breakdown-row"><span>Налоги и комиссии</span><b id="costs">—</b></div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h3>Ближайшие денежные потоки</h3>
+          <div class="schedule-wrap">
+            <table>
+              <thead><tr><th>Дата</th><th>Событие</th><th>На бумагу</th><th>На портфель</th></tr></thead>
+              <tbody id="schedule"></tbody>
+            </table>
+          </div>
+          <p class="table-foot" id="scheduleFoot"></p>
+        </article>
+      </section>
+
+      <section class="method" aria-label="Методика и источники">
+        <p><strong>Как считается.</strong> Цена покупки и продажи указывается в процентах от номинала без НКД. Каждый купон после возможного налога реинвестируется до конца горизонта по заданной эффективной годовой ставке. До погашения стоимость пакета определяется выбранной ценой продажи и накопленным НКД; в дату погашения — по номиналу.</p>
+        <p><strong>Важно.</strong> Это сценарная модель, а не индивидуальная инвестиционная рекомендация. Налог рассчитан упрощённо: ставка применяется к купонам и положительному ценовому результату без учёта ИИС, ЛДВ, вычетов и особенностей конкретного брокера. Для расчёта до налогов оставьте 0%.</p>
+        <p>Параметры выпуска: <a href="https://www.moex.com/ru/listing/securities-cards.aspx?code=RU000A10D517" target="_blank" rel="noreferrer">Московская биржа</a>. Стартовый рыночный срез 29.09.2026: последняя цена 83,66%, НКД 57,34 ₽, расчётная доходность 16,76%.</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const FACE = 1000;
+      const COUPON = 64.82;
+      const PURCHASE_DATE = new Date('2026-09-29T12:00:00');
+      const NEXT_COUPON = new Date('2026-10-21T12:00:00');
+      const MATURITY = new Date('2038-10-06T12:00:00');
+      const DAY = 86400000;
+      const YEAR = 365.25;
+      const maxYears = (MATURITY - PURCHASE_DATE) / DAY / YEAR;
+      const couponDates = [];
+      for (let d = new Date(NEXT_COUPON); d <= MATURITY; d = new Date(d.getTime() + 182 * DAY)) couponDates.push(d);
+      if (+couponDates.at(-1) !== +MATURITY) couponDates.push(new Date(MATURITY));
+
+      const ids = ['investment','buyPrice','buyPriceRange','reinvestRate','reinvestRateRange','years','yearsRange','sellPrice','sellPriceRange','accrued','taxRate','commission'];
+      const el = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+      el.years.max = el.yearsRange.max = maxYears.toFixed(2);
+
+      const money = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
+      const money2 = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const num = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+      const pct = value => `${new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)}%`;
+      const dateFmt = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const clamp = (v, min, max) => Math.min(max, Math.max(min, Number(v) || 0));
+      const yearFraction = (a, b) => Math.max(0, (b - a) / DAY / YEAR);
+
+      function addYears(date, years) {
+        return new Date(Math.min(+MATURITY, +date + years * YEAR * DAY));
+      }
+
+      function accruedAt(date) {
+        if (date >= MATURITY) return 0;
+        let next = couponDates.find(d => d > date);
+        if (!next) return 0;
+        const prev = new Date(next.getTime() - 182 * DAY);
+        return COUPON * clamp((date - prev) / DAY / 182, 0, 1);
+      }
+
+      function calcYtm(buyPrice, accrued) {
+        const dirty = buyPrice / 100 * FACE + accrued;
+        const flows = couponDates.filter(d => d > PURCHASE_DATE).map(d => ({
+          t: yearFraction(PURCHASE_DATE, d),
+          v: COUPON + (+d === +MATURITY ? FACE : 0)
+        }));
+        const npv = r => flows.reduce((s, f) => s + f.v / Math.pow(1 + r, f.t), 0) - dirty;
+        let lo = -0.5, hi = 1;
+        for (let i = 0; i < 100; i++) { const mid = (lo + hi) / 2; if (npv(mid) > 0) lo = mid; else hi = mid; }
+        return (lo + hi) / 2 * 100;
+      }
+
+      function readInputs() {
+        return {
+          investment: clamp(el.investment.value, 0, 1e12),
+          buyPrice: clamp(el.buyPrice.value, 1, 200),
+          reinvestRate: clamp(el.reinvestRate.value, 0, 50) / 100,
+          years: clamp(el.years.value, .01, maxYears),
+          sellPrice: clamp(el.sellPrice.value, 1, 200),
+          accrued: clamp(el.accrued.value, 0, COUPON),
+          taxRate: clamp(el.taxRate.value, 0, 50) / 100,
+          commission: clamp(el.commission.value, 0, 5) / 100
+        };
+      }
+
+      function calculate(values = readInputs()) {
+        const v = values;
+        const horizon = addYears(PURCHASE_DATE, v.years);
+        const atMaturity = +horizon >= +MATURITY - DAY;
+        const dirtyUnit = v.buyPrice / 100 * FACE + v.accrued;
+        const unitWithCommission = dirtyUnit * (1 + v.commission);
+        const count = Math.max(0, Math.floor(v.investment / unitWithCommission));
+        const purchaseCommission = count * dirtyUnit * v.commission;
+        const spent = count * unitWithCommission;
+        const cash = Math.max(0, v.investment - spent);
+        const due = couponDates.filter(d => d > PURCHASE_DATE && d <= horizon);
+        let couponNet = 0, reinvested = 0, couponTax = 0;
+        const flows = due.map((d, i) => {
+          const gross = count * COUPON;
+          const taxable = i === 0 ? Math.max(0, gross - count * v.accrued) : gross;
+          const tax = taxable * v.taxRate;
+          const net = gross - tax;
+          const future = net * Math.pow(1 + v.reinvestRate, yearFraction(d, horizon));
+          couponNet += net;
+          couponTax += tax;
+          reinvested += future;
+          return { date: d, gross, net, future, maturity: +d === +MATURITY };
+        });
+        const exitPrice = atMaturity ? 100 : v.sellPrice;
+        const exitCleanGross = count * FACE * exitPrice / 100;
+        const exitNkdGross = atMaturity ? 0 : count * accruedAt(horizon);
+        const exitCommission = atMaturity ? 0 : (exitCleanGross + exitNkdGross) * v.commission;
+        const taxableGain = Math.max(0, exitCleanGross + exitNkdGross - count * dirtyUnit - exitCommission - purchaseCommission);
+        const gainTax = taxableGain * v.taxRate;
+        const exitNet = exitCleanGross + exitNkdGross - exitCommission - gainTax;
+        const final = cash + exitNet + reinvested;
+        const profit = final - v.investment;
+        const totalReturn = v.investment ? profit / v.investment : 0;
+        const annualReturn = v.investment && v.years > 0 ? Math.pow(final / v.investment, 1 / v.years) - 1 : 0;
+        const currentYield = (COUPON * 2) / (v.buyPrice / 100 * FACE) * 100;
+        const ytm = calcYtm(v.buyPrice, v.accrued);
+        return { ...v, horizon, atMaturity, dirtyUnit, unitWithCommission, count, spent, cash, flows, couponNet, reinvested, couponTax, purchaseCommission, exitPrice, exitCleanGross, exitNkdGross, exitCommission, gainTax, exitNet, final, profit, totalReturn, annualReturn, currentYield, ytm };
+      }
+
+      function setText(id, text) { document.getElementById(id).textContent = text; }
+
+      function drawChart(r) {
+        const w = 760, h = 210, pad = { l: 8, r: 8, t: 14, b: 24 };
+        const points = [];
+        const samples = 42;
+        for (let i = 0; i <= samples; i++) {
+          const t = r.years * i / samples;
+          const d = addYears(PURCHASE_DATE, t);
+          const maturityAtPoint = +d >= +MATURITY - DAY;
+          const markPct = maturityAtPoint ? 100 : r.buyPrice + (r.sellPrice - r.buyPrice) * (t / r.years);
+          const clean = r.count * FACE * markPct / 100;
+          const nkd = maturityAtPoint ? 0 : r.count * accruedAt(d);
+          let cp = 0;
+          couponDates.filter(cd => cd > PURCHASE_DATE && cd <= d).forEach((cd, idx) => {
+            const gross = r.count * COUPON;
+            const taxable = idx === 0 ? Math.max(0, gross - r.count * r.accrued) : gross;
+            const net = gross - taxable * r.taxRate;
+            cp += net * Math.pow(1 + r.reinvestRate, yearFraction(cd, d));
+          });
+          points.push({ t, value: r.cash + clean + nkd + cp });
+        }
+        const maxV = Math.max(r.investment, ...points.map(p => p.value)) * 1.08 || 1;
+        const minV = Math.min(r.investment, ...points.map(p => p.value)) * .92;
+        const range = Math.max(1, maxV - minV);
+        const x = t => pad.l + (w - pad.l - pad.r) * t / r.years;
+        const y = v => pad.t + (h - pad.t - pad.b) * (1 - (v - minV) / range);
+        const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
+        const area = `${line} L${x(r.years)},${h-pad.b} L${x(0)},${h-pad.b} Z`;
+        document.getElementById('chartLine').setAttribute('d', line);
+        document.getElementById('chartArea').setAttribute('d', area);
+        document.getElementById('chartBase').setAttribute('d', `M${pad.l},${y(r.investment)} L${w-pad.r},${y(r.investment)}`);
+        let grid = '', labels = '';
+        for (let i = 0; i < 4; i++) {
+          const gy = pad.t + i * (h-pad.t-pad.b)/3;
+          grid += `<line class="chart-grid" x1="${pad.l}" y1="${gy}" x2="${w-pad.r}" y2="${gy}"/>`;
+        }
+        [0, .5, 1].forEach(k => { labels += `<text class="chart-label" x="${x(r.years*k)}" y="204" text-anchor="${k===0?'start':k===1?'middle':'end'}">${k===0?'сейчас':k===1?(r.years/2).toFixed(1)+' г.':r.years.toFixed(1)+' г.'}</text>`; });
+        document.getElementById('chartGrid').innerHTML = grid;
+        document.getElementById('chartLabels').innerHTML = labels;
+      }
+
+      function renderSchedule(r) {
+        const body = document.getElementById('schedule');
+        const rows = r.flows.slice(0, 5).map(f => `<tr><td>${dateFmt.format(f.date)}</td><td>${f.maturity ? 'Купон + погашение' : 'Купон'}</td><td>${money2.format(COUPON + (f.maturity ? FACE : 0))}</td><td>${money.format(f.gross + (f.maturity ? r.count*FACE : 0))}</td></tr>`);
+        if (!rows.length) rows.push('<tr><td colspan="4">На выбранном горизонте купонных выплат нет</td></tr>');
+        body.innerHTML = rows.join('');
+        setText('scheduleFoot', r.flows.length > 5 ? `Показаны первые 5 из ${r.flows.length} выплат в выбранном периоде.` : `В выбранном периоде: ${r.flows.length} выплат.`);
+      }
+
+      function render() {
+        const r = calculate();
+        const actualExit = r.atMaturity ? 100 : r.sellPrice;
+        el.sellPrice.disabled = el.sellPriceRange.disabled = r.atMaturity;
+        el.sellPrice.style.opacity = el.sellPriceRange.style.opacity = r.atMaturity ? .55 : 1;
+        setText('sellHint', r.atMaturity ? 'погашение по 100%' : 'на горизонте');
+        setText('horizonHint', dateFmt.format(r.horizon));
+        setText('horizonDate', dateFmt.format(r.horizon));
+        setText('unitCost', money2.format(r.unitWithCommission));
+        setText('finalValue', money.format(r.final));
+        const delta = document.getElementById('profitDelta');
+        delta.textContent = `${r.profit >= 0 ? '+' : '−'}${money.format(Math.abs(r.profit))} к вложенной сумме`;
+        delta.classList.toggle('negative', r.profit < 0);
+        setText('totalReturn', pct(r.totalReturn * 100));
+        setText('annualReturn', pct(r.annualReturn * 100));
+        setText('bondCount', `${num.format(r.count)} шт.`);
+        setText('couponCount', `${r.flows.length}`);
+        setText('currentYield', pct(r.currentYield));
+        setText('ytm', pct(r.ytm));
+        const principalNet = r.exitCleanGross - r.exitCommission - r.gainTax;
+        const reinvestIncome = r.reinvested - r.couponNet;
+        setText('allocPrincipal', money.format(principalNet));
+        setText('allocCoupons', money.format(r.couponNet));
+        setText('allocReinvest', money.format(reinvestIncome));
+        setText('allocCash', money.format(r.cash + r.exitNkdGross));
+        const totalParts = Math.max(1, principalNet + r.couponNet + Math.max(0,reinvestIncome) + r.cash + r.exitNkdGross);
+        document.getElementById('barPrincipal').style.width = `${principalNet/totalParts*100}%`;
+        document.getElementById('barCoupons').style.width = `${r.couponNet/totalParts*100}%`;
+        document.getElementById('barReinvest').style.width = `${Math.max(0,reinvestIncome)/totalParts*100}%`;
+        document.getElementById('barCash').style.width = `${(r.cash+r.exitNkdGross)/totalParts*100}%`;
+        setText('investedBonds', money.format(r.spent));
+        setText('cashLeft', money.format(r.cash));
+        setText('couponsReceived', money.format(r.couponNet));
+        setText('reinvestIncome', money.format(reinvestIncome));
+        setText('exitValue', `${money.format(r.exitCleanGross)} · ${pct(actualExit)}`);
+        setText('exitAccrued', money.format(r.exitNkdGross));
+        setText('costs', money.format(r.purchaseCommission + r.exitCommission + r.couponTax + r.gainTax));
+        drawChart(r);
+        renderSchedule(r);
+        return r;
+      }
+
+      const pairs = [['buyPrice','buyPriceRange'],['reinvestRate','reinvestRateRange'],['years','yearsRange'],['sellPrice','sellPriceRange']];
+      pairs.forEach(([a,b]) => {
+        el[a].addEventListener('input', () => { el[b].value = el[a].value; render(); });
+        el[b].addEventListener('input', () => { el[a].value = el[b].value; render(); });
+      });
+      ['investment','accrued','taxRate','commission'].forEach(id => el[id].addEventListener('input', render));
+
+      render();
+
+      if (document.modelContext?.registerTool) {
+        const lifecycle = new AbortController();
+        try {
+          void Promise.resolve(document.modelContext.registerTool({
+            name: 'calculate_ofz_26253_scenario',
+            title: 'Рассчитать сценарий ОФЗ 26253',
+            description: 'Обновляет параметры калькулятора ОФЗ 26253 и возвращает стоимость портфеля и доходность на выбранном горизонте.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                investment: { type: 'number', minimum: 1000, description: 'Сумма инвестирования в рублях' },
+                buyPrice: { type: 'number', minimum: 1, maximum: 200, description: 'Цена покупки в процентах от номинала' },
+                reinvestRate: { type: 'number', minimum: 0, maximum: 50, description: 'Годовая ставка реинвестирования в процентах' },
+                years: { type: 'number', minimum: 0.5, maximum: 12.02, description: 'Срок инвестирования в годах' },
+                sellPrice: { type: 'number', minimum: 1, maximum: 200, description: 'Цена продажи в процентах от номинала' }
+              },
+              required: ['investment','buyPrice','reinvestRate','years','sellPrice'],
+              additionalProperties: false
+            },
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute(input) {
+              const limits = {
+                investment: [1000, 1e12],
+                buyPrice: [1, 200],
+                reinvestRate: [0, 50],
+                years: [0.5, Number(maxYears.toFixed(2))],
+                sellPrice: [1, 200]
+              };
+              if (!input || typeof input !== 'object') throw new TypeError('Ожидается объект с параметрами расчёта.');
+              for (const [key, [min, max]] of Object.entries(limits)) {
+                const value = input[key];
+                if (!Number.isFinite(value) || value < min || value > max) {
+                  throw new RangeError(`${key}: значение должно быть от ${min} до ${max.toFixed ? max.toFixed(2) : max}`);
+                }
+              }
+              for (const [id, value] of Object.entries(input)) if (el[id]) el[id].value = value;
+              pairs.forEach(([a,b]) => { el[b].value = el[a].value; });
+              const r = render();
+              return { bondCount: r.count, finalPortfolioRub: Math.round(r.final), profitRub: Math.round(r.profit), totalReturnPct: +(r.totalReturn*100).toFixed(2), annualReturnPct: +(r.annualReturn*100).toFixed(2), horizonDate: r.horizon.toISOString().slice(0,10) };
+            }
+          }, { signal: lifecycle.signal })).catch(() => {});
+        } catch (_) {}
+      }
+    })();
+  </script>
+</body>
+</html>
