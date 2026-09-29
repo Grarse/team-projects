@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Наглядное сравнение действующих налогов на инвестиционный доход и возможной шкалы 13–22%. ИИС-3 и Контур как инструменты долгосрочного инвестирования.">
+  <title>Налоги на инвестиции: сейчас и возможные изменения</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #111c2f;
+      --muted: #637086;
+      --line: #dbe3ec;
+      --paper: #ffffff;
+      --surface: #f3f6f9;
+      --navy: #0c1f35;
+      --blue: #245cff;
+      --red: #f04c3e;
+      --orange: #ff8a38;
+      --green: #087f67;
+      --green-soft: #e7f7f1;
+      --purple: #7142c7;
+      --purple-soft: #f1eafe;
+      --shadow: 0 24px 70px rgba(19, 38, 62, .10);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 88% 4%, rgba(36, 92, 255, .12), transparent 30rem),
+        radial-gradient(circle at 8% 23%, rgba(240, 76, 62, .08), transparent 26rem),
+        #f6f8fb;
+    }
+    button, input { font: inherit; }
+    a { color: inherit; }
+    .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(246, 248, 251, .88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(219, 227, 236, .75);
+    }
+    .topbar-inner {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand { font-weight: 900; letter-spacing: -.04em; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid #f5c6bf;
+      color: #9f291f;
+      background: #fff2ef;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+
+    .hero { padding: 74px 0 38px; }
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 1000px;
+      margin: 0;
+      font-size: clamp(44px, 7vw, 84px);
+      line-height: .98;
+      letter-spacing: -.065em;
+    }
+    h1 span { color: var(--red); }
+    .hero-bottom {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 32px;
+      margin-top: 30px;
+    }
+    .hero-copy { max-width: 680px; margin: 0; color: var(--muted); font-size: clamp(17px, 2vw, 22px); line-height: 1.45; }
+    .hero-copy strong { color: var(--ink); }
+    .hero-note { color: var(--muted); font-size: 12px; text-align: right; }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 36px;
+    }
+    .tax-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: rgba(255, 255, 255, .94);
+      box-shadow: var(--shadow);
+    }
+    .tax-head { padding: 26px 28px 22px; border-bottom: 1px solid var(--line); }
+    .tax-card.future .tax-head { color: #fff; background: var(--navy); border-bottom-color: rgba(255,255,255,.14); }
+    .tax-kicker { margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .future .tax-kicker { color: #9fb3c9; }
+    .tax-head h2 { margin: 0; font-size: clamp(25px, 3vw, 38px); letter-spacing: -.04em; }
+    .tax-head p { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+    .future .tax-head p { color: #b9c8d8; }
+    .bands { padding: 16px; }
+    .band {
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      align-items: center;
+      gap: 18px;
+      min-height: 62px;
+      padding: 10px 14px;
+      border-radius: 16px;
+    }
+    .band:nth-child(odd) { background: var(--surface); }
+    .rate { font-size: 29px; font-weight: 900; letter-spacing: -.05em; }
+    .limit { color: var(--muted); font-size: 15px; }
+    .arrow {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      align-self: center;
+      margin: 0 auto;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--red);
+      font-size: 25px;
+      font-weight: 800;
+      box-shadow: 0 12px 28px rgba(240, 76, 62, .26);
+    }
+
+    .section { padding: 64px 0; }
+    .section-title { margin: 0 0 12px; font-size: clamp(32px, 5vw, 56px); line-height: 1; letter-spacing: -.055em; }
+    .section-lead { max-width: 720px; margin: 0 0 28px; color: var(--muted); font-size: 17px; line-height: 1.5; }
+
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .example {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--paper);
+    }
+    .example-label { color: var(--muted); font-size: 13px; font-weight: 700; }
+    .example-income { margin: 5px 0 18px; font-size: 28px; font-weight: 900; letter-spacing: -.04em; }
+    .tax-row { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0; color: var(--muted); font-size: 13px; border-top: 1px solid #edf1f5; }
+    .tax-row b { color: var(--ink); }
+    .tax-delta {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #a82e24;
+      background: #fff0ee;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .calc {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 0;
+      overflow: hidden;
+      border-radius: 32px;
+      color: #fff;
+      background: var(--navy);
+      box-shadow: var(--shadow);
+    }
+    .calc-controls { padding: 34px; border-right: 1px solid rgba(255,255,255,.12); }
+    .calc-title { margin: 0 0 8px; font-size: 31px; letter-spacing: -.04em; }
+    .calc-subtitle { margin: 0 0 28px; color: #9fb3c9; line-height: 1.45; }
+    .income-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 16px;
+      background: rgba(255,255,255,.07);
+    }
+    .income-box input {
+      min-width: 0;
+      width: 100%;
+      padding: 0;
+      color: #fff;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font-size: 27px;
+      font-weight: 900;
+    }
+    .income-box span { color: #9fb3c9; font-weight: 800; }
+    input[type="range"] { width: 100%; accent-color: var(--red); }
+    .range-labels { display: flex; justify-content: space-between; margin-top: 8px; color: #8197ae; font-size: 12px; }
+    .calc-results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(255,255,255,.12); }
+    .result { min-width: 0; padding: 32px 24px; background: #102840; }
+    .result.best { background: #0a725e; }
+    .result-label { min-height: 38px; color: #aabbd0; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .result.best .result-label { color: #b9eadc; }
+    .result-value { margin: 14px 0 8px; font-size: clamp(25px, 3vw, 39px); font-weight: 900; letter-spacing: -.05em; white-space: nowrap; }
+    .result-desc { color: #8fa4ba; font-size: 12px; line-height: 1.4; }
+    .result.best .result-desc { color: #b9eadc; }
+    .saving {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 17px 24px;
+      background: #091a2c;
+      font-size: 14px;
+    }
+    .saving b { color: #76e1c3; font-size: 20px; }
+
+    .solutions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .solution {
+      position: relative;
+      overflow: hidden;
+      min-height: 390px;
+      padding: 32px;
+      border-radius: 30px;
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+    .solution.iis { background: linear-gradient(145deg, #5d2fb1, #865be0); }
+    .solution.kontur { background: linear-gradient(145deg, #08745e, #00a882); }
+    .solution::after {
+      content: "";
+      position: absolute;
+      right: -90px;
+      bottom: -110px;
+      width: 280px;
+      height: 280px;
+      border: 48px solid rgba(255,255,255,.10);
+      border-radius: 50%;
+    }
+    .solution-tag { font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; opacity: .72; }
+    .solution h3 { position: relative; z-index: 1; margin: 12px 0 26px; font-size: 42px; letter-spacing: -.05em; }
+    .solution-big { position: relative; z-index: 1; margin-bottom: 6px; font-size: clamp(38px, 5vw, 62px); font-weight: 900; letter-spacing: -.06em; }
+    .solution-copy { position: relative; z-index: 1; max-width: 390px; margin: 0 0 28px; font-size: 17px; line-height: 1.45; }
+    .facts { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; }
+    .fact { padding: 8px 11px; border-radius: 999px; background: rgba(255,255,255,.15); font-size: 12px; font-weight: 800; }
+
+    .cta {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 28px;
+      margin-top: 18px;
+      padding: 28px 32px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--paper);
+    }
+    .cta h3 { margin: 0 0 6px; font-size: 24px; }
+    .cta p { margin: 0; color: var(--muted); }
+    .cta a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      padding: 0 20px;
+      border-radius: 14px;
+      color: #fff;
+      background: var(--navy);
+      text-decoration: none;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .cta a:hover { background: var(--blue); }
+
+    .footnote {
+      margin-top: 26px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--orange);
+      color: var(--muted);
+      background: #fff8f0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    footer { padding: 26px 0 50px; color: var(--muted); font-size: 12px; }
+    .footer-row { display: flex; justify-content: space-between; gap: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .sources { display: flex; flex-wrap: wrap; gap: 14px; }
+    .sources a { color: var(--muted); }
+
+    @media (max-width: 900px) {
+      .compare, .solutions, .calc { grid-template-columns: 1fr; }
+      .calc-controls { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.12); }
+      .examples { grid-template-columns: repeat(2, 1fr); }
+      .hero-bottom { grid-template-columns: 1fr; }
+      .hero-note { text-align: left; }
+    }
+    @media (max-width: 640px) {
+      .wrap { width: min(100% - 24px, 1180px); }
+      .topbar-inner { min-height: 58px; }
+      .status { font-size: 10px; padding: 7px 9px; }
+      .hero { padding-top: 48px; }
+      h1 { font-size: 47px; }
+      .compare { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); }
+      .examples { grid-template-columns: 1fr; }
+      .calc-results { grid-template-columns: 1fr; }
+      .saving { grid-column: auto; align-items: flex-start; flex-direction: column; }
+      .solution { min-height: 350px; padding: 26px; }
+      .cta { grid-template-columns: 1fr; }
+      .cta a { width: 100%; }
+      .footer-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">Налоговый навигатор</div>
+      <div class="status">Предложение, не закон</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <p class="eyebrow">Инвестиционный доход · НДФЛ</p>
+      <h1>Сегодня — до 15%.<br>Возможный сценарий — <span>до 22%</span></h1>
+      <div class="hero-bottom">
+        <p class="hero-copy">Минфин предложил включить инвестиционные и другие пассивные доходы в общую прогрессивную шкалу. <strong>Текст закона пока не принят.</strong></p>
+        <div class="hero-note">Информация актуальна на 29.09.2026</div>
+      </div>
+
+      <div class="compare" aria-label="Сравнение налоговых ставок">
+        <article class="tax-card">
+          <div class="tax-head">
+            <div class="tax-kicker">Сейчас</div>
+            <h2>Отдельная шкала 13/15%</h2>
+            <p>Для большинства инвестиционных доходов</p>
+          </div>
+          <div class="bands">
+            <div class="band"><div class="rate">13%</div><div class="limit">до 2,4 млн ₽</div></div>
+            <div class="band"><div class="rate">15%</div><div class="limit">свыше 2,4 млн ₽</div></div>
+          </div>
+        </article>
+
+        <article class="tax-card future">
+          <div class="tax-head">
+            <div class="tax-kicker">Возможные изменения</div>
+            <h2>Общая шкала 13–22%</h2>
+            <p>Если предложение будет принято</p>
+          </div>
+          <div class="bands">
+            <div class="band"><div class="rate">13%</div><div class="limit">до 2,4 млн ₽</div></div>
+            <div class="band"><div class="rate">15%</div><div class="limit">2,4–5 млн ₽</div></div>
+            <div class="band"><div class="rate">18%</div><div class="limit">5–20 млн ₽</div></div>
+            <div class="band"><div class="rate">20%</div><div class="limit">20–50 млн ₽</div></div>
+            <div class="band"><div class="rate">22%</div><div class="limit">свыше 50 млн ₽</div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <p class="eyebrow">Сколько это в рублях</p>
+      <h2 class="section-title">Чем выше прибыль — тем заметнее разница</h2>
+      <p class="section-lead">Расчет только с инвестиционного дохода, без льгот и вычетов.</p>
+
+      <div class="examples">
+        <article class="example">
+          <div class="example-label">Инвестиционный доход</div>
+          <div class="example-income">10 млн ₽</div>
+          <div class="tax-row"><span>Сейчас</span><b>1,452 млн ₽</b></div>
+          <div class="tax-row"><span>Возможный налог</span><b>1,602 млн ₽</b></div>
+          <div class="tax-delta"><span>Разница</span><span>+150 тыс. ₽</span></div>
+        </article>
+        <article class="example">
+          <div class="example-label">Инвестиционный доход</div>
+          <div class="example-income">30 млн ₽</div>
+          <div class="tax-row"><span>Сейчас</span><b>4,452 млн ₽</b></div>
+          <div class="tax-row"><span>Возможный налог</span><b>5,402 млн ₽</b></div>
+          <div class="tax-delta"><span>Разница</span><span>+950 тыс. ₽</span></div>
+        </article>
+        <article class="example">
+          <div class="example-label">Инвестиционный доход</div>
+          <div class="example-income">60 млн ₽</div>
+          <div class="tax-row"><span>Сейчас</span><b>8,952 млн ₽</b></div>
+          <div class="tax-row"><span>Возможный налог</span><b>11,602 млн ₽</b></div>
+          <div class="tax-delta"><span>Разница</span><span>+2,65 млн ₽</span></div>
+        </article>
+        <article class="example">
+          <div class="example-label">Инвестиционный доход</div>
+          <div class="example-income">100 млн ₽</div>
+          <div class="tax-row"><span>Сейчас</span><b>14,952 млн ₽</b></div>
+          <div class="tax-row"><span>Возможный налог</span><b>20,402 млн ₽</b></div>
+          <div class="tax-delta"><span>Разница</span><span>+5,45 млн ₽</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <div class="calc">
+        <div class="calc-controls">
+          <p class="eyebrow">Быстрая оценка</p>
+          <h2 class="calc-title">Введите инвестиционный доход</h2>
+          <p class="calc-subtitle">Сравним действующий НДФЛ, возможную шкалу и сценарий с вычетом до 30 млн ₽.</p>
+          <label class="income-box">
+            <input id="incomeInput" type="text" inputmode="numeric" value="30 000 000" aria-label="Инвестиционный доход">
+            <span>₽</span>
+          </label>
+          <input id="incomeRange" type="range" min="1000000" max="100000000" step="1000000" value="30000000" aria-label="Выбор инвестиционного дохода">
+          <div class="range-labels"><span>1 млн ₽</span><span>100 млн ₽</span></div>
+        </div>
+        <div class="calc-results">
+          <div class="result">
+            <div class="result-label">НДФЛ сейчас<br>13/15%</div>
+            <div class="result-value" id="currentTax">4 452 000 ₽</div>
+            <div class="result-desc">Отдельная шкала инвестиционных доходов</div>
+          </div>
+          <div class="result">
+            <div class="result-label">Возможный НДФЛ<br>13–22%</div>
+            <div class="result-value" id="futureTax">5 402 000 ₽</div>
+            <div class="result-desc">Без применения льгот и вычетов</div>
+          </div>
+          <div class="result best">
+            <div class="result-label">С вычетом<br>до 30 млн ₽</div>
+            <div class="result-value" id="benefitTax">0 ₽</div>
+            <div class="result-desc">Упрощенная модель для ИИС‑3 или квалифицирующего ДСЖ</div>
+          </div>
+          <div class="saving">
+            <span>Потенциальная экономия против шкалы 13–22%</span>
+            <b id="savingValue">5 402 000 ₽</b>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="solutions">
+      <p class="eyebrow">Как смягчить эффект</p>
+      <h2 class="section-title">Два инструмента долгосрочного капитала</h2>
+      <p class="section-lead">Налоговый результат зависит от соблюдения срока, условий договора и требований НК РФ.</p>
+
+      <div class="solutions">
+        <article class="solution iis">
+          <div class="solution-tag">Инвестиционный счет</div>
+          <h3>ИИС‑3</h3>
+          <div class="solution-big">до 30 млн ₽</div>
+          <p class="solution-copy">Вычет положительного финансового результата по всем ИИС, закрытым в одном налоговом периоде.</p>
+          <div class="facts">
+            <span class="fact">срок от 5 лет*</span>
+            <span class="fact">пополнение не ограничено</span>
+            <span class="fact">вычет на взносы до 400 тыс. ₽/год**</span>
+          </div>
+        </article>
+
+        <article class="solution kontur">
+          <div class="solution-tag">Страховая оболочка · ДСЖ</div>
+          <h3>Контур</h3>
+          <div class="solution-big">до 30 млн ₽</div>
+          <p class="solution-copy">Часть выплаты сверх внесенных премий может не включаться в налоговую базу при выполнении условий льготы.</p>
+          <div class="facts">
+            <span class="fact">срок от 5 лет*</span>
+            <span class="fact">инвестиционная стратегия</span>
+            <span class="fact">страховая оболочка</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="cta">
+        <div>
+          <h3>Сравнить ИИС‑3 и «Контур» на своих цифрах</h3>
+          <p>Срок, доходность, комиссии и налоговые сценарии — в одном калькуляторе.</p>
+        </div>
+        <a href="https://grarse.github.io/team-projects/iis-kontur-calculator/" target="_blank" rel="noopener">Открыть калькулятор →</a>
+      </div>
+
+      <div class="footnote">
+        * Для ИИС, открытых в 2024–2026 годах, и договоров долгосрочных сбережений 2025–2026 годов действует переходный минимальный срок 5 лет. ** Лимит 400 тыс. ₽ общий для взносов по программам долгосрочных сбережений. Расчеты показывают инвестиционный доход как единственную налоговую базу; окончательный механизм законопроекта может отличаться. Иллюстрация не учитывает индивидуальные обстоятельства и не является налоговой или инвестиционной рекомендацией.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <div>© 2026 · Информационный материал</div>
+      <div class="sources">
+        <a href="https://www.nalog.gov.ru/rn25/taxation/taxes/ndfl/15551276/" target="_blank" rel="noopener">ФНС: ставки НДФЛ</a>
+        <a href="https://www.nalog.gov.ru/rn44/news/activities_fts/16571744/" target="_blank" rel="noopener">ФНС: ИИС‑3</a>
+        <a href="https://www.nalog.gov.ru/rn71/news/activities_fts/16644692/" target="_blank" rel="noopener">ФНС: долгосрочные сбережения</a>
+        <a href="https://www.garant.ru/hotlaw/federal/2252249/" target="_blank" rel="noopener">Предложение Минфина 24.09.2026</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const input = document.getElementById('incomeInput');
+    const range = document.getElementById('incomeRange');
+    const currentTaxEl = document.getElementById('currentTax');
+    const futureTaxEl = document.getElementById('futureTax');
+    const benefitTaxEl = document.getElementById('benefitTax');
+    const savingEl = document.getElementById('savingValue');
+    const formatter = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+
+    function taxCurrent(income) {
+      const firstBand = Math.min(income, 2_400_000) * .13;
+      const secondBand = Math.max(0, income - 2_400_000) * .15;
+      return firstBand + secondBand;
+    }
+
+    function taxProgressive(income) {
+      const bands = [
+        [2_400_000, .13],
+        [5_000_000, .15],
+        [20_000_000, .18],
+        [50_000_000, .20],
+        [Infinity, .22]
+      ];
+      let tax = 0;
+      let floor = 0;
+      for (const [ceiling, rate] of bands) {
+        const taxable = Math.max(0, Math.min(income, ceiling) - floor);
+        tax += taxable * rate;
+        if (income <= ceiling) break;
+        floor = ceiling;
+      }
+      return tax;
+    }
+
+    function normalize(value) {
+      return Math.max(0, Math.min(100_000_000, Number(String(value).replace(/\D/g, '')) || 0));
+    }
+
+    function render(value, syncRange = true) {
+      const income = normalize(value);
+      const current = taxCurrent(income);
+      const future = taxProgressive(income);
+      const benefit = taxProgressive(Math.max(0, income - 30_000_000));
+      input.value = formatter.format(income);
+      if (syncRange) range.value = Math.max(1_000_000, income);
+      currentTaxEl.textContent = `${formatter.format(current)} ₽`;
+      futureTaxEl.textContent = `${formatter.format(future)} ₽`;
+      benefitTaxEl.textContent = `${formatter.format(benefit)} ₽`;
+      savingEl.textContent = `${formatter.format(future - benefit)} ₽`;
+    }
+
+    range.addEventListener('input', event => render(event.target.value, false));
+    input.addEventListener('change', event => render(event.target.value));
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter') input.blur();
+    });
+  </script>
+</body>
+</html>
