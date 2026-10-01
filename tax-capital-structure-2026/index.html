@@ -132,6 +132,7 @@
     .metric strong { display: block; margin-top: 6px; font-size: clamp(17px, 2vw, 22px); line-height: 1.2; overflow-wrap: anywhere; }
     .metric.saving strong { color: var(--mint); }
     .metric.tax strong { color: #ff9f96; }
+    .metric.fee strong { color: #ffd58a; }
 
     .benefit-progress { margin: 0 0 24px; padding: 18px; border: 1px solid rgba(101,230,180,.32); border-radius: 18px; background: rgba(101,230,180,.07); }
     .benefit-progress-head { display: flex; justify-content: space-between; gap: 14px; color: #edf6f2; font-size: 15px; font-weight: 750; }
@@ -234,6 +235,7 @@
       <p class="hero-copy">24 сентября Минфин предложил изменения в налогообложении физлиц. В частности, обсуждается применение прогрессивной шкалы <strong>13–22% к пассивным доходам</strong> — <span class="accent">процентам по вкладам</span>, <span class="accent">дивидендам</span>, операциям с ценными бумагами и др.</p>
       <div class="hero-facts" aria-label="Основные параметры модели">
         <span class="pill">Ежедневная капитализация</span>
+        <span class="pill">Комиссия страховки поквартально</span>
         <span class="pill">До 3 счетов</span>
         <span class="pill">Льгота после 5 лет</span>
         <span class="pill">Сценарий НДФЛ 13–22%</span>
@@ -277,6 +279,13 @@
             <div class="range-scale"><span>0%</span><span>30%</span></div>
           </div>
 
+          <div class="field" id="insurance-fee-field">
+            <div class="field-head"><label for="insurance-fee">Комиссия страхового договора</label><output class="field-value" id="insurance-fee-value" for="insurance-fee">1,5% в год</output></div>
+            <input id="insurance-fee" type="range" min="0" max="5" step="0.1" value="1.5">
+            <div class="range-scale"><span>0%</span><span>5%</span></div>
+            <p class="field-hint" id="insurance-fee-hint">Удерживается ежеквартально с текущей стоимости страховых активов: по 0,375% за квартал.</p>
+          </div>
+
           <div class="field">
             <div class="field-head"><label id="accounts-label">Количество комплектов</label><span class="field-value" id="accounts-value">1 комплект</span></div>
             <div class="account-toggle" role="group" aria-label="Количество счетов или договоров">
@@ -309,10 +318,11 @@
             <div class="metric"><span>Инвестиционный доход</span><strong id="profit-result">—</strong></div>
             <div class="metric tax"><span>НДФЛ с учетом льготы</span><strong id="tax-result">—</strong></div>
             <div class="metric saving"><span>Экономия НДФЛ</span><strong id="saving-result">—</strong></div>
+            <div class="metric fee"><span>Удержано комиссии по страховке</span><strong id="fee-result">—</strong></div>
             <div class="metric wide"><span>Налоговая база</span><strong id="taxable-result">—</strong></div>
           </div>
 
-          <p class="result-note" id="result-note">Расчет носит иллюстративный характер и не учитывает другие доходы налогоплательщика, комиссии и рыночные риски.</p>
+          <p class="result-note" id="result-note">Расчет носит иллюстративный характер. Страховая комиссия учитывается отдельно; другие комиссии, доходы и рыночные риски не учитываются.</p>
         </section>
       </div>
     </section>
@@ -413,6 +423,7 @@
       const amountRange = document.querySelector('#amount-range');
       const termInput = document.querySelector('#term');
       const returnInput = document.querySelector('#return');
+      const insuranceFeeInput = document.querySelector('#insurance-fee');
       const accountButtons = [...document.querySelectorAll('.account-btn')];
       const wrapperButtons = [...document.querySelectorAll('.wrapper-btn')];
       let accounts = 1;
@@ -421,10 +432,13 @@
       const rubles = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
       const number = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
       const percent = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const quarterPercent = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
 
       const els = {
         termValue: document.querySelector('#term-value'),
         returnValue: document.querySelector('#return-value'),
+        insuranceFeeValue: document.querySelector('#insurance-fee-value'),
+        insuranceFeeHint: document.querySelector('#insurance-fee-hint'),
         wrapperValue: document.querySelector('#wrapper-value'),
         wrapperHint: document.querySelector('#wrapper-hint'),
         amountHint: document.querySelector('#amount-hint'),
@@ -439,6 +453,7 @@
         profit: document.querySelector('#profit-result'),
         tax: document.querySelector('#tax-result'),
         saving: document.querySelector('#saving-result'),
+        fee: document.querySelector('#fee-result'),
         taxable: document.querySelector('#taxable-result'),
         progressValue: document.querySelector('#progress-value'),
         progressBar: document.querySelector('#progress-bar'),
@@ -505,31 +520,75 @@
         return tax;
       }
 
+      function insuranceOutcome(principal, annualRate, annualFeeRate, years) {
+        let assets = principal;
+        let totalFee = 0;
+        const quarterGrowth = Math.pow(1 + annualRate / 365, 365 / 4);
+        const quarterlyFeeRate = annualFeeRate / 4;
+        const quarters = years * 4;
+        for (let quarter = 0; quarter < quarters; quarter += 1) {
+          assets *= quarterGrowth;
+          const fee = assets * quarterlyFeeRate;
+          totalFee += fee;
+          assets -= fee;
+        }
+        return { capital: assets, totalFee };
+      }
+
       function calculate() {
         const principal = parseMoney(amountInput.value);
         const years = Number(termInput.value);
         const annualRate = Number(returnInput.value) / 100;
+        const annualInsuranceFeeRate = Number(insuranceFeeInput.value) / 100;
         const days = years * 365;
         const growth = Math.pow(1 + annualRate / 365, days);
-        const capital = principal * growth;
-        const profit = Math.max(0, capital - principal);
+        const iisPrincipal = wrapper === 'insurance' ? 0 : wrapper === 'both' ? principal / 2 : principal;
+        const insurancePrincipal = wrapper === 'iis' ? 0 : wrapper === 'both' ? principal / 2 : principal;
+        const iisCapital = iisPrincipal * growth;
+        const insurance = insuranceOutcome(insurancePrincipal, annualRate, annualInsuranceFeeRate, years);
+        const insuranceCapital = insurance.capital;
+        const capital = iisCapital + insuranceCapital;
+        const iisProfit = Math.max(0, iisCapital - iisPrincipal);
+        const insuranceProfit = Math.max(0, insuranceCapital - insurancePrincipal);
+        const profit = iisProfit + insuranceProfit;
         const wrapperMultiplier = wrapper === 'both' ? 2 : 1;
         const benefitPerUnit = 30_000_000 * wrapperMultiplier;
         const benefitLimit = benefitPerUnit * accounts;
         const benefitMillions = 30 * wrapperMultiplier * accounts;
         const isEligible = years >= 5;
-        const appliedBenefit = isEligible ? Math.min(profit, benefitLimit) : 0;
-        const taxableProfit = Math.max(0, profit - appliedBenefit);
+        const iisBenefitLimit = wrapper === 'insurance' ? 0 : 30_000_000 * accounts;
+        const insuranceBenefitLimit = wrapper === 'iis' ? 0 : 30_000_000 * accounts;
+        const potentialBenefit = Math.min(iisProfit, iisBenefitLimit) + Math.min(insuranceProfit, insuranceBenefitLimit);
+        const appliedBenefit = isEligible ? potentialBenefit : 0;
+        const taxableProfit = isEligible
+          ? Math.max(0, iisProfit - iisBenefitLimit) + Math.max(0, insuranceProfit - insuranceBenefitLimit)
+          : profit;
         const tax = progressiveTax(taxableProfit);
         const taxWithoutBenefit = progressiveTax(profit);
         const saving = Math.max(0, taxWithoutBenefit - tax);
-        const profitFactor = growth - 1;
-        const targetPrincipal = profitFactor > 0 ? benefitLimit / profitFactor : Infinity;
+        const iisProfitFactor = growth - 1;
+        const insuranceGrowth = insurancePrincipal > 0 ? insuranceCapital / insurancePrincipal : insuranceOutcome(1, annualRate, annualInsuranceFeeRate, years).capital;
+        const insuranceProfitFactor = insuranceGrowth - 1;
+        let targetPrincipal = Infinity;
+        if (wrapper === 'iis' && iisProfitFactor > 0) {
+          targetPrincipal = iisBenefitLimit / iisProfitFactor;
+        } else if (wrapper === 'insurance' && insuranceProfitFactor > 0) {
+          targetPrincipal = insuranceBenefitLimit / insuranceProfitFactor;
+        } else if (wrapper === 'both' && iisProfitFactor > 0 && insuranceProfitFactor > 0) {
+          targetPrincipal = Math.max(
+            2 * iisBenefitLimit / iisProfitFactor,
+            2 * insuranceBenefitLimit / insuranceProfitFactor
+          );
+        }
         const additional = Number.isFinite(targetPrincipal) ? Math.max(0, targetPrincipal - principal) : Infinity;
-        const progress = benefitLimit > 0 ? Math.min(100, profit / benefitLimit * 100) : 0;
+        const progress = benefitLimit > 0 ? Math.min(100, potentialBenefit / benefitLimit * 100) : 0;
 
         els.termValue.textContent = pluralYears(years);
         els.returnValue.textContent = `${percent.format(annualRate * 100)}% в год`;
+        els.insuranceFeeValue.textContent = `${percent.format(annualInsuranceFeeRate * 100)}% в год`;
+        els.insuranceFeeHint.textContent = wrapper === 'iis'
+          ? 'Для выбранного ИИС комиссия страхового договора не применяется.'
+          : `Удерживается ежеквартально с текущей стоимости страховых активов: по ${quarterPercent.format(annualInsuranceFeeRate * 100 / 4)}% за квартал.`;
         if (wrapper === 'iis') {
           els.wrapperValue.textContent = 'ИИС-3';
           els.wrapperHint.textContent = 'Расчет льготы по индивидуальным инвестиционным счетам.';
@@ -557,15 +616,16 @@
         els.profit.textContent = rubles.format(profit);
         els.tax.textContent = rubles.format(tax);
         els.saving.textContent = rubles.format(saving);
+        els.fee.textContent = rubles.format(insurance.totalFee);
         els.taxable.textContent = rubles.format(taxableProfit);
         els.progressValue.textContent = `${percent.format(progress)}%`;
         els.progressBar.style.width = `${progress}%`;
         els.benefitLimit.textContent = `${benefitMillions} млн ₽`;
 
-        if (annualRate <= 0) {
-          els.targetLabel.textContent = 'При нулевой доходности налоговая льгота не заполняется';
-          els.additional.textContent = 'Нужна доходность выше 0%';
-          els.targetCaption.textContent = 'Измените ожидаемую доходность, чтобы рассчитать целевой капитал.';
+        if (!Number.isFinite(targetPrincipal)) {
+          els.targetLabel.textContent = 'При выбранной доходности и комиссии льгота не заполняется';
+          els.additional.textContent = 'Измените параметры';
+          els.targetCaption.textContent = 'Увеличьте ожидаемую доходность или уменьшите комиссию страхового договора.';
         } else if (!isEligible) {
           els.targetLabel.textContent = 'Для применения льготы сначала увеличьте срок';
           els.additional.textContent = `Еще ${pluralYears(5 - years)}`;
@@ -582,9 +642,9 @@
         }
 
         if (!isEligible) {
-          els.resultNote.textContent = 'Срок меньше 5 лет: вся прибыль включена в налоговую базу. Модель не учитывает другие доходы, комиссии и рыночные риски.';
+          els.resultNote.textContent = 'Срок меньше 5 лет: вся прибыль включена в налоговую базу. Страховая комиссия списывается ежеквартально; модель не учитывает другие комиссии, доходы и рыночные риски.';
         } else {
-          els.resultNote.textContent = `В расчете применена льгота до ${rubles.format(benefitLimit)} прибыли. Модель не учитывает другие доходы, комиссии и рыночные риски.`;
+          els.resultNote.textContent = `В расчете применена льгота до ${rubles.format(benefitLimit)} прибыли. Страховая комиссия списывается ежеквартально; модель не учитывает другие комиссии, доходы и рыночные риски.`;
         }
 
         return {
@@ -593,6 +653,7 @@
           profit: Math.round(profit),
           tax: Math.round(tax),
           taxSavings: Math.round(saving),
+          insuranceFees: Math.round(insurance.totalFee),
           taxableProfit: Math.round(taxableProfit),
           benefitLimit: Math.round(benefitLimit),
           targetInvestment: Number.isFinite(targetPrincipal) ? Math.round(targetPrincipal) : null,
@@ -601,7 +662,8 @@
           accounts,
           wrapper,
           years,
-          annualReturnPercent: annualRate * 100
+          annualReturnPercent: annualRate * 100,
+          insuranceAnnualFeePercent: annualInsuranceFeeRate * 100
         };
       }
 
@@ -613,6 +675,7 @@
       });
       termInput.addEventListener('input', calculate);
       returnInput.addEventListener('input', calculate);
+      insuranceFeeInput.addEventListener('input', calculate);
       wrapperButtons.forEach(button => button.addEventListener('click', () => {
         wrapper = button.dataset.wrapper;
         wrapperButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
@@ -630,17 +693,18 @@
         const register = modelContext.registerTool({
           name: 'calculate_tax_plan',
           title: 'Рассчитать налоговый сценарий',
-          description: 'Установить оболочку, сумму инвестирования, срок, ожидаемую доходность и количество счетов или договоров, затем вернуть расчет капитала, налога, экономии и требуемого пополнения.',
+          description: 'Установить оболочку, сумму инвестирования, срок, ожидаемую доходность, комиссию страхового договора и количество счетов или договоров, затем вернуть расчет капитала, комиссии, налога, экономии и требуемого пополнения.',
           inputSchema: {
             type: 'object',
             properties: {
               amount: { type: 'number', minimum: 0, maximum: 1000000000000, description: 'Общая сумма инвестирования в рублях.' },
               years: { type: 'integer', minimum: 1, maximum: 20, description: 'Срок инвестирования в полных годах.' },
               annualReturnPercent: { type: 'number', minimum: 0, maximum: 30, description: 'Ожидаемая средняя годовая доходность в процентах.' },
+              insuranceAnnualFeePercent: { type: 'number', minimum: 0, maximum: 5, description: 'Годовая комиссия страхового договора в процентах. Удерживается ежеквартально с текущей стоимости страховых активов.' },
               wrapper: { type: 'string', enum: ['iis', 'insurance', 'both'], description: 'Оболочка: ИИС-3, страховка или оба инструмента вместе.' },
               accountCount: { type: 'integer', minimum: 1, maximum: 3, description: 'Количество счетов.' }
             },
-            required: ['amount', 'years', 'annualReturnPercent', 'wrapper', 'accountCount'],
+            required: ['amount', 'years', 'annualReturnPercent', 'insuranceAnnualFeePercent', 'wrapper', 'accountCount'],
             additionalProperties: false
           },
           annotations: { readOnlyHint: false, untrustedContentHint: false },
@@ -649,6 +713,7 @@
             const valid = Number.isFinite(values.amount) && values.amount >= 0 && values.amount <= 1_000_000_000_000
               && Number.isInteger(values.years) && values.years >= 1 && values.years <= 20
               && Number.isFinite(values.annualReturnPercent) && values.annualReturnPercent >= 0 && values.annualReturnPercent <= 30
+              && Number.isFinite(values.insuranceAnnualFeePercent) && values.insuranceAnnualFeePercent >= 0 && values.insuranceAnnualFeePercent <= 5
               && ['iis', 'insurance', 'both'].includes(values.wrapper)
               && Number.isInteger(values.accountCount) && values.accountCount >= 1 && values.accountCount <= 3;
             if (!valid) throw new TypeError('Параметры вне допустимого диапазона калькулятора.');
@@ -656,6 +721,7 @@
             amountInput.value = number.format(values.amount);
             termInput.value = String(values.years);
             returnInput.value = String(values.annualReturnPercent);
+            insuranceFeeInput.value = String(values.insuranceAnnualFeePercent);
             wrapper = values.wrapper;
             wrapperButtons.forEach(item => item.setAttribute('aria-pressed', String(item.dataset.wrapper === wrapper)));
             accounts = values.accountCount;
