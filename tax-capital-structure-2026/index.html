@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ИИС-3 и страховой договор — калькулятор налоговой структуры</title>
+  <meta name="description" content="Калькулятор капитала и налоговой экономии: ИИС-3, страховой договор, льгота до 30 млн рублей и возможная шкала НДФЛ 13–22%.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230b1730'/%3E%3Cpath d='M16 43V31h8v12zm12 0V21h8v22zm12 0V12h8v31z' fill='%2365e6b4'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #0b1730;
+      --ink-soft: #23324e;
+      --paper: #f4f7fb;
+      --card: #ffffff;
+      --line: #dbe3ed;
+      --muted: #66738a;
+      --mint: #65e6b4;
+      --mint-dark: #08775c;
+      --blue: #2658d8;
+      --blue-soft: #eaf0ff;
+      --amber: #ffbd59;
+      --red: #d94949;
+      --shadow: 0 18px 60px rgba(11, 23, 48, .10);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 92% 2%, rgba(101, 230, 180, .18), transparent 28rem),
+        linear-gradient(180deg, #eef3fa 0, #f8fafc 50rem, #fff 100%);
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .shell { width: min(1180px, calc(100% - 32px)); margin-inline: auto; }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 0 5px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; letter-spacing: -.02em; }
+    .brand-mark {
+      width: 37px; height: 37px; border-radius: 11px; background: var(--ink);
+      display: grid; place-items: center; color: var(--mint); box-shadow: 0 9px 20px rgba(11,23,48,.18);
+    }
+    .header-note { color: var(--muted); font-size: 14px; }
+
+    .hero { padding: 32px 0 8px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; margin-bottom: 17px;
+      color: var(--blue); font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    }
+    .eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--blue); }
+    h1 {
+      max-width: 940px; margin: 0; font-size: clamp(38px, 4.7vw, 58px); line-height: 1;
+      letter-spacing: -.055em; font-weight: 820;
+    }
+    .hero-copy {
+      max-width: 790px; margin: 17px 0 20px; color: var(--ink-soft);
+      font-size: clamp(17px, 1.7vw, 20px); line-height: 1.42;
+    }
+    .hero-copy .accent { color: var(--blue); font-weight: 850; }
+    .hero-facts { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 14px; }
+    .pill {
+      padding: 9px 13px; border: 1px solid rgba(11,23,48,.1); border-radius: 999px;
+      background: rgba(255,255,255,.72); color: var(--ink-soft); font-size: 14px; font-weight: 700;
+      backdrop-filter: blur(10px);
+    }
+
+    .calculator {
+      display: grid; grid-template-columns: minmax(300px, .82fr) minmax(0, 1.35fr);
+      overflow: hidden; border: 1px solid var(--line); border-radius: 30px; background: var(--card); box-shadow: var(--shadow);
+    }
+    .controls { padding: clamp(24px, 4vw, 42px); background: #fff; border-right: 1px solid var(--line); }
+    .results { padding: clamp(24px, 4vw, 42px); background: var(--ink); color: #fff; }
+    .section-kicker { margin: 0 0 6px; font-size: 13px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+    .results .section-kicker { color: #9eabc0; }
+    h2 { margin: 0; font-size: clamp(26px, 3vw, 37px); line-height: 1.1; letter-spacing: -.035em; }
+
+    .field { margin-top: 27px; }
+    .field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin-bottom: 9px; }
+    .field label { font-weight: 750; }
+    .field-value { color: var(--blue); font-weight: 800; white-space: nowrap; }
+    .money-input-wrap { position: relative; }
+    .money-input {
+      width: 100%; height: 58px; border: 1.5px solid var(--line); border-radius: 15px; padding: 0 48px 0 16px;
+      font-size: 20px; font-weight: 800; color: var(--ink); background: #fbfcfe; outline: none; transition: .2s ease;
+    }
+    .money-input:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(38,88,216,.10); background: #fff; }
+    .money-symbol { position: absolute; right: 17px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 800; }
+    input[type="range"] { width: 100%; accent-color: var(--blue); }
+    .amount-range { margin-top: 13px; }
+    .range-scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .wrapper-toggle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .wrapper-btn {
+      min-height: 52px; padding: 8px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff;
+      color: var(--ink); font-size: 13px; font-weight: 800; line-height: 1.2; transition: .18s ease;
+    }
+    .wrapper-btn:hover { border-color: #9eb0c9; }
+    .wrapper-btn[aria-pressed="true"] { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 8px 18px rgba(38,88,216,.20); }
+    .account-toggle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .account-btn {
+      min-height: 48px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff;
+      color: var(--ink); font-weight: 800; transition: .18s ease;
+    }
+    .account-btn:hover { border-color: #9eb0c9; }
+    .account-btn[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); box-shadow: 0 8px 18px rgba(11,23,48,.16); }
+    .field-hint { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+
+    .target-card {
+      margin-top: 25px; padding: 22px; border: 1px solid rgba(101,230,180,.44); border-radius: 19px;
+      background: linear-gradient(135deg, rgba(101,230,180,.17), rgba(101,230,180,.05));
+    }
+    .target-label { color: #bdeedc; font-size: 14px; font-weight: 750; }
+    .target-value { display: block; margin: 4px 0 5px; color: var(--mint); font-size: clamp(34px, 5vw, 56px); line-height: 1; letter-spacing: -.045em; font-weight: 850; }
+    .target-caption { margin: 0; color: #d4dce8; font-size: 14px; }
+
+    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+    .metric { min-width: 0; padding: 16px; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; background: rgba(255,255,255,.055); }
+    .metric span { display: block; color: #9eabc0; font-size: 12px; line-height: 1.35; }
+    .metric strong { display: block; margin-top: 6px; font-size: clamp(17px, 2vw, 22px); line-height: 1.2; overflow-wrap: anywhere; }
+    .metric.saving strong { color: var(--mint); }
+    .metric.tax strong { color: #ff9f96; }
+
+    .benefit-progress { margin: 0 0 24px; padding: 18px; border: 1px solid rgba(101,230,180,.32); border-radius: 18px; background: rgba(101,230,180,.07); }
+    .benefit-progress-head { display: flex; justify-content: space-between; gap: 14px; color: #edf6f2; font-size: 15px; font-weight: 750; }
+    .benefit-progress-head strong { color: var(--mint); font-size: 19px; }
+    .progress-track { height: 22px; margin: 12px 0 10px; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+    .progress-bar { height: 100%; width: 0; min-width: 3px; border-radius: inherit; background: linear-gradient(90deg, var(--mint), #c5ff70); box-shadow: 0 0 18px rgba(101,230,180,.55); transition: width .35s ease; }
+    .progress-foot { display: flex; justify-content: space-between; color: #b5c2d4; font-size: 13px; }
+    .result-note { margin: 18px 0 0; color: #aeb8c8; font-size: 12px; }
+
+    .comparison { padding: 38px 0 38px; }
+    .section-intro { max-width: 780px; margin-bottom: 30px; }
+    .section-intro p { margin: 14px 0 0; color: var(--muted); font-size: 18px; }
+    .tax-shift { display: grid; grid-template-columns: 1fr 70px 1fr; align-items: stretch; }
+    .tax-card { padding: 30px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: 0 12px 38px rgba(11,23,48,.06); }
+    .tax-card.future { border-color: rgba(38,88,216,.32); background: linear-gradient(145deg, #fff, #edf3ff); }
+    .tax-card small { color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .tax-card h3 { margin: 10px 0 8px; font-size: 27px; letter-spacing: -.03em; }
+    .tax-card p { margin: 0; color: var(--ink-soft); }
+    .rate { display: block; margin: 18px 0 7px; font-size: clamp(38px, 5vw, 60px); line-height: 1; letter-spacing: -.05em; font-weight: 850; }
+    .shift-mark { display: grid; place-items: center; color: var(--blue); font-size: 27px; font-weight: 900; }
+    .shift-caption { max-width: 1050px; margin: 30px 0 0; padding: 28px 30px; border-left: 7px solid var(--blue); border-radius: 0 18px 18px 0; background: linear-gradient(135deg, var(--blue-soft), #f4f7ff); color: var(--ink); font-size: clamp(23px, 2.5vw, 34px); line-height: 1.22; font-weight: 820; letter-spacing: -.025em; box-shadow: 0 12px 34px rgba(38,88,216,.10); }
+
+    .infrastructure { padding: 62px 0 35px; }
+    .infrastructure .section-intro .emphasis { color: var(--blue); font-weight: 800; }
+    .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .product-card { padding: 30px; border-radius: var(--radius); background: var(--ink); color: #fff; position: relative; overflow: hidden; }
+    .product-card:nth-child(2) { background: #173c7d; }
+    .product-number { color: var(--mint); font-weight: 850; letter-spacing: .08em; }
+    .product-card h3 { margin: 16px 0 10px; font-size: 30px; letter-spacing: -.035em; }
+    .product-card p { color: #cbd5e3; }
+    .product-card ul { margin: 20px 0 0; padding-left: 20px; }
+    .product-card li { margin: 8px 0; }
+    .timeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; align-items: end; margin-top: 20px; }
+    .timeline span { display: flex; flex-direction: column; justify-content: center; padding: 7px 6px; border: 1px solid rgba(255,255,255,.18); border-radius: 12px; color: #dfe8f5; text-align: center; font-size: 12px; line-height: 1.25; background: rgba(255,255,255,.025); }
+    .timeline span:nth-child(1) { min-height: 48px; }
+    .timeline span:nth-child(2) { min-height: 58px; }
+    .timeline span:nth-child(3) { min-height: 68px; }
+    .timeline span:nth-child(4) { min-height: 78px; }
+    .timeline span:nth-child(5) { min-height: 88px; }
+    .timeline span:nth-child(6) { min-height: 98px; }
+    .timeline strong { display: block; color: var(--mint); font-size: 15px; }
+
+    .formula { margin: 50px 0 0; padding: 25px 28px; border: 1px dashed #aebbd0; border-radius: 18px; background: rgba(255,255,255,.68); }
+    .formula > strong { display: inline-block; margin-bottom: 10px; padding: 7px 12px; border-radius: 10px; background: var(--blue-soft); color: var(--blue); font-size: 20px; }
+    .formula p { margin: 0; color: var(--muted); }
+    .formula-note { margin-top: 10px !important; }
+
+    .calculator-host { padding: 70px 0 35px; }
+    .calculator-host::before { content: "Калькулятор"; display: block; margin-bottom: 18px; color: var(--blue); font-size: 13px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+    .calculator-host .hero-facts { margin: 0 0 16px; }
+
+    .closing { padding: 80px 0 95px; text-align: center; }
+    .closing h2 { max-width: 760px; margin-inline: auto; }
+    .closing p { max-width: 670px; margin: 16px auto 26px; color: var(--muted); font-size: 18px; }
+    .cta {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 22px;
+      border-radius: 14px; background: var(--blue); color: #fff; text-decoration: none; font-weight: 800;
+      box-shadow: 0 12px 24px rgba(38,88,216,.22);
+    }
+    footer { padding: 24px 0 38px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+
+    @media (max-width: 900px) {
+      .calculator { grid-template-columns: 1fr; }
+      .controls { border-right: 0; border-bottom: 1px solid var(--line); }
+      .result-grid { grid-template-columns: repeat(2, 1fr); }
+      .tax-shift { grid-template-columns: 1fr; gap: 12px; }
+      .shift-mark { height: 34px; transform: rotate(90deg); }
+    }
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 22px, 1180px); }
+      .site-header { align-items: flex-start; }
+      .header-note { display: none; }
+      .hero { padding-top: 38px; }
+      h1 { font-size: clamp(38px, 12.3vw, 56px); }
+      .calculator { border-radius: 22px; }
+      .controls, .results { padding: 24px 18px; }
+      .result-grid { grid-template-columns: 1fr 1fr; }
+      .metric { padding: 13px; }
+      .metric.wide { grid-column: 1 / -1; }
+      .product-grid { grid-template-columns: 1fr; }
+      .timeline { grid-template-columns: repeat(3, 1fr); }
+      .comparison { padding-top: 34px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header shell">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">30</span><span>Налоговая структура капитала</span></div>
+    <div class="header-note">ИИС-3 + страховой договор · ежедневная капитализация</div>
+  </header>
+
+  <main>
+    <section class="hero shell" id="top">
+      <span class="eyebrow">Налоговое планирование · сценарий 2026</span>
+      <h1>Налоги могут измениться. Структуру капитала можно подготовить заранее</h1>
+      <p class="hero-copy">24 сентября Минфин предложил изменения в налогообложении физлиц. В частности, обсуждается применение прогрессивной шкалы <strong>13–22% к пассивным доходам</strong> — <span class="accent">процентам по вкладам</span>, <span class="accent">дивидендам</span>, операциям с ценными бумагами и др.</p>
+      <div class="hero-facts" aria-label="Основные параметры модели">
+        <span class="pill">Ежедневная капитализация</span>
+        <span class="pill">До 3 счетов</span>
+        <span class="pill">Льгота после 5 лет</span>
+        <span class="pill">Сценарий НДФЛ 13–22%</span>
+      </div>
+
+      <div class="calculator">
+        <section class="controls" aria-labelledby="controls-title">
+          <p class="section-kicker">Ваши параметры</p>
+          <h2 id="controls-title">Соберите сценарий</h2>
+
+          <div class="field">
+            <div class="field-head"><label>Инвестиционная оболочка</label><span class="field-value" id="wrapper-value">ИИС + Страховка</span></div>
+            <div class="wrapper-toggle" role="group" aria-label="Выбор инвестиционной оболочки">
+              <button class="wrapper-btn" type="button" data-wrapper="iis" aria-pressed="false">ИИС-3</button>
+              <button class="wrapper-btn" type="button" data-wrapper="insurance" aria-pressed="false">Страховка</button>
+              <button class="wrapper-btn" type="button" data-wrapper="both" aria-pressed="true">Вместе</button>
+            </div>
+            <p class="field-hint" id="wrapper-hint">Одновременно учитываются ИИС-3 и страховой договор.</p>
+          </div>
+
+          <div class="field">
+            <div class="field-head"><label for="amount">Сумма инвестирования</label></div>
+            <div class="money-input-wrap">
+              <input class="money-input" id="amount" type="text" inputmode="numeric" value="2 000 000" aria-describedby="amount-hint">
+              <span class="money-symbol">₽</span>
+            </div>
+            <input class="amount-range" id="amount-range" type="range" min="100000" max="300000000" step="100000" value="2000000" aria-label="Сумма инвестирования ползунком">
+            <div class="range-scale"><span>100 тыс. ₽</span><span>300 млн ₽</span></div>
+            <p class="field-hint" id="amount-hint">Общая сумма распределяется поровну между выбранными счетами.</p>
+          </div>
+
+          <div class="field">
+            <div class="field-head"><label for="term">Срок</label><output class="field-value" id="term-value" for="term">5 лет</output></div>
+            <input id="term" type="range" min="1" max="20" step="1" value="5">
+            <div class="range-scale"><span>1 год</span><span>20 лет</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-head"><label for="return">Ожидаемая доходность</label><output class="field-value" id="return-value" for="return">15,0% в год</output></div>
+            <input id="return" type="range" min="0" max="30" step="0.5" value="15">
+            <div class="range-scale"><span>0%</span><span>30%</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-head"><label id="accounts-label">Количество комплектов</label><span class="field-value" id="accounts-value">1 комплект</span></div>
+            <div class="account-toggle" role="group" aria-label="Количество счетов или договоров">
+              <button class="account-btn" type="button" data-accounts="1" aria-pressed="true">1</button>
+              <button class="account-btn" type="button" data-accounts="2" aria-pressed="false">2</button>
+              <button class="account-btn" type="button" data-accounts="3" aria-pressed="false">3</button>
+            </div>
+            <p class="field-hint" id="accounts-hint">Один комплект — один ИИС-3 и один страховой договор; суммарная льгота модели — до 60 млн ₽.</p>
+          </div>
+        </section>
+
+        <section class="results" aria-live="polite" aria-labelledby="results-title">
+          <div class="benefit-progress">
+            <div class="benefit-progress-head"><span>Использование доступной льготы</span><strong id="progress-value">—</strong></div>
+            <div class="progress-track" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
+            <div class="progress-foot"><span>0 ₽ прибыли</span><span id="benefit-limit">60 млн ₽</span></div>
+          </div>
+          <p class="section-kicker">Расчет по вашим параметрам</p>
+          <h2 id="results-title">Цена полного использования льготы</h2>
+
+          <div class="target-card">
+            <span class="target-label" id="target-label">Чтобы получить 30 млн ₽ прибыли без НДФЛ, пополните еще</span>
+            <strong class="target-value" id="additional">—</strong>
+            <p class="target-caption" id="target-caption">—</p>
+          </div>
+
+          <div class="result-grid">
+            <div class="metric"><span>Вложено</span><strong id="principal-result">—</strong></div>
+            <div class="metric"><span>Итоговый капитал</span><strong id="capital-result">—</strong></div>
+            <div class="metric"><span>Инвестиционный доход</span><strong id="profit-result">—</strong></div>
+            <div class="metric tax"><span>НДФЛ с учетом льготы</span><strong id="tax-result">—</strong></div>
+            <div class="metric saving"><span>Экономия НДФЛ</span><strong id="saving-result">—</strong></div>
+            <div class="metric wide"><span>Налоговая база</span><strong id="taxable-result">—</strong></div>
+          </div>
+
+          <p class="result-note" id="result-note">Расчет носит иллюстративный характер и не учитывает другие доходы налогоплательщика, комиссии и рыночные риски.</p>
+        </section>
+      </div>
+    </section>
+
+    <section class="comparison shell" aria-labelledby="change-title">
+      <div class="section-intro">
+        <p class="section-kicker">Что обсуждается</p>
+        <h2 id="change-title">Пассивные доходы могут попасть под общую прогрессивную шкалу</h2>
+      </div>
+      <div class="tax-shift">
+        <article class="tax-card">
+          <small>Текущее положение</small>
+          <span class="rate">13 / 15%</span>
+          <h3>Отдельная шкала</h3>
+          <p>Пассивные доходы облагаются по отдельной шкале 13/15% и не складываются с основной пятиступенчатой базой.</p>
+        </article>
+        <div class="shift-mark" aria-hidden="true">›</div>
+        <article class="tax-card future">
+          <small>Возможный сценарий</small>
+          <span class="rate">13–22%</span>
+          <h3>Единая прогрессия</h3>
+          <p>Проценты, дивиденды и операции с ценными бумагами могут облагаться по ставкам от 13% до 22%.</p>
+        </article>
+      </div>
+      <p class="shift-caption">На этом фоне целесообразно заранее обратить внимание на два инструмента, которые помогают сформировать более эффективную налоговую структуру капитала.</p>
+    </section>
+
+    <section class="infrastructure shell" aria-labelledby="infrastructure-title">
+      <div class="section-intro">
+        <p class="section-kicker">Два инструмента</p>
+        <h2 id="infrastructure-title">Зафиксировать условия 2026 года</h2>
+        <p class="emphasis">ИИС-3 и страховой договор можно использовать одновременно, сочетая их налоговые преимущества.</p>
+      </div>
+      <div class="product-grid">
+        <article class="product-card">
+          <span class="product-number">01 · ИИС-3</span>
+          <h3>ИИС-3</h3>
+          <p>Брокерский инвестиционный счет с долгосрочными налоговыми льготами и широким выбором биржевых инструментов.</p>
+          <ul>
+            <li><strong>До 30 млн ₽ прибыли без НДФЛ</strong> при соблюдении срока владения</li>
+            <li>Можно открыть <strong>до 3 ИИС</strong> и распределить их закрытие по разным годам</li>
+            <li>Потенциально — <strong>до 90 млн ₽ прибыли без НДФЛ</strong> по трем счетам на одно физлицо</li>
+            <li>До <strong>88 тыс. ₽ налогового вычета ежегодно</strong></li>
+            <li>Фонды флоатеров и ликвидности, облигации, РЕПО и другие инструменты</li>
+            <li>Счет можно открыть сейчас без пополнения и зафиксировать срок владения</li>
+            <li>Для ИИС, открытого в <strong>2026 году</strong>, минимальный срок владения — <strong>5 лет</strong></li>
+          </ul>
+          <div class="timeline" aria-label="Минимальный срок ИИС по году открытия">
+            <span><strong>2026</strong>5 лет</span><span><strong>2027</strong>6 лет</span><span><strong>2028</strong>7 лет</span><span><strong>2029</strong>8 лет</span><span><strong>2030</strong>9 лет</span><span><strong>2031</strong>10 лет</span>
+          </div>
+        </article>
+        <article class="product-card">
+          <span class="product-number">02 · ДОГОВОР СТРАХОВАНИЯ</span>
+          <h3>Страховой договор</h3>
+          <p>Инвестиционная оболочка, которая сочетает налоговое планирование, управление портфелем, страховые возможности и позволяет организовать наследственное планирование.</p>
+          <ul>
+            <li><strong>До 30 млн ₽ дохода без НДФЛ</strong> при соблюдении условий</li>
+            <li>Можно использовать <strong>3 договора на одно физлицо</strong> и распределять выплаты по годам</li>
+            <li>Потенциально — <strong>до 90 млн ₽ дохода без НДФЛ</strong> по трем договорам на одно физлицо</li>
+            <li>Договоры можно структурировать в пользу близких родственников — до 3 договоров на каждого</li>
+            <li>Банковские депозиты, РЕПО, облигации, фонды ликвидности, флоатеры и другие активы</li>
+            <li><strong>Гибкое управление портфелем</strong> внутри договора</li>
+            <li>Дополнительная страховая защита и адресная передача капитала — выгодоприобретателем может быть третье лицо</li>
+            <li>В определенных случаях — дополнительная защита от требований третьих лиц <strong>(юридическая защита)</strong></li>
+            <li>Для договора, открытого в <strong>2026 году</strong>, минимальный срок для льготы — <strong>5 лет</strong>; в <strong>2027 году — 6 лет</strong></li>
+          </ul>
+        </article>
+      </div>
+      <div class="formula">
+        <strong>ИИС-3 и страховой договор можно использовать одновременно</strong>
+        <p>При соблюдении условий это позволяет сочетать налоговые преимущества двух инструментов: до <strong>60 млн ₽ льготируемого дохода на одно физлицо в один год</strong></p>
+        <p class="formula-note">Калькулятор использует ежедневную капитализацию. До 5 лет льгота не применяется; после 5 лет учитывается лимит 30 млн ₽ на выбранный счет или договор, а превышение облагается по модельной шкале 13 / 15 / 18 / 20 / 22%.</p>
+      </div>
+    </section>
+
+    <section class="closing shell">
+      <h2>Зафиксируйте условия 2026 года, пока минимальный срок составляет 5 лет</h2>
+      <p>ИИС-3 можно открыть без пополнения. Чем раньше начинается срок владения счетом или договором, тем раньше появляется возможность использовать льготы при соблюдении остальных условий.</p>
+      <a class="cta" href="#calculator">Пересчитать свой сценарий</a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">Финансовая модель не является индивидуальной инвестиционной или налоговой рекомендацией. Будущая доходность не гарантирована. Налоговые правила и условия конкретного продукта следует подтвердить перед заключением договора.</div>
+  </footer>
+
+  <script>
+    (() => {
+      const calculatorBlock = document.querySelector('.calculator');
+      const calculatorHost = document.createElement('section');
+      calculatorHost.className = 'calculator-host shell';
+      calculatorHost.id = 'calculator';
+      document.querySelector('.closing').before(calculatorHost);
+      calculatorHost.append(document.querySelector('.hero-facts'));
+      calculatorHost.append(calculatorBlock);
+
+      const amountInput = document.querySelector('#amount');
+      const amountRange = document.querySelector('#amount-range');
+      const termInput = document.querySelector('#term');
+      const returnInput = document.querySelector('#return');
+      const accountButtons = [...document.querySelectorAll('.account-btn')];
+      const wrapperButtons = [...document.querySelectorAll('.wrapper-btn')];
+      let accounts = 1;
+      let wrapper = 'both';
+
+      const rubles = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
+      const number = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+      const percent = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+      const els = {
+        termValue: document.querySelector('#term-value'),
+        returnValue: document.querySelector('#return-value'),
+        wrapperValue: document.querySelector('#wrapper-value'),
+        wrapperHint: document.querySelector('#wrapper-hint'),
+        amountHint: document.querySelector('#amount-hint'),
+        accountsLabel: document.querySelector('#accounts-label'),
+        accountsValue: document.querySelector('#accounts-value'),
+        accountsHint: document.querySelector('#accounts-hint'),
+        additional: document.querySelector('#additional'),
+        targetLabel: document.querySelector('#target-label'),
+        targetCaption: document.querySelector('#target-caption'),
+        principal: document.querySelector('#principal-result'),
+        capital: document.querySelector('#capital-result'),
+        profit: document.querySelector('#profit-result'),
+        tax: document.querySelector('#tax-result'),
+        saving: document.querySelector('#saving-result'),
+        taxable: document.querySelector('#taxable-result'),
+        progressValue: document.querySelector('#progress-value'),
+        progressBar: document.querySelector('#progress-bar'),
+        benefitLimit: document.querySelector('#benefit-limit'),
+        resultNote: document.querySelector('#result-note')
+      };
+
+      function parseMoney(value) {
+        const clean = String(value).replace(/[^0-9]/g, '');
+        return Math.max(0, Number(clean) || 0);
+      }
+
+      function formatMoneyInput() {
+        amountInput.value = number.format(parseMoney(amountInput.value));
+      }
+
+      function syncAmountRange() {
+        const amount = parseMoney(amountInput.value);
+        amountRange.value = String(Math.min(Number(amountRange.max), Math.max(Number(amountRange.min), amount)));
+      }
+
+      function pluralYears(value) {
+        const mod10 = value % 10;
+        const mod100 = value % 100;
+        if (mod10 === 1 && mod100 !== 11) return `${value} год`;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${value} года`;
+        return `${value} лет`;
+      }
+
+      function pluralAccounts(value) {
+        if (value === 1) return '1 счет';
+        if (value === 2 || value === 3) return `${value} счета`;
+        return `${value} счетов`;
+      }
+
+      function pluralContracts(value) {
+        if (value === 1) return '1 договор';
+        if (value === 2 || value === 3) return `${value} договора`;
+        return `${value} договоров`;
+      }
+
+      function pluralSets(value) {
+        if (value === 1) return '1 комплект';
+        if (value === 2 || value === 3) return `${value} комплекта`;
+        return `${value} комплектов`;
+      }
+
+      function progressiveTax(base) {
+        const brackets = [
+          { cap: 2_400_000, rate: 0.13 },
+          { cap: 5_000_000, rate: 0.15 },
+          { cap: 20_000_000, rate: 0.18 },
+          { cap: 50_000_000, rate: 0.20 },
+          { cap: Infinity, rate: 0.22 }
+        ];
+        let tax = 0;
+        let floor = 0;
+        for (const bracket of brackets) {
+          if (base <= floor) break;
+          const slice = Math.min(base, bracket.cap) - floor;
+          tax += slice * bracket.rate;
+          floor = bracket.cap;
+        }
+        return tax;
+      }
+
+      function calculate() {
+        const principal = parseMoney(amountInput.value);
+        const years = Number(termInput.value);
+        const annualRate = Number(returnInput.value) / 100;
+        const days = years * 365;
+        const growth = Math.pow(1 + annualRate / 365, days);
+        const capital = principal * growth;
+        const profit = Math.max(0, capital - principal);
+        const wrapperMultiplier = wrapper === 'both' ? 2 : 1;
+        const benefitPerUnit = 30_000_000 * wrapperMultiplier;
+        const benefitLimit = benefitPerUnit * accounts;
+        const benefitMillions = 30 * wrapperMultiplier * accounts;
+        const isEligible = years >= 5;
+        const appliedBenefit = isEligible ? Math.min(profit, benefitLimit) : 0;
+        const taxableProfit = Math.max(0, profit - appliedBenefit);
+        const tax = progressiveTax(taxableProfit);
+        const taxWithoutBenefit = progressiveTax(profit);
+        const saving = Math.max(0, taxWithoutBenefit - tax);
+        const profitFactor = growth - 1;
+        const targetPrincipal = profitFactor > 0 ? benefitLimit / profitFactor : Infinity;
+        const additional = Number.isFinite(targetPrincipal) ? Math.max(0, targetPrincipal - principal) : Infinity;
+        const progress = benefitLimit > 0 ? Math.min(100, profit / benefitLimit * 100) : 0;
+
+        els.termValue.textContent = pluralYears(years);
+        els.returnValue.textContent = `${percent.format(annualRate * 100)}% в год`;
+        if (wrapper === 'iis') {
+          els.wrapperValue.textContent = 'ИИС-3';
+          els.wrapperHint.textContent = 'Расчет льготы по индивидуальным инвестиционным счетам.';
+          els.accountsLabel.textContent = 'Количество ИИС';
+          els.accountsValue.textContent = pluralAccounts(accounts);
+          els.accountsHint.textContent = 'В модели льгота составляет до 30 млн ₽ прибыли на каждый ИИС.';
+          els.amountHint.textContent = 'Общая сумма распределяется поровну между выбранными ИИС.';
+        } else if (wrapper === 'insurance') {
+          els.wrapperValue.textContent = 'Страховка';
+          els.wrapperHint.textContent = 'Расчет льготы по договорам страхования.';
+          els.accountsLabel.textContent = 'Количество договоров';
+          els.accountsValue.textContent = pluralContracts(accounts);
+          els.accountsHint.textContent = 'В модели льгота составляет до 30 млн ₽ дохода на каждый договор.';
+          els.amountHint.textContent = 'Общая сумма распределяется поровну между выбранными договорами.';
+        } else {
+          els.wrapperValue.textContent = 'ИИС + Страховка';
+          els.wrapperHint.textContent = 'Одновременно учитываются ИИС-3 и страховой договор.';
+          els.accountsLabel.textContent = 'Количество комплектов';
+          els.accountsValue.textContent = pluralSets(accounts);
+          els.accountsHint.textContent = 'Один комплект — один ИИС-3 и один страховой договор; суммарная льгота модели — до 60 млн ₽.';
+          els.amountHint.textContent = 'Общая сумма распределяется между выбранными комплектами ИИС-3 и страховых договоров.';
+        }
+        els.principal.textContent = rubles.format(principal);
+        els.capital.textContent = rubles.format(capital);
+        els.profit.textContent = rubles.format(profit);
+        els.tax.textContent = rubles.format(tax);
+        els.saving.textContent = rubles.format(saving);
+        els.taxable.textContent = rubles.format(taxableProfit);
+        els.progressValue.textContent = `${percent.format(progress)}%`;
+        els.progressBar.style.width = `${progress}%`;
+        els.benefitLimit.textContent = `${benefitMillions} млн ₽`;
+
+        if (annualRate <= 0) {
+          els.targetLabel.textContent = 'При нулевой доходности налоговая льгота не заполняется';
+          els.additional.textContent = 'Нужна доходность выше 0%';
+          els.targetCaption.textContent = 'Измените ожидаемую доходность, чтобы рассчитать целевой капитал.';
+        } else if (!isEligible) {
+          els.targetLabel.textContent = 'Для применения льготы сначала увеличьте срок';
+          els.additional.textContent = `Еще ${pluralYears(5 - years)}`;
+          els.targetCaption.textContent = `При выбранной доходности капитал для прибыли ${benefitMillions} млн ₽ составил бы ${rubles.format(targetPrincipal)}, но до 5 лет льгота не действует.`;
+        } else if (additional > 0) {
+          els.targetLabel.textContent = `Чтобы использовать льготу ${benefitMillions} млн ₽ полностью, пополните еще`;
+          els.additional.textContent = rubles.format(additional);
+          const unitName = wrapper === 'iis' ? 'один ИИС' : wrapper === 'insurance' ? 'один договор' : 'один комплект';
+          els.targetCaption.textContent = `Целевой объем вложений: ${rubles.format(targetPrincipal)} · ${rubles.format(targetPrincipal / accounts)} на ${unitName}.`;
+        } else {
+          els.targetLabel.textContent = 'Ваш капитал уже формирует прибыль выше лимита льготы';
+          els.additional.textContent = 'Пополнение не требуется';
+          els.targetCaption.textContent = `До ${rubles.format(benefitLimit)} прибыли освобождается, превышение попадает под прогрессивную шкалу.`;
+        }
+
+        if (!isEligible) {
+          els.resultNote.textContent = 'Срок меньше 5 лет: вся прибыль включена в налоговую базу. Модель не учитывает другие доходы, комиссии и рыночные риски.';
+        } else {
+          els.resultNote.textContent = `В расчете применена льгота до ${rubles.format(benefitLimit)} прибыли. Модель не учитывает другие доходы, комиссии и рыночные риски.`;
+        }
+
+        return {
+          invested: Math.round(principal),
+          finalCapital: Math.round(capital),
+          profit: Math.round(profit),
+          tax: Math.round(tax),
+          taxSavings: Math.round(saving),
+          taxableProfit: Math.round(taxableProfit),
+          benefitLimit: Math.round(benefitLimit),
+          targetInvestment: Number.isFinite(targetPrincipal) ? Math.round(targetPrincipal) : null,
+          additionalInvestmentNeeded: Number.isFinite(additional) ? Math.round(additional) : null,
+          eligible: isEligible,
+          accounts,
+          wrapper,
+          years,
+          annualReturnPercent: annualRate * 100
+        };
+      }
+
+      amountInput.addEventListener('input', () => { syncAmountRange(); calculate(); });
+      amountInput.addEventListener('blur', () => { formatMoneyInput(); syncAmountRange(); calculate(); });
+      amountRange.addEventListener('input', () => {
+        amountInput.value = number.format(Number(amountRange.value));
+        calculate();
+      });
+      termInput.addEventListener('input', calculate);
+      returnInput.addEventListener('input', calculate);
+      wrapperButtons.forEach(button => button.addEventListener('click', () => {
+        wrapper = button.dataset.wrapper;
+        wrapperButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+        calculate();
+      }));
+      accountButtons.forEach(button => button.addEventListener('click', () => {
+        accounts = Number(button.dataset.accounts);
+        accountButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+        calculate();
+      }));
+
+      const modelContext = document.modelContext;
+      if (modelContext?.registerTool) {
+        const lifecycle = new AbortController();
+        const register = modelContext.registerTool({
+          name: 'calculate_tax_plan',
+          title: 'Рассчитать налоговый сценарий',
+          description: 'Установить оболочку, сумму инвестирования, срок, ожидаемую доходность и количество счетов или договоров, затем вернуть расчет капитала, налога, экономии и требуемого пополнения.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              amount: { type: 'number', minimum: 0, maximum: 1000000000000, description: 'Общая сумма инвестирования в рублях.' },
+              years: { type: 'integer', minimum: 1, maximum: 20, description: 'Срок инвестирования в полных годах.' },
+              annualReturnPercent: { type: 'number', minimum: 0, maximum: 30, description: 'Ожидаемая средняя годовая доходность в процентах.' },
+              wrapper: { type: 'string', enum: ['iis', 'insurance', 'both'], description: 'Оболочка: ИИС-3, страховка или оба инструмента вместе.' },
+              accountCount: { type: 'integer', minimum: 1, maximum: 3, description: 'Количество счетов.' }
+            },
+            required: ['amount', 'years', 'annualReturnPercent', 'wrapper', 'accountCount'],
+            additionalProperties: false
+          },
+          annotations: { readOnlyHint: false, untrustedContentHint: false },
+          execute(input) {
+            const values = input || {};
+            const valid = Number.isFinite(values.amount) && values.amount >= 0 && values.amount <= 1_000_000_000_000
+              && Number.isInteger(values.years) && values.years >= 1 && values.years <= 20
+              && Number.isFinite(values.annualReturnPercent) && values.annualReturnPercent >= 0 && values.annualReturnPercent <= 30
+              && ['iis', 'insurance', 'both'].includes(values.wrapper)
+              && Number.isInteger(values.accountCount) && values.accountCount >= 1 && values.accountCount <= 3;
+            if (!valid) throw new TypeError('Параметры вне допустимого диапазона калькулятора.');
+
+            amountInput.value = number.format(values.amount);
+            termInput.value = String(values.years);
+            returnInput.value = String(values.annualReturnPercent);
+            wrapper = values.wrapper;
+            wrapperButtons.forEach(item => item.setAttribute('aria-pressed', String(item.dataset.wrapper === wrapper)));
+            accounts = values.accountCount;
+            accountButtons.forEach(item => item.setAttribute('aria-pressed', String(Number(item.dataset.accounts) === accounts)));
+            return calculate();
+          }
+        }, { signal: lifecycle.signal });
+        Promise.resolve(register).catch(() => lifecycle.abort());
+      }
+
+      formatMoneyInput();
+      syncAmountRange();
+      calculate();
+    })();
+  </script>
+</body>
+</html>
+
+
