@@ -86,11 +86,12 @@ async function refreshQuotes(){
   const errors=[];
   for(const a of CONFIG.assets){
    try{
-    const url=new URL('https://api.twelvedata.com/quote');url.search=new URLSearchParams({symbol:a.symbol,mic_code:'ARCX',apikey:key,timezone:'UTC'});
+    const mic=a.symbol==='SPPP'?'XASE':'ARCX';
+    const url=new URL('https://api.twelvedata.com/quote');url.search=new URLSearchParams({symbol:a.symbol,mic_code:mic,apikey:key,timezone:'UTC'});
     const q=await fetchJSON(url);
     if(version!==generation)return;
     if(q.status==='error'||!q.close)throw Error(q.message||'нет данных');
-    if(q.symbol!==a.symbol||q.currency!=='USD'||q.mic_code!=='ARCX'||!Number.isFinite(Number(q.close))||Number(q.close)<=0)throw Error('Источник вернул неподходящий тикер, биржу, валюту или цену');
+    if(q.symbol!==a.symbol||q.currency!=='USD'||q.mic_code!==mic||!Number.isFinite(Number(q.close))||Number(q.close)<=0)throw Error('Источник вернул неподходящий тикер, биржу, валюту или цену');
     const hasTimestamp=Number.isFinite(Number(q.timestamp))&&Number(q.timestamp)>0;
     if(!hasTimestamp&&!q.datetime)throw Error('Источник не указал время котировки');
     quotes[a.symbol]={price:Number(q.close),currency:'USD',timestamp:hasTimestamp?new Date(Number(q.timestamp)*1000).toISOString():q.datetime+' UTC',source:'Twelve Data',marketStatus:q.is_market_open?'Сессия открыта':'Сессия закрыта / последнее значение'};
