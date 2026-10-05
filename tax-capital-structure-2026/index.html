@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ИИС-3 и страховой договор — калькулятор налоговой структуры</title>
-  <meta name="description" content="Калькулятор капитала и налоговой экономии: ИИС-3, страховой договор, льгота до 30 млн рублей и возможная шкала НДФЛ 13–22%.">
+  <title>ЛДВ, ИИС-3 и страховой договор — калькулятор налоговой структуры</title>
+  <meta name="description" content="Калькулятор капитала и налоговой экономии: ЛДВ, ИИС-3 и страховой договор. Ежедневная капитализация, квартальная комиссия страховки и сценарий НДФЛ 13–22%.">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230b1730'/%3E%3Cpath d='M16 43V31h8v12zm12 0V21h8v22zm12 0V12h8v31z' fill='%2365e6b4'/%3E%3C/svg%3E">
   <style>
     :root {
@@ -26,6 +26,7 @@
     }
 
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
@@ -102,7 +103,7 @@
     input[type="range"] { width: 100%; accent-color: var(--blue); }
     .amount-range { margin-top: 13px; }
     .range-scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 3px; }
-    .wrapper-toggle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .wrapper-toggle { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .wrapper-btn {
       min-height: 52px; padding: 8px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff;
       color: var(--ink); font-size: 13px; font-weight: 800; line-height: 1.2; transition: .18s ease;
@@ -157,9 +158,10 @@
 
     .infrastructure { padding: 62px 0 35px; }
     .infrastructure .section-intro .emphasis { color: var(--blue); font-weight: 800; }
-    .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
     .product-card { padding: 30px; border-radius: var(--radius); background: var(--ink); color: #fff; position: relative; overflow: hidden; }
     .product-card:nth-child(2) { background: #173c7d; }
+    .product-card:nth-child(3) { background: #183d39; }
     .product-number { color: var(--mint); font-weight: 850; letter-spacing: .08em; }
     .product-card h3 { margin: 16px 0 10px; font-size: 30px; letter-spacing: -.035em; }
     .product-card p { color: #cbd5e3; }
@@ -195,6 +197,7 @@
     footer { padding: 24px 0 38px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
 
     @media (max-width: 900px) {
+      .product-grid { grid-template-columns: 1fr; }
       .calculator { grid-template-columns: 1fr; }
       .controls { border-right: 0; border-bottom: 1px solid var(--line); }
       .result-grid { grid-template-columns: repeat(2, 1fr); }
@@ -225,7 +228,7 @@
 <body>
   <header class="site-header shell">
     <div class="brand"><span class="brand-mark" aria-hidden="true">30</span><span>Налоговая структура капитала</span></div>
-    <div class="header-note">ИИС-3 + страховой договор · ежедневная капитализация</div>
+    <div class="header-note">ЛДВ / ИИС-3 / страховой договор · ежедневная капитализация</div>
   </header>
 
   <main>
@@ -237,7 +240,8 @@
         <span class="pill">Ежедневная капитализация</span>
         <span class="pill">Комиссия страховки поквартально</span>
         <span class="pill">До 3 счетов</span>
-        <span class="pill">Льгота после 5 лет</span>
+        <span class="pill">ЛДВ: более 3 лет владения</span>
+        <span class="pill">ИИС и страховка: от 5 лет</span>
         <span class="pill">Сценарий НДФЛ 13–22%</span>
       </div>
 
@@ -252,6 +256,7 @@
               <button class="wrapper-btn" type="button" data-wrapper="iis" aria-pressed="false">ИИС-3</button>
               <button class="wrapper-btn" type="button" data-wrapper="insurance" aria-pressed="false">Страховка</button>
               <button class="wrapper-btn" type="button" data-wrapper="both" aria-pressed="true">Вместе</button>
+              <button class="wrapper-btn" type="button" data-wrapper="ldv" aria-pressed="false">Брокерский счет + ЛДВ</button>
             </div>
             <p class="field-hint" id="wrapper-hint">Одновременно учитываются ИИС-3 и страховой договор.</p>
           </div>
@@ -286,7 +291,7 @@
             <p class="field-hint" id="insurance-fee-hint">Удерживается ежеквартально с текущей стоимости страховых активов: по 0,375% за квартал.</p>
           </div>
 
-          <div class="field">
+          <div class="field" id="accounts-field">
             <div class="field-head"><label id="accounts-label">Количество комплектов</label><span class="field-value" id="accounts-value">1 комплект</span></div>
             <div class="account-toggle" role="group" aria-label="Количество счетов или договоров">
               <button class="account-btn" type="button" data-accounts="1" aria-pressed="true">1</button>
@@ -299,7 +304,7 @@
 
         <section class="results" aria-live="polite" aria-labelledby="results-title">
           <div class="benefit-progress">
-            <div class="benefit-progress-head"><span>Использование доступной льготы</span><strong id="progress-value">—</strong></div>
+            <div class="benefit-progress-head"><span id="progress-label">Использование доступной льготы</span><strong id="progress-value">—</strong></div>
             <div class="progress-track" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
             <div class="progress-foot"><span>0 ₽ прибыли</span><span id="benefit-limit">60 млн ₽</span></div>
           </div>
@@ -314,7 +319,7 @@
 
           <div class="result-grid">
             <div class="metric"><span>Вложено</span><strong id="principal-result">—</strong></div>
-            <div class="metric"><span>Итоговый капитал</span><strong id="capital-result">—</strong></div>
+            <div class="metric"><span>Капитал до НДФЛ</span><strong id="capital-result">—</strong></div>
             <div class="metric"><span>Инвестиционный доход</span><strong id="profit-result">—</strong></div>
             <div class="metric tax"><span>НДФЛ с учетом льготы</span><strong id="tax-result">—</strong></div>
             <div class="metric saving"><span>Экономия НДФЛ</span><strong id="saving-result">—</strong></div>
@@ -347,14 +352,14 @@
           <p>Проценты, дивиденды и операции с ценными бумагами могут облагаться по ставкам от 13% до 22%.</p>
         </article>
       </div>
-      <p class="shift-caption">На этом фоне целесообразно заранее обратить внимание на два инструмента, которые помогают сформировать более эффективную налоговую структуру капитала.</p>
+      <p class="shift-caption">На этом фоне стоит сравнить три инструмента налоговой льготы и подобрать их под сроки и задачи капитала.</p>
     </section>
 
     <section class="infrastructure shell" aria-labelledby="infrastructure-title">
       <div class="section-intro">
-        <p class="section-kicker">Два инструмента</p>
-        <h2 id="infrastructure-title">Зафиксировать условия 2026 года</h2>
-        <p class="emphasis">ИИС-3 и страховой договор можно использовать одновременно, сочетая их налоговые преимущества.</p>
+        <p class="section-kicker">Три инструмента</p>
+        <h2 id="infrastructure-title">Разные задачи — разные налоговые льготы</h2>
+        <p class="emphasis">ЛДВ действует для подходящих бумаг на обычном брокерском счете. ИИС-3 и страховой договор можно использовать одновременно для других частей капитала.</p>
       </div>
       <div class="product-grid">
         <article class="product-card">
@@ -390,11 +395,26 @@
             <li>Для договора, открытого в <strong>2026 году</strong>, минимальный срок для льготы — <strong>5 лет</strong>; в <strong>2027 году — 6 лет</strong></li>
           </ul>
         </article>
+        <article class="product-card">
+          <span class="product-number">03 · ЛДВ</span>
+          <h3>Долгосрочное владение</h3>
+          <p>Налоговый вычет из дохода от продажи или погашения подходящих ценных бумаг на обычном брокерском счете.</p>
+          <ul>
+            <li>Лимит: <strong>3 млн ₽ за каждый полный год владения</strong> при одинаковом сроке всех бумаг</li>
+            <li>Условие: <strong>более 3 лет непрерывного владения</strong> конкретными бумагами</li>
+            <li>За 5 полных лет — <strong>до 15 млн ₽ прибыли без НДФЛ</strong>; за 10 лет — до 30 млн ₽</li>
+            <li>Количество брокерских счетов <strong>не увеличивает общий лимит</strong> за налоговый год</li>
+            <li>Льгота не распространяется отдельно на <strong>купоны и дивиденды</strong></li>
+            <li>Бумаги, которые учитываются или ранее учитывались на ИИС, не подходят для этой льготы</li>
+            <li>Новая покупка начинает свой срок владения. Если сроки бумаг различаются, лимит рассчитывается с учетом коэффициента Кцб</li>
+          </ul>
+          <p><a href="https://www.nalog.gov.ru/rn77/taxation/taxes/ndfl/nalog_vichet/inv_vichet/" target="_blank" rel="noopener noreferrer">Условия ЛДВ на сайте ФНС</a></p>
+        </article>
       </div>
       <div class="formula">
         <strong>ИИС-3 и страховой договор можно использовать одновременно</strong>
         <p>При соблюдении условий это позволяет сочетать налоговые преимущества двух инструментов: до <strong>60 млн ₽ льготируемого дохода на одно физлицо в один год</strong></p>
-        <p class="formula-note">Калькулятор использует ежедневную капитализацию. До 5 лет льгота не применяется; после 5 лет учитывается лимит 30 млн ₽ на выбранный счет или договор, а превышение облагается по модельной шкале 13 / 15 / 18 / 20 / 22%.</p>
+        <p class="formula-note">Калькулятор использует ежедневную капитализацию и модельную шкалу НДФЛ 13 / 15 / 18 / 20 / 22% для возможных изменений. Для ИИС и страховки применяется пятилетний минимум по условиям 2026 года. Для ЛДВ — более трех лет владения и лимит 3 млн ₽ × число полных лет. В режиме ЛДВ весь доход условно представляет рост стоимости подходящих бумаг без купонов, дивидендов и промежуточных продаж. ЛДВ и льготу ИИС нельзя применить к одному и тому же доходу.</p>
       </div>
     </section>
 
@@ -439,6 +459,8 @@
         returnValue: document.querySelector('#return-value'),
         insuranceFeeValue: document.querySelector('#insurance-fee-value'),
         insuranceFeeHint: document.querySelector('#insurance-fee-hint'),
+        insuranceFeeField: document.querySelector('#insurance-fee-field'),
+        accountsField: document.querySelector('#accounts-field'),
         wrapperValue: document.querySelector('#wrapper-value'),
         wrapperHint: document.querySelector('#wrapper-hint'),
         amountHint: document.querySelector('#amount-hint'),
@@ -456,6 +478,7 @@
         fee: document.querySelector('#fee-result'),
         taxable: document.querySelector('#taxable-result'),
         progressValue: document.querySelector('#progress-value'),
+        progressLabel: document.querySelector('#progress-label'),
         progressBar: document.querySelector('#progress-bar'),
         benefitLimit: document.querySelector('#benefit-limit'),
         resultNote: document.querySelector('#result-note')
@@ -540,28 +563,34 @@
         const years = Number(termInput.value);
         const annualRate = Number(returnInput.value) / 100;
         const annualInsuranceFeeRate = Number(insuranceFeeInput.value) / 100;
+        const isLdv = wrapper === 'ldv';
         const days = years * 365;
         const growth = Math.pow(1 + annualRate / 365, days);
-        const iisPrincipal = wrapper === 'insurance' ? 0 : wrapper === 'both' ? principal / 2 : principal;
-        const insurancePrincipal = wrapper === 'iis' ? 0 : wrapper === 'both' ? principal / 2 : principal;
+        const iisPrincipal = wrapper === 'insurance' || isLdv ? 0 : wrapper === 'both' ? principal / 2 : principal;
+        const insurancePrincipal = wrapper === 'iis' || isLdv ? 0 : wrapper === 'both' ? principal / 2 : principal;
+        const ldvCapital = isLdv ? principal * growth : 0;
         const iisCapital = iisPrincipal * growth;
         const insurance = insuranceOutcome(insurancePrincipal, annualRate, annualInsuranceFeeRate, years);
         const insuranceCapital = insurance.capital;
-        const capital = iisCapital + insuranceCapital;
+        const capital = iisCapital + insuranceCapital + ldvCapital;
         const iisProfit = Math.max(0, iisCapital - iisPrincipal);
         const insuranceProfit = Math.max(0, insuranceCapital - insurancePrincipal);
-        const profit = iisProfit + insuranceProfit;
+        const ldvProfit = isLdv ? Math.max(0, ldvCapital - principal) : 0;
+        const profit = iisProfit + insuranceProfit + ldvProfit;
         const wrapperMultiplier = wrapper === 'both' ? 2 : 1;
         const benefitPerUnit = 30_000_000 * wrapperMultiplier;
-        const benefitLimit = benefitPerUnit * accounts;
-        const benefitMillions = 30 * wrapperMultiplier * accounts;
-        const isEligible = years >= 5;
-        const iisBenefitLimit = wrapper === 'insurance' ? 0 : 30_000_000 * accounts;
-        const insuranceBenefitLimit = wrapper === 'iis' ? 0 : 30_000_000 * accounts;
-        const potentialBenefit = Math.min(iisProfit, iisBenefitLimit) + Math.min(insuranceProfit, insuranceBenefitLimit);
+        const ldvBenefitLimit = isLdv ? 3_000_000 * Math.floor(years) : 0;
+        const benefitLimit = isLdv ? ldvBenefitLimit : benefitPerUnit * accounts;
+        const benefitMillions = benefitLimit / 1_000_000;
+        // Integer-year input: exactly three years does not satisfy "more than three".
+        const isEligible = isLdv ? years > 3 : years >= 5;
+        const minimumEligibleYears = isLdv ? 4 : 5;
+        const iisBenefitLimit = wrapper === 'insurance' || isLdv ? 0 : 30_000_000 * accounts;
+        const insuranceBenefitLimit = wrapper === 'iis' || isLdv ? 0 : 30_000_000 * accounts;
+        const potentialBenefit = Math.min(iisProfit, iisBenefitLimit) + Math.min(insuranceProfit, insuranceBenefitLimit) + Math.min(ldvProfit, ldvBenefitLimit);
         const appliedBenefit = isEligible ? potentialBenefit : 0;
         const taxableProfit = isEligible
-          ? Math.max(0, iisProfit - iisBenefitLimit) + Math.max(0, insuranceProfit - insuranceBenefitLimit)
+          ? Math.max(0, iisProfit - iisBenefitLimit) + Math.max(0, insuranceProfit - insuranceBenefitLimit) + Math.max(0, ldvProfit - ldvBenefitLimit)
           : profit;
         const tax = progressiveTax(taxableProfit);
         const taxWithoutBenefit = progressiveTax(profit);
@@ -570,7 +599,9 @@
         const insuranceGrowth = insurancePrincipal > 0 ? insuranceCapital / insurancePrincipal : insuranceOutcome(1, annualRate, annualInsuranceFeeRate, years).capital;
         const insuranceProfitFactor = insuranceGrowth - 1;
         let targetPrincipal = Infinity;
-        if (wrapper === 'iis' && iisProfitFactor > 0) {
+        if (isLdv && iisProfitFactor > 0) {
+          targetPrincipal = ldvBenefitLimit / iisProfitFactor;
+        } else if (wrapper === 'iis' && iisProfitFactor > 0) {
           targetPrincipal = iisBenefitLimit / iisProfitFactor;
         } else if (wrapper === 'insurance' && insuranceProfitFactor > 0) {
           targetPrincipal = insuranceBenefitLimit / insuranceProfitFactor;
@@ -581,15 +612,25 @@
           );
         }
         const additional = Number.isFinite(targetPrincipal) ? Math.max(0, targetPrincipal - principal) : Infinity;
-        const progress = benefitLimit > 0 ? Math.min(100, potentialBenefit / benefitLimit * 100) : 0;
+        const progress = benefitLimit > 0 ? Math.min(100, (isLdv ? appliedBenefit : potentialBenefit) / benefitLimit * 100) : 0;
 
         els.termValue.textContent = pluralYears(years);
         els.returnValue.textContent = `${percent.format(annualRate * 100)}% в год`;
         els.insuranceFeeValue.textContent = `${percent.format(annualInsuranceFeeRate * 100)}% в год`;
-        els.insuranceFeeHint.textContent = wrapper === 'iis'
-          ? 'Для выбранного ИИС комиссия страхового договора не применяется.'
+        els.insuranceFeeField.hidden = isLdv;
+        els.accountsField.hidden = isLdv;
+        els.progressLabel.textContent = isLdv && !isEligible ? 'ЛДВ пока недоступна по сроку' : 'Использование доступной льготы';
+        els.insuranceFeeHint.textContent = wrapper === 'iis' || isLdv
+          ? 'Комиссия страхового договора для выбранного инструмента не применяется.'
           : `Удерживается ежеквартально с текущей стоимости страховых активов: по ${quarterPercent.format(annualInsuranceFeeRate * 100 / 4)}% за квартал.`;
-        if (wrapper === 'iis') {
+        if (isLdv) {
+          els.wrapperValue.textContent = 'ЛДВ';
+          els.wrapperHint.textContent = 'Брокерский счет: более 3 лет владения подходящими бумагами. Лимит — 3 млн ₽ × число полных лет; число счетов его не увеличивает.';
+          els.accountsLabel.textContent = 'Количество брокерских счетов';
+          els.accountsValue.textContent = 'Общий лимит';
+          els.accountsHint.textContent = 'Лимит ЛДВ общий для налогоплательщика за год, независимо от числа брокерских счетов.';
+          els.amountHint.textContent = 'Вся сумма — портфель подходящих бумаг с одинаковым сроком владения. Доход условно только от роста стоимости, без купонов и дивидендов.';
+        } else if (wrapper === 'iis') {
           els.wrapperValue.textContent = 'ИИС-3';
           els.wrapperHint.textContent = 'Расчет льготы по индивидуальным инвестиционным счетам.';
           els.accountsLabel.textContent = 'Количество ИИС';
@@ -625,23 +666,31 @@
         if (!Number.isFinite(targetPrincipal)) {
           els.targetLabel.textContent = 'При выбранной доходности и комиссии льгота не заполняется';
           els.additional.textContent = 'Измените параметры';
-          els.targetCaption.textContent = 'Увеличьте ожидаемую доходность или уменьшите комиссию страхового договора.';
+          els.targetCaption.textContent = isLdv ? 'При нулевой доходности нет прибыли для применения ЛДВ. Выберите положительную ожидаемую доходность.' : 'Увеличьте ожидаемую доходность или уменьшите комиссию страхового договора.';
         } else if (!isEligible) {
           els.targetLabel.textContent = 'Для применения льготы сначала увеличьте срок';
-          els.additional.textContent = `Еще ${pluralYears(5 - years)}`;
-          els.targetCaption.textContent = `При выбранной доходности капитал для прибыли ${benefitMillions} млн ₽ составил бы ${rubles.format(targetPrincipal)}, но до 5 лет льгота не действует.`;
+          els.additional.textContent = `Еще ${pluralYears(minimumEligibleYears - years)}`;
+          els.targetCaption.textContent = isLdv
+            ? 'Нужно более 3 лет владения бумагами. Ползунок задает целые годы: выберите 4 года или больше. При ровно 3 годах вычет не применяется.'
+            : `При выбранной доходности капитал для прибыли ${benefitMillions} млн ₽ составил бы ${rubles.format(targetPrincipal)}, но до 5 лет льгота не действует.`;
         } else if (additional > 0) {
           els.targetLabel.textContent = `Чтобы использовать льготу ${benefitMillions} млн ₽ полностью, пополните еще`;
           els.additional.textContent = rubles.format(additional);
           const unitName = wrapper === 'iis' ? 'один ИИС' : wrapper === 'insurance' ? 'один договор' : 'один комплект';
-          els.targetCaption.textContent = `Целевой объем вложений: ${rubles.format(targetPrincipal)} · ${rubles.format(targetPrincipal / accounts)} на ${unitName}.`;
+          els.targetCaption.textContent = isLdv
+            ? `Целевой объем вложений: ${rubles.format(targetPrincipal)} для прибыли ${benefitMillions} млн ₽ за ${pluralYears(years)}. Лимит общий, не на каждый счет.`
+            : `Целевой объем вложений: ${rubles.format(targetPrincipal)} · ${rubles.format(targetPrincipal / accounts)} на ${unitName}.`;
         } else {
-          els.targetLabel.textContent = 'Ваш капитал уже формирует прибыль выше лимита льготы';
+          els.targetLabel.textContent = 'Ваш капитал уже полностью использует лимит льготы';
           els.additional.textContent = 'Пополнение не требуется';
           els.targetCaption.textContent = `До ${rubles.format(benefitLimit)} прибыли освобождается, превышение попадает под прогрессивную шкалу.`;
         }
 
-        if (!isEligible) {
+        if (isLdv) {
+          els.resultNote.textContent = isEligible
+            ? `ЛДВ: лимит ${rubles.format(ldvBenefitLimit)} за ${pluralYears(years)} владения. Налог рассчитан при продаже или погашении в конце срока. Все бумаги условно подходят для ЛДВ и не учитывались на ИИС. Купоны, дивиденды, другие доходы и комиссии брокера не моделируются. Шкала 13–22% — сценарий возможных изменений, а не действующая шкала для этих доходов.`
+            : 'ЛДВ не применяется: нужно более 3 лет непрерывного владения подходящими бумагами. Вся прибыль включена в налоговую базу по сценарной шкале 13–22%. Комиссия страховки не применяется.';
+        } else if (!isEligible) {
           els.resultNote.textContent = 'Срок меньше 5 лет: вся прибыль включена в налоговую базу. Страховая комиссия списывается ежеквартально; модель не учитывает другие комиссии, доходы и рыночные риски.';
         } else {
           els.resultNote.textContent = `В расчете применена льгота до ${rubles.format(benefitLimit)} прибыли. Страховая комиссия списывается ежеквартально; модель не учитывает другие комиссии, доходы и рыночные риски.`;
@@ -653,13 +702,15 @@
           profit: Math.round(profit),
           tax: Math.round(tax),
           taxSavings: Math.round(saving),
+          appliedBenefit: Math.round(appliedBenefit),
+          netCapital: Math.round(capital - tax),
           insuranceFees: Math.round(insurance.totalFee),
           taxableProfit: Math.round(taxableProfit),
           benefitLimit: Math.round(benefitLimit),
           targetInvestment: Number.isFinite(targetPrincipal) ? Math.round(targetPrincipal) : null,
           additionalInvestmentNeeded: Number.isFinite(additional) ? Math.round(additional) : null,
           eligible: isEligible,
-          accounts,
+          accounts: isLdv ? 1 : accounts,
           wrapper,
           years,
           annualReturnPercent: annualRate * 100,
@@ -693,7 +744,7 @@
         const register = modelContext.registerTool({
           name: 'calculate_tax_plan',
           title: 'Рассчитать налоговый сценарий',
-          description: 'Установить оболочку, сумму инвестирования, срок, ожидаемую доходность, комиссию страхового договора и количество счетов или договоров, затем вернуть расчет капитала, комиссии, налога, экономии и требуемого пополнения.',
+          description: 'Рассчитать ЛДВ, ИИС-3, страховку или сочетание ИИС и страховки: капитал, комиссию, льготу, налог, экономию и требуемое пополнение. Для ЛДВ лимит общий, количество счетов не влияет.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -701,8 +752,8 @@
               years: { type: 'integer', minimum: 1, maximum: 20, description: 'Срок инвестирования в полных годах.' },
               annualReturnPercent: { type: 'number', minimum: 0, maximum: 30, description: 'Ожидаемая средняя годовая доходность в процентах.' },
               insuranceAnnualFeePercent: { type: 'number', minimum: 0, maximum: 5, description: 'Годовая комиссия страхового договора в процентах. Удерживается ежеквартально с текущей стоимости страховых активов.' },
-              wrapper: { type: 'string', enum: ['iis', 'insurance', 'both'], description: 'Оболочка: ИИС-3, страховка или оба инструмента вместе.' },
-              accountCount: { type: 'integer', minimum: 1, maximum: 3, description: 'Количество счетов.' }
+              wrapper: { type: 'string', enum: ['iis', 'insurance', 'both', 'ldv'], description: 'ИИС-3, страховка, ИИС и страховка вместе или брокерский счет с ЛДВ. ЛДВ и ИИС не суммируются для одного дохода.' },
+              accountCount: { type: 'integer', minimum: 1, maximum: 3, description: 'Количество счетов или договоров в исходной модели. Для ЛДВ параметр не увеличивает лимит.' }
             },
             required: ['amount', 'years', 'annualReturnPercent', 'insuranceAnnualFeePercent', 'wrapper', 'accountCount'],
             additionalProperties: false
@@ -714,7 +765,7 @@
               && Number.isInteger(values.years) && values.years >= 1 && values.years <= 20
               && Number.isFinite(values.annualReturnPercent) && values.annualReturnPercent >= 0 && values.annualReturnPercent <= 30
               && Number.isFinite(values.insuranceAnnualFeePercent) && values.insuranceAnnualFeePercent >= 0 && values.insuranceAnnualFeePercent <= 5
-              && ['iis', 'insurance', 'both'].includes(values.wrapper)
+              && ['iis', 'insurance', 'both', 'ldv'].includes(values.wrapper)
               && Number.isInteger(values.accountCount) && values.accountCount >= 1 && values.accountCount <= 3;
             if (!valid) throw new TypeError('Параметры вне допустимого диапазона калькулятора.');
 
@@ -726,6 +777,7 @@
             wrapperButtons.forEach(item => item.setAttribute('aria-pressed', String(item.dataset.wrapper === wrapper)));
             accounts = values.accountCount;
             accountButtons.forEach(item => item.setAttribute('aria-pressed', String(Number(item.dataset.accounts) === accounts)));
+            syncAmountRange();
             return calculate();
           }
         }, { signal: lifecycle.signal });
@@ -739,5 +791,3 @@
   </script>
 </body>
 </html>
-
-
