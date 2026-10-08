@@ -239,7 +239,7 @@
       <div class="hero-facts" aria-label="Основные параметры модели">
         <span class="pill">Ежедневная капитализация</span>
         <span class="pill">Комиссия страховки поквартально</span>
-        <span class="pill">До 3 счетов</span>
+        <span class="pill">До 3 ИИС и до 3 страховых договоров</span>
         <span class="pill">ЛДВ: более 3 лет владения</span>
         <span class="pill">ИИС и страховка: от 5 лет</span>
         <span class="pill">Сценарий НДФЛ 13–22%</span>
@@ -259,6 +259,26 @@
               <button class="wrapper-btn" type="button" data-wrapper="ldv" aria-pressed="false">Брокерский счет + ЛДВ</button>
             </div>
             <p class="field-hint" id="wrapper-hint">Одновременно учитываются ИИС-3 и страховой договор.</p>
+          </div>
+
+          <div class="field" id="iis-count-field">
+            <div class="field-head"><span id="iis-count-label">Количество ИИС</span><span class="field-value" id="iis-count-value">1 счет</span></div>
+            <div class="account-toggle" role="group" aria-labelledby="iis-count-label">
+              <button class="account-btn" type="button" data-iis-count="1" aria-pressed="true">1</button>
+              <button class="account-btn" type="button" data-iis-count="2" aria-pressed="false">2</button>
+              <button class="account-btn" type="button" data-iis-count="3" aria-pressed="false">3</button>
+            </div>
+            <p class="field-hint">Количество ИИС задается независимо от количества страховых договоров.</p>
+          </div>
+
+          <div class="field" id="insurance-count-field">
+            <div class="field-head"><span id="insurance-count-label">Количество страховых договоров</span><span class="field-value" id="insurance-count-value">1 договор</span></div>
+            <div class="account-toggle" role="group" aria-labelledby="insurance-count-label">
+              <button class="account-btn" type="button" data-insurance-count="1" aria-pressed="true">1</button>
+              <button class="account-btn" type="button" data-insurance-count="2" aria-pressed="false">2</button>
+              <button class="account-btn" type="button" data-insurance-count="3" aria-pressed="false">3</button>
+            </div>
+            <p class="field-hint">Комиссия удерживается только с активов выбранных страховых договоров.</p>
           </div>
 
           <div class="field">
@@ -291,15 +311,6 @@
             <p class="field-hint" id="insurance-fee-hint">Удерживается ежеквартально с текущей стоимости страховых активов: по 0,375% за квартал.</p>
           </div>
 
-          <div class="field" id="accounts-field">
-            <div class="field-head"><label id="accounts-label">Количество комплектов</label><span class="field-value" id="accounts-value">1 комплект</span></div>
-            <div class="account-toggle" role="group" aria-label="Количество счетов или договоров">
-              <button class="account-btn" type="button" data-accounts="1" aria-pressed="true">1</button>
-              <button class="account-btn" type="button" data-accounts="2" aria-pressed="false">2</button>
-              <button class="account-btn" type="button" data-accounts="3" aria-pressed="false">3</button>
-            </div>
-            <p class="field-hint" id="accounts-hint">Один комплект — один ИИС-3 и один страховой договор; суммарная льгота модели — до 60 млн ₽.</p>
-          </div>
         </section>
 
         <section class="results" aria-live="polite" aria-labelledby="results-title">
@@ -444,9 +455,11 @@
       const termInput = document.querySelector('#term');
       const returnInput = document.querySelector('#return');
       const insuranceFeeInput = document.querySelector('#insurance-fee');
-      const accountButtons = [...document.querySelectorAll('.account-btn')];
+      const iisCountButtons = [...document.querySelectorAll('[data-iis-count]')];
+      const insuranceCountButtons = [...document.querySelectorAll('[data-insurance-count]')];
       const wrapperButtons = [...document.querySelectorAll('.wrapper-btn')];
-      let accounts = 1;
+      let iisAccountCount = 1;
+      let insuranceContractCount = 1;
       let wrapper = 'both';
 
       const rubles = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
@@ -460,13 +473,13 @@
         insuranceFeeValue: document.querySelector('#insurance-fee-value'),
         insuranceFeeHint: document.querySelector('#insurance-fee-hint'),
         insuranceFeeField: document.querySelector('#insurance-fee-field'),
-        accountsField: document.querySelector('#accounts-field'),
+        iisCountField: document.querySelector('#iis-count-field'),
+        insuranceCountField: document.querySelector('#insurance-count-field'),
+        iisCountValue: document.querySelector('#iis-count-value'),
+        insuranceCountValue: document.querySelector('#insurance-count-value'),
         wrapperValue: document.querySelector('#wrapper-value'),
         wrapperHint: document.querySelector('#wrapper-hint'),
         amountHint: document.querySelector('#amount-hint'),
-        accountsLabel: document.querySelector('#accounts-label'),
-        accountsValue: document.querySelector('#accounts-value'),
-        accountsHint: document.querySelector('#accounts-hint'),
         additional: document.querySelector('#additional'),
         targetLabel: document.querySelector('#target-label'),
         targetCaption: document.querySelector('#target-caption'),
@@ -518,12 +531,6 @@
         return `${value} договоров`;
       }
 
-      function pluralSets(value) {
-        if (value === 1) return '1 комплект';
-        if (value === 2 || value === 3) return `${value} комплекта`;
-        return `${value} комплектов`;
-      }
-
       function progressiveTax(base) {
         const brackets = [
           { cap: 2_400_000, rate: 0.13 },
@@ -564,10 +571,16 @@
         const annualRate = Number(returnInput.value) / 100;
         const annualInsuranceFeeRate = Number(insuranceFeeInput.value) / 100;
         const isLdv = wrapper === 'ldv';
+        const activeIisCount = wrapper === 'iis' || wrapper === 'both' ? iisAccountCount : 0;
+        const activeInsuranceCount = wrapper === 'insurance' || wrapper === 'both' ? insuranceContractCount : 0;
+        const totalAccounts = activeIisCount + activeInsuranceCount;
+        // Equal initial investment in every selected account/contract, not 50/50 by wrapper.
+        const iisShare = totalAccounts > 0 ? activeIisCount / totalAccounts : 0;
+        const insuranceShare = totalAccounts > 0 ? activeInsuranceCount / totalAccounts : 0;
         const days = years * 365;
         const growth = Math.pow(1 + annualRate / 365, days);
-        const iisPrincipal = wrapper === 'insurance' || isLdv ? 0 : wrapper === 'both' ? principal / 2 : principal;
-        const insurancePrincipal = wrapper === 'iis' || isLdv ? 0 : wrapper === 'both' ? principal / 2 : principal;
+        const iisPrincipal = principal * iisShare;
+        const insurancePrincipal = principal * insuranceShare;
         const ldvCapital = isLdv ? principal * growth : 0;
         const iisCapital = iisPrincipal * growth;
         const insurance = insuranceOutcome(insurancePrincipal, annualRate, annualInsuranceFeeRate, years);
@@ -577,16 +590,14 @@
         const insuranceProfit = Math.max(0, insuranceCapital - insurancePrincipal);
         const ldvProfit = isLdv ? Math.max(0, ldvCapital - principal) : 0;
         const profit = iisProfit + insuranceProfit + ldvProfit;
-        const wrapperMultiplier = wrapper === 'both' ? 2 : 1;
-        const benefitPerUnit = 30_000_000 * wrapperMultiplier;
+        const iisBenefitLimit = 30_000_000 * activeIisCount;
+        const insuranceBenefitLimit = 30_000_000 * activeInsuranceCount;
         const ldvBenefitLimit = isLdv ? 3_000_000 * Math.floor(years) : 0;
-        const benefitLimit = isLdv ? ldvBenefitLimit : benefitPerUnit * accounts;
+        const benefitLimit = isLdv ? ldvBenefitLimit : iisBenefitLimit + insuranceBenefitLimit;
         const benefitMillions = benefitLimit / 1_000_000;
         // Integer-year input: exactly three years does not satisfy "more than three".
         const isEligible = isLdv ? years > 3 : years >= 5;
         const minimumEligibleYears = isLdv ? 4 : 5;
-        const iisBenefitLimit = wrapper === 'insurance' || isLdv ? 0 : 30_000_000 * accounts;
-        const insuranceBenefitLimit = wrapper === 'iis' || isLdv ? 0 : 30_000_000 * accounts;
         const potentialBenefit = Math.min(iisProfit, iisBenefitLimit) + Math.min(insuranceProfit, insuranceBenefitLimit) + Math.min(ldvProfit, ldvBenefitLimit);
         const appliedBenefit = isEligible ? potentialBenefit : 0;
         const taxableProfit = isEligible
@@ -607,8 +618,8 @@
           targetPrincipal = insuranceBenefitLimit / insuranceProfitFactor;
         } else if (wrapper === 'both' && iisProfitFactor > 0 && insuranceProfitFactor > 0) {
           targetPrincipal = Math.max(
-            2 * iisBenefitLimit / iisProfitFactor,
-            2 * insuranceBenefitLimit / insuranceProfitFactor
+            iisBenefitLimit / iisProfitFactor / iisShare,
+            insuranceBenefitLimit / insuranceProfitFactor / insuranceShare
           );
         }
         const additional = Number.isFinite(targetPrincipal) ? Math.max(0, targetPrincipal - principal) : Infinity;
@@ -617,40 +628,31 @@
         els.termValue.textContent = pluralYears(years);
         els.returnValue.textContent = `${percent.format(annualRate * 100)}% в год`;
         els.insuranceFeeValue.textContent = `${percent.format(annualInsuranceFeeRate * 100)}% в год`;
-        els.insuranceFeeField.hidden = isLdv;
-        els.accountsField.hidden = isLdv;
-        els.progressLabel.textContent = isLdv && !isEligible ? 'ЛДВ пока недоступна по сроку' : 'Использование доступной льготы';
+        els.insuranceFeeField.hidden = activeInsuranceCount === 0;
+        els.iisCountField.hidden = activeIisCount === 0;
+        els.insuranceCountField.hidden = activeInsuranceCount === 0;
+        els.iisCountValue.textContent = pluralAccounts(iisAccountCount);
+        els.insuranceCountValue.textContent = pluralContracts(insuranceContractCount);
+        els.progressLabel.textContent = isLdv && !isEligible ? 'ЛДВ пока недоступна по сроку' : totalAccounts > 2 ? 'Использование суммарного лимита модели' : 'Использование доступной льготы';
         els.insuranceFeeHint.textContent = wrapper === 'iis' || isLdv
           ? 'Комиссия страхового договора для выбранного инструмента не применяется.'
           : `Удерживается ежеквартально с текущей стоимости страховых активов: по ${quarterPercent.format(annualInsuranceFeeRate * 100 / 4)}% за квартал.`;
         if (isLdv) {
           els.wrapperValue.textContent = 'ЛДВ';
           els.wrapperHint.textContent = 'Брокерский счет: более 3 лет владения подходящими бумагами. Лимит — 3 млн ₽ × число полных лет; число счетов его не увеличивает.';
-          els.accountsLabel.textContent = 'Количество брокерских счетов';
-          els.accountsValue.textContent = 'Общий лимит';
-          els.accountsHint.textContent = 'Лимит ЛДВ общий для налогоплательщика за год, независимо от числа брокерских счетов.';
           els.amountHint.textContent = 'Вся сумма — портфель подходящих бумаг с одинаковым сроком владения. Доход условно только от роста стоимости, без купонов и дивидендов.';
         } else if (wrapper === 'iis') {
           els.wrapperValue.textContent = 'ИИС-3';
           els.wrapperHint.textContent = 'Расчет льготы по индивидуальным инвестиционным счетам.';
-          els.accountsLabel.textContent = 'Количество ИИС';
-          els.accountsValue.textContent = pluralAccounts(accounts);
-          els.accountsHint.textContent = 'В модели льгота составляет до 30 млн ₽ прибыли на каждый ИИС.';
           els.amountHint.textContent = 'Общая сумма распределяется поровну между выбранными ИИС.';
         } else if (wrapper === 'insurance') {
           els.wrapperValue.textContent = 'Страховка';
           els.wrapperHint.textContent = 'Расчет льготы по договорам страхования.';
-          els.accountsLabel.textContent = 'Количество договоров';
-          els.accountsValue.textContent = pluralContracts(accounts);
-          els.accountsHint.textContent = 'В модели льгота составляет до 30 млн ₽ дохода на каждый договор.';
           els.amountHint.textContent = 'Общая сумма распределяется поровну между выбранными договорами.';
         } else {
           els.wrapperValue.textContent = 'ИИС + Страховка';
-          els.wrapperHint.textContent = 'Одновременно учитываются ИИС-3 и страховой договор.';
-          els.accountsLabel.textContent = 'Количество комплектов';
-          els.accountsValue.textContent = pluralSets(accounts);
-          els.accountsHint.textContent = 'Один комплект — один ИИС-3 и один страховой договор; суммарная льгота модели — до 60 млн ₽.';
-          els.amountHint.textContent = 'Общая сумма распределяется между выбранными комплектами ИИС-3 и страховых договоров.';
+          els.wrapperHint.textContent = `Выбрано: ИИС — ${pluralAccounts(activeIisCount)}, страховка — ${pluralContracts(activeInsuranceCount)}. Количество каждого инструмента задается отдельно.`;
+          els.amountHint.textContent = `Начальная сумма распределяется поровну между всеми выбранными счетами и договорами: ${rubles.format(principal / totalAccounts)} на каждый. В ИИС — ${rubles.format(iisPrincipal)}, в страховке — ${rubles.format(insurancePrincipal)}.`;
         }
         els.principal.textContent = rubles.format(principal);
         els.capital.textContent = rubles.format(capital);
@@ -676,10 +678,10 @@
         } else if (additional > 0) {
           els.targetLabel.textContent = `Чтобы использовать льготу ${benefitMillions} млн ₽ полностью, пополните еще`;
           els.additional.textContent = rubles.format(additional);
-          const unitName = wrapper === 'iis' ? 'один ИИС' : wrapper === 'insurance' ? 'один договор' : 'один комплект';
+          const unitName = wrapper === 'iis' ? 'каждый ИИС' : wrapper === 'insurance' ? 'каждый страховой договор' : 'каждый счет или договор';
           els.targetCaption.textContent = isLdv
             ? `Целевой объем вложений: ${rubles.format(targetPrincipal)} для прибыли ${benefitMillions} млн ₽ за ${pluralYears(years)}. Лимит общий, не на каждый счет.`
-            : `Целевой объем вложений: ${rubles.format(targetPrincipal)} · ${rubles.format(targetPrincipal / accounts)} на ${unitName}.`;
+            : `Целевой объем вложений: ${rubles.format(targetPrincipal)} · ${rubles.format(targetPrincipal / totalAccounts)} на ${unitName}.`;
         } else {
           els.targetLabel.textContent = 'Ваш капитал уже полностью использует лимит льготы';
           els.additional.textContent = 'Пополнение не требуется';
@@ -693,7 +695,7 @@
         } else if (!isEligible) {
           els.resultNote.textContent = 'Срок меньше 5 лет: вся прибыль включена в налоговую базу. Страховая комиссия списывается ежеквартально; модель не учитывает другие комиссии, доходы и рыночные риски.';
         } else {
-          els.resultNote.textContent = `В расчете применена льгота до ${rubles.format(benefitLimit)} прибыли. Страховая комиссия списывается ежеквартально; модель не учитывает другие комиссии, доходы и рыночные риски.`;
+          els.resultNote.textContent = `В расчете использован суммарный лимит модели до ${rubles.format(benefitLimit)} прибыли. При нескольких ИИС или страховых договорах это не означает освобождение всей суммы в одном году: закрытия ИИС и страховые выплаты нужно распределять с учетом годовых ограничений. Годовой график выплат и налогов не моделируется. Страховая комиссия списывается ежеквартально; другие комиссии, доходы и рыночные риски не учтены.`;
         }
 
         return {
@@ -710,7 +712,11 @@
           targetInvestment: Number.isFinite(targetPrincipal) ? Math.round(targetPrincipal) : null,
           additionalInvestmentNeeded: Number.isFinite(additional) ? Math.round(additional) : null,
           eligible: isEligible,
-          accounts: isLdv ? 1 : accounts,
+          accounts: isLdv ? 1 : totalAccounts,
+          iisAccountCount: activeIisCount,
+          insuranceContractCount: activeInsuranceCount,
+          iisInvested: Math.round(iisPrincipal),
+          insuranceInvested: Math.round(insurancePrincipal),
           wrapper,
           years,
           annualReturnPercent: annualRate * 100,
@@ -732,9 +738,14 @@
         wrapperButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
         calculate();
       }));
-      accountButtons.forEach(button => button.addEventListener('click', () => {
-        accounts = Number(button.dataset.accounts);
-        accountButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      iisCountButtons.forEach(button => button.addEventListener('click', () => {
+        iisAccountCount = Number(button.dataset.iisCount);
+        iisCountButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+        calculate();
+      }));
+      insuranceCountButtons.forEach(button => button.addEventListener('click', () => {
+        insuranceContractCount = Number(button.dataset.insuranceCount);
+        insuranceCountButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
         calculate();
       }));
 
@@ -753,20 +764,28 @@
               annualReturnPercent: { type: 'number', minimum: 0, maximum: 30, description: 'Ожидаемая средняя годовая доходность в процентах.' },
               insuranceAnnualFeePercent: { type: 'number', minimum: 0, maximum: 5, description: 'Годовая комиссия страхового договора в процентах. Удерживается ежеквартально с текущей стоимости страховых активов.' },
               wrapper: { type: 'string', enum: ['iis', 'insurance', 'both', 'ldv'], description: 'ИИС-3, страховка, ИИС и страховка вместе или брокерский счет с ЛДВ. ЛДВ и ИИС не суммируются для одного дохода.' },
-              accountCount: { type: 'integer', minimum: 1, maximum: 3, description: 'Количество счетов или договоров в исходной модели. Для ЛДВ параметр не увеличивает лимит.' }
+              iisAccountCount: { type: 'integer', minimum: 1, maximum: 3, description: 'Количество ИИС: от 1 до 3, независимо от страховых договоров. По умолчанию 1. Используется в режимах iis и both.' },
+              insuranceContractCount: { type: 'integer', minimum: 1, maximum: 3, description: 'Количество страховых договоров: от 1 до 3, независимо от ИИС. По умолчанию 1. Используется в режимах insurance и both.' },
+              accountCount: { type: 'integer', minimum: 1, maximum: 3, description: 'Устаревший параметр совместимости. Задает оба количества, только если отдельные параметры не переданы. Для ЛДВ не влияет на лимит.' }
             },
-            required: ['amount', 'years', 'annualReturnPercent', 'insuranceAnnualFeePercent', 'wrapper', 'accountCount'],
+            required: ['amount', 'years', 'annualReturnPercent', 'insuranceAnnualFeePercent', 'wrapper'],
             additionalProperties: false
           },
           annotations: { readOnlyHint: false, untrustedContentHint: false },
           execute(input) {
             const values = input || {};
+            const requestedIisCount = values.iisAccountCount ?? values.accountCount ?? 1;
+            const requestedInsuranceCount = values.insuranceContractCount ?? values.accountCount ?? 1;
+            const validCount = value => Number.isInteger(value) && value >= 1 && value <= 3;
             const valid = Number.isFinite(values.amount) && values.amount >= 0 && values.amount <= 1_000_000_000_000
               && Number.isInteger(values.years) && values.years >= 1 && values.years <= 20
               && Number.isFinite(values.annualReturnPercent) && values.annualReturnPercent >= 0 && values.annualReturnPercent <= 30
               && Number.isFinite(values.insuranceAnnualFeePercent) && values.insuranceAnnualFeePercent >= 0 && values.insuranceAnnualFeePercent <= 5
               && ['iis', 'insurance', 'both', 'ldv'].includes(values.wrapper)
-              && Number.isInteger(values.accountCount) && values.accountCount >= 1 && values.accountCount <= 3;
+              && validCount(requestedIisCount) && validCount(requestedInsuranceCount)
+              && (values.iisAccountCount === undefined || validCount(values.iisAccountCount))
+              && (values.insuranceContractCount === undefined || validCount(values.insuranceContractCount))
+              && (values.accountCount === undefined || validCount(values.accountCount));
             if (!valid) throw new TypeError('Параметры вне допустимого диапазона калькулятора.');
 
             amountInput.value = number.format(values.amount);
@@ -775,8 +794,10 @@
             insuranceFeeInput.value = String(values.insuranceAnnualFeePercent);
             wrapper = values.wrapper;
             wrapperButtons.forEach(item => item.setAttribute('aria-pressed', String(item.dataset.wrapper === wrapper)));
-            accounts = values.accountCount;
-            accountButtons.forEach(item => item.setAttribute('aria-pressed', String(Number(item.dataset.accounts) === accounts)));
+            iisAccountCount = requestedIisCount;
+            insuranceContractCount = requestedInsuranceCount;
+            iisCountButtons.forEach(item => item.setAttribute('aria-pressed', String(Number(item.dataset.iisCount) === iisAccountCount)));
+            insuranceCountButtons.forEach(item => item.setAttribute('aria-pressed', String(Number(item.dataset.insuranceCount) === insuranceContractCount)));
             syncAmountRange();
             return calculate();
           }
