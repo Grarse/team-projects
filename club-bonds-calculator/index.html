@@ -52,6 +52,9 @@
 @media(max-width:780px){.company-answer{border-top-color:#e2d9ec}}
 
 .effect-bridge{grid-template-columns:1fr 15px .8fr 15px 1.2fr;max-width:1000px}.path-chain{min-height:35px}
+.simple-breakdown{border-top:1px solid var(--line);padding:27px 0 0;margin-top:27px}.simple-breakdown h3{font-size:21px;font-weight:600;line-height:1.3;margin:0 0 9px}.simple-breakdown>p{font-size:11px;line-height:1.65;color:var(--muted);margin:0 0 17px;max-width:850px}.simple-table{border-collapse:collapse;width:100%;max-width:900px;font-size:13px}.simple-table th,.simple-table td{padding:12px 0;border-bottom:1px solid var(--line)}.simple-table th{text-align:left;font-weight:400;padding-right:22px;line-height:1.5}.simple-table td{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:16px;width:145px}.simple-table thead th{font-size:11px;color:var(--muted)}.simple-table thead th:last-child{text-align:right;padding-right:0;white-space:nowrap}.simple-table .simple-base th,.simple-table .simple-base td{padding-bottom:17px}.simple-table .simple-difference th,.simple-table .simple-difference td{font-weight:600}.simple-table .simple-result th,.simple-table .simple-result td{font-weight:600;color:var(--red);border-bottom:2px solid var(--red);padding-top:17px;padding-bottom:17px}.simple-table .simple-result td{font-size:23px}.simple-breakdown>.simple-note{font-size:10px;margin:13px 0 0;max-width:850px}
+@media(max-width:780px){.simple-breakdown{margin-top:23px;padding-top:23px}.simple-breakdown h3{font-size:20px}.simple-table{font-size:11px}.simple-table th{padding-right:14px}.simple-table td{font-size:14px;width:105px}.simple-table .simple-result td{font-size:21px}}
+@media print{.simple-breakdown{padding-top:18px;margin-top:18px;break-inside:avoid}.simple-breakdown h3{font-size:17px}.simple-table{font-size:10px;max-width:none}.simple-table th,.simple-table td{padding-top:7px;padding-bottom:7px}.simple-table td{font-size:12px}.simple-table .simple-result td{font-size:17px}.simple-breakdown>p,.simple-breakdown>.simple-note{font-size:9px}}
 .tax-deduction-note{font-size:11px;line-height:1.65;color:var(--muted);margin:10px 0 0;min-height:62px}.bond-company-callout{color:var(--red);font-size:12px;line-height:1.65;font-weight:600;border-left:2px solid var(--red);padding-left:12px;margin:15px 0}.nominal-explanation{font-size:11px;line-height:1.65;color:var(--muted);margin:13px 0 0}.nominal-explanation strong{color:var(--ink);font-weight:600}
 @media(max-width:780px){.effect-bridge{grid-template-columns:1fr 1fr}.effect-bridge>.effect-total{grid-column:1/-1}.path-chain{min-height:0}}
 @media(max-width:780px){.tax-deduction-note{min-height:0}.bond-company-callout{font-size:11px}}
@@ -239,7 +242,26 @@
 <p class="nominal-explanation" id="nominal-explanation"></p>
 </section>
 </div>
-<details class="calculation-details" id="calculation-details"><summary>Пошаговый расчет этих сумм<svg fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="calculation-body" id="calculation-body"></div></details>
+<section class="simple-breakdown" aria-labelledby="simple-title">
+<h3 id="simple-title">Как получилась разница</h3>
+<p id="simple-context"></p>
+<table class="simple-table">
+<caption class="sr-only">Доход, вычет, личные налоги и итог собственников за весь период</caption>
+<thead><tr><th scope="col">Расчет</th><th scope="col">млн руб.</th></tr></thead>
+<tbody>
+<tr><th scope="row">Купонный доход с ежемесячным реинвестированием</th><td id="simple-gross"></td></tr>
+<tr><th scope="row">Доход, освобожденный от НДФЛ</th><td id="simple-exempt"></td></tr>
+<tr class="simple-base"><th scope="row">Доход, облагаемый НДФЛ при закрытии ИИС</th><td id="simple-taxable"></td></tr>
+<tr><th scope="row">НДФЛ с ИИС</th><td id="simple-iis-tax"></td></tr>
+<tr><th scope="row">НДФЛ с такой же суммы дивидендов, распределенной по годам</th><td id="simple-div-tax"></td></tr>
+<tr class="simple-difference"><th scope="row">Разница НДФЛ</th><td id="simple-tax-difference"></td></tr>
+<tr><th scope="row">Расходы на выпуск</th><td id="simple-cost"></td></tr>
+<tr class="simple-result"><th scope="row">Итог собственников</th><td id="simple-result"></td></tr>
+</tbody>
+</table>
+<p class="simple-note">Вычет уменьшает облагаемый доход, не сам налог. НДФЛ считается по человеку и году в сценарии 13–22%. Эффект компании не включен в этот итог.</p>
+</section>
+<details class="calculation-details" id="calculation-details"><summary>Подробные формулы и таблицы<svg fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="calculation-body" id="calculation-body"></div></details>
 <div class="effect-bridge" aria-label="Разница личных налогов за вычетом расходов на выпуск">
 <div>
 <span id="owner-breakdown-label">Собственники платят больше НДФЛ</span>
@@ -505,6 +527,11 @@ function draw(){
   const rows={'div-gross':r.divGross,'div-tax':r.divTax,'div-net':r.divNet,'bond-coupons':r.gross,'iis-tax':r.iisTax,'bond-net':r.bondNet,'issue-cost':p.cost,'company-coupons':r.gross,'company-benefit':r.companySaving};
   document.querySelector('.scene-fallback').innerHTML='КЛУБНЫЙ ВЫПУСК<strong>'+nf.format(p.rate*100)+'%</strong>'+money(p.principal);
   for(const [id,value] of Object.entries(rows))$(id).textContent=money(value);
+  $('simple-context').textContent='Выпуск '+money(p.principal)+' · купон '+nf.format(p.rate*100)+'% · '+p.owners+' '+(p.owners===1?'собственник':'собственника')+'. Все суммы — на всех собственников за весь период работы трех ИИС (5, 6 и 7 лет).';
+  const simpleRows={'simple-gross':r.gross,'simple-exempt':-r.exempt,'simple-taxable':r.gross-r.exempt,'simple-iis-tax':r.iisTax,'simple-div-tax':r.divTax,'simple-tax-difference':r.ownerTaxSaving,'simple-cost':-p.cost,'simple-result':r.saving};
+  for(const [id,value] of Object.entries(simpleRows))$(id).textContent=nf.format(value/M).replace('-','−');
+  $('simple-result').className=r.saving<0?'negative':'';
+  $('simple-tax-difference').className=r.ownerTaxSaving<0?'negative':'';
   $('iis-exemption').textContent='В НДФЛ уже учтен вычет: '+money(r.exempt/p.owners)+' дохода на человека, '+money(r.exempt)+' суммарно. Лимит — до 30 млн руб. в каждом из трех разных годов закрытия.';
   $('nominal-explanation').innerHTML='<strong>Компания обязана вернуть первоначальный заем — '+money(p.principal)+'.</strong> Это возврат вложенных собственниками денег, а не новый доход. Проценты после НДФЛ плюс возврат первоначальных вложений: '+money(r.bondNet+p.principal)+' всем собственникам за весь период, до расходов на выпуск. Повторное реинвестирование купонов увеличивает долг компании; его возврат учтен в купонном результате. Возврат исходного займа не прибавляется к налоговой выгоде.';
   $('company-rate-label').textContent=nf.format(p.companyTax*100)+'%';
