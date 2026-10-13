@@ -4,6 +4,7 @@
 
 ## Проекты
 
+- [Калькулятор: клубные облигации и ИИС-3](./club-bonds-calculator/) · [Открыть страницу](https://grarse.github.io/team-projects/club-bonds-calculator/)
 - [Страница 1: Альфа, ИИС-3 и брокерский счет](./alfa-policy-calculator/)
 - [Калькулятор: ИИС-3, Контур и брокерский счет](./iis-kontur-calculator/)
 - [Калькулятор: ОФЗ 26253](./ofz-26253-calculator/)
