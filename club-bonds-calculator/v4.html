@@ -190,7 +190,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   const host=document.getElementById('scene');
   let renderer;
   try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true,powerPreference:'low-power'})}catch(error){document.body.classList.add('no-webgl');return}
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio,2),2.5));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFShadowMap;
@@ -218,8 +218,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   shape.lineTo(-width/2,-height/2+corner);shape.quadraticCurveTo(-width/2,-height/2,-width/2+corner,-height/2);
   const geometry=new THREE.ExtrudeGeometry(shape,{depth:.11,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.025,bevelThickness:.025,curveSegments:18});
   geometry.translate(0,0,-.055);
-  function faceCanvas(color){const canvas=document.createElement('canvas');canvas.width=600;canvas.height=960;const c=canvas.getContext('2d');c.fillStyle=color;c.beginPath();c.roundRect(0,0,600,960,20);c.fill();c.globalCompositeOperation='destination-out';for(const x of [0,600]){c.beginPath();c.arc(x,720,18,0,Math.PI*2);c.fill()}c.globalCompositeOperation='source-over';return{canvas,c}}
-  function texture(canvas){const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex}
+  // Draw at double resolution while keeping the ticket's layout coordinates unchanged.
+  function faceCanvas(color){const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=1920;const c=canvas.getContext('2d');c.scale(2,2);c.fillStyle=color;c.beginPath();c.roundRect(0,0,600,960,20);c.fill();c.globalCompositeOperation='destination-out';for(const x of [0,600]){c.beginPath();c.arc(x,720,18,0,Math.PI*2);c.fill()}c.globalCompositeOperation='source-over';return{canvas,c}}
+  function texture(canvas){const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.generateMipmaps=false;tex.minFilter=THREE.LinearFilter;tex.magFilter=THREE.LinearFilter;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex}
   function addTicket(color,tex){const card=new THREE.Group();const body=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,roughness:.37,metalness:.02}));body.castShadow=true;body.receiveShadow=true;card.add(body);const front=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));front.position.z=.085;card.add(front);return card}
   const sheets=[];
   for(let i=2;i>=0;i--){const {canvas,c}=faceCanvas('#f7f9ff');c.fillStyle='#244ae7';c.font='600 54px "Golos Text",Arial';c.fillText('ИИС 0'+(i+1),52,110);c.font='400 20px "Golos Text",Arial';c.fillText('ДОЛГОСРОЧНЫЙ КАПИТАЛ',52,156);c.strokeStyle='#d2daf1';c.lineWidth=2;for(let y=210;y<630;y+=52){c.beginPath();c.moveTo(52,y);c.lineTo(548,y);c.stroke()}c.font='600 65px "Golos Text",Arial';c.fillText('30 млн ₽',52,816);c.font='400 22px "Golos Text",Arial';c.fillText('ДОХОДА ПОД ВЫЧЕТОМ',52,858);const card=addTicket(0xe8edf6,texture(canvas));card.position.set(.33*(i+1),.16*(i+1),-.33*(i+1));card.rotation.z=.065*(i+1);group.add(card);sheets.push(card)}
