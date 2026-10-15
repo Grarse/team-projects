@@ -69,6 +69,7 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
 @media(prefers-reduced-motion:reduce){.assembly-trail{display:none}.assembly-status{letter-spacing:.1em}}
 @media print{.assembly-canvas,.assembly-field,.assembly-shadow,.assembly-controls,.assembly-status{display:none!important}.hero-art.assembly-ready>.hero-sculpture{visibility:visible!important}.hero-art .art-tag.four{display:none}.hero-art.assembly-ready .art-tag.one{top:20%;right:10%}.hero-art.assembly-ready .art-tag.two{top:58%;left:5%}.hero-art.assembly-ready .art-tag.three{top:70%;right:1%}}
 
+.assembly-hint{display:none;position:absolute;left:21%;bottom:108px;z-index:4;margin:0;color:var(--muted);font-size:9px;line-height:1.6;letter-spacing:.015em;pointer-events:none}.assembly-ready .assembly-hint{display:block}.hero-art:focus-visible{outline:1px solid var(--accent);outline-offset:5px;border-radius:8px}.hero-art.assembly-print .assembly-hint{display:none}@media(max-width:1050px) and (min-width:651px){.assembly-hint{left:17%;font-size:8px}}@media(max-width:650px){.assembly-hint{left:10%;bottom:61px;font-size:8px}}@media print{.assembly-hint{display:none!important}}
 </style>
 </head>
 <body>
@@ -86,12 +87,12 @@ summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:n
   <div class="hero-topline"><span class="eyebrow"><i class="status-dot"></i>Частный капитал. Российское право.</span><span class="eyebrow">ПРАКТИЧЕСКИЙ ГИД / 2026</span></div>
   <div class="hero-grid">
    <div class="hero-copy"><h1 id="heroTitle">Капитал,<br>который<br><em>остаётся.</em></h1><p class="hero-description">Личный фонд: как сохранить бизнес целиком, задать правила для семьи и отделить активы от личных рисков.</p><div class="hero-actions"><a class="primary-link" href="#about">Начать с основы <span class="arrow">↘</span></a><span class="reading-time">Сначала — простая модель.<br>Подробности — по желанию.</span></div></div>
-   <div class="hero-art" id="heroArt">
+   <div class="hero-art" id="heroArt" tabindex="0" role="group" aria-label="Объединение активов в личном фонде" aria-describedby="assemblyHint">
     <canvas class="assembly-canvas" id="assemblyCanvas" role="img" aria-label="Анимация: отдельные медные фрагменты собираются в единую объёмную раму, символизируя объединение разных активов в личном фонде"></canvas>
     <div class="assembly-shadow" id="assemblyShadow" aria-hidden="true"></div>
     <svg class="assembly-field" id="assemblyField" viewBox="0 0 700 700" aria-hidden="true" focusable="false"><path class="assembly-orbit" data-assembly-orbit="0"/><path class="assembly-orbit" data-assembly-orbit="1"/><path class="assembly-trail" data-assembly-trail="0"/><path class="assembly-trail" data-assembly-trail="1"/><path class="assembly-trail" data-assembly-trail="2"/><path class="assembly-trail" data-assembly-trail="3"/></svg>
     <div class="assembly-status" aria-hidden="true"><i class="assembly-signal"></i><span id="assemblyStatus">Разные активы</span></div>
-    <div class="assembly-controls" role="group" aria-label="Управление анимацией"><button type="button" id="assemblyReplay" aria-label="Повторить сборку фрагментов"><span aria-hidden="true">↻</span> Повторить</button><button type="button" id="assemblyPause" aria-label="Приостановить анимацию" aria-pressed="false"><span aria-hidden="true">Ⅱ</span> Пауза</button></div>
+    <p class="assembly-hint" id="assemblyHint">Наведите курсор, чтобы собрать</p>
 
     <svg class="hero-sculpture" id="sculpture" viewBox="0 0 700 700" role="img" aria-label="Медная объёмная рама: разные активы в едином контуре личного фонда">
      <defs><linearGradient id="layer" x1="0" y1="0" x2="1" y2=".7"><stop offset="0" stop-color="#ca9475"/><stop offset=".3" stop-color="#ad6e54"/><stop offset=".59" stop-color="#703b3b"/><stop offset=".77" stop-color="#9e5a47"/><stop offset="1" stop-color="#4c2a31"/></linearGradient><linearGradient id="topFace" x1="0" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#e9c5a1"/><stop offset=".45" stop-color="#c28b6c"/><stop offset="1" stop-color="#a46650"/></linearGradient><radialGradient id="halo"><stop stop-color="#ceb69d" stop-opacity=".32"/><stop offset="1" stop-color="#ceb69d" stop-opacity="0"/></radialGradient><filter id="shadow"><feGaussianBlur stdDeviation="17"/></filter><path id="ring" d="M142 227 355 126 Q370 119 384 129 L579 268 Q595 279 577 288 L367 391 Q354 397 340 386 L142 247 Q127 237 142 227 Z M231 238 354 180 Q365 175 375 182 L490 264 Q500 272 487 279 L369 337 Q357 344 345 335 L231 255 Q218 246 231 238 Z" fill-rule="evenodd"/></defs>
@@ -456,10 +457,10 @@ selectReformTab('lf');
  let gl;try{gl=canvas.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:false,powerPreference:'low-power'});}catch{return;}
  if(!gl)return;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),fine=matchMedia('(pointer: fine)');
- const pause=document.getElementById('assemblyPause'),replay=document.getElementById('assemblyReplay'),status=document.getElementById('assemblyStatus');
+ const status=document.getElementById('assemblyStatus');
  const field=document.getElementById('assemblyField'),shadow=document.getElementById('assemblyShadow');
  const orbitPaths=Array.from(field.querySelectorAll('[data-assembly-orbit]')),trailPaths=Array.from(field.querySelectorAll('[data-assembly-trail]'));
- const TAU=Math.PI*2,DURATION=17.6;
+ const TAU=Math.PI*2,BREATH_PERIOD=17.6;
  const clamp=x=>Math.max(0,Math.min(1,x));
  const smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10);};
  const mix=(a,b,t)=>a+(b-a)*t;
@@ -489,76 +490,99 @@ selectReformTab('lf');
  for(const end of [0,1]){const a=section(end?Math.PI/2-gap:gap),center=a.reduce((s,p)=>s.map((v,i)=>v+p[i]/a.length),[0,0,0]);for(let k=0;k<8;k++)end?triangle(center,a[(k+1)%8],a[k]):triangle(center,a[k],a[(k+1)%8]);}
  const vertexSource=`attribute vec3 aPosition;attribute vec3 aNormal;uniform mat4 uModel;uniform mat4 uViewProjection;varying mediump vec3 vPosition;varying mediump vec3 vNormal;varying mediump vec3 vLocal;
  void main(){vec4 p=uModel*vec4(aPosition,1.0);vPosition=p.xyz;vNormal=normalize(mat3(uModel)*aNormal);vLocal=aPosition;gl_Position=uViewProjection*p;}`;
- const fragmentSource=`precision mediump float;varying mediump vec3 vPosition;varying mediump vec3 vNormal;varying mediump vec3 vLocal;uniform vec3 uEye;uniform vec3 uCopper;uniform float uTime;uniform float uAssembly;
+ const fragmentSource=`precision mediump float;varying mediump vec3 vPosition;varying mediump vec3 vNormal;varying mediump vec3 vLocal;uniform vec3 uEye;uniform vec3 uCopper;uniform float uSweep;uniform float uAssembly;
  void main(){vec3 n=normalize(vNormal);if(!gl_FrontFacing)n=-n;vec3 v=normalize(uEye-vPosition);vec3 key=normalize(vec3(-3.0,7.0,5.0));vec3 fill=normalize(vec3(5.0,2.5,-3.0));
  float diffuse=max(dot(n,key),0.0);float fillLight=max(dot(n,fill),0.0);vec3 r=reflect(-v,n);float box=pow(max(dot(r,normalize(vec3(-.8,1.4,1.1))),0.0),22.0);float strip=pow(max(dot(r,normalize(vec3(1.3,.8,-.8))),0.0),46.0);float fresnel=pow(1.0-max(dot(n,v),0.0),3.0);
  float grain=sin(vLocal.y*175.0+vLocal.x*8.0+sin(vLocal.z*17.0))*.009;float inward=max(-dot(n.xz,normalize(vPosition.xz+vec2(.001))),0.0);float occlusion=1.0-inward*uAssembly*.27;
  vec3 color=uCopper*(.34+diffuse*.88+fillLight*.22+grain)*occlusion+vec3(1.0,.80,.57)*box*.65+vec3(.8,.43,.23)*strip*.38+vec3(.65,.37,.22)*fresnel*.22;
- float scan=pow(max(0.0,1.0-abs(dot(vPosition,vec3(.35,.8,.18))-(mod(uTime,17.6)-8.1)*1.4)/.075),3.0)*uAssembly;color+=vec3(.55,.29,.10)*scan;
+ float scan=pow(max(0.0,1.0-abs(dot(vPosition,vec3(.35,.8,.18))-mix(-2.8,2.8,uSweep))/.075),3.0)*uAssembly*step(0.0,uSweep);color+=vec3(.55,.29,.10)*scan;
  color=color/(color+vec3(.55));color=pow(color,vec3(.87));gl_FragColor=vec4(color,1.0);}`;
  function createRenderer(){
   function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){gl.deleteShader(s);throw Error('Assembly shader unavailable');}return s;}
   const vs=shader(gl.VERTEX_SHADER,vertexSource),fs=shader(gl.FRAGMENT_SHADER,fragmentSource),program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('Assembly program unavailable');
   gl.useProgram(program);
   for(const [name,data]of[['aPosition',positions],['aNormal',normals]]){const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);const loc=gl.getAttribLocation(program,name);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,3,gl.FLOAT,false,0,0);}
-  const uniforms={};for(const name of ['uModel','uViewProjection','uEye','uCopper','uTime','uAssembly'])uniforms[name]=gl.getUniformLocation(program,name);
+  const uniforms={};for(const name of ['uModel','uViewProjection','uEye','uCopper','uSweep','uAssembly'])uniforms[name]=gl.getUniformLocation(program,name);
   gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);return {program,uniforms};
  }
  let gpu;try{gpu=createRenderer();}catch{return;}
- let width=1,heightPx=1,viewProjection,frameId=0,last=0,elapsed=0,userPaused=false,visible=true,contextLost=false,disposed=false;
+ let width=1,heightPx=1,viewProjection,frameId=0,last=0,elapsed=0,visible=true,contextLost=false,disposed=false,printing=false;
+ let progress=reduced.matches?1:0,velocity=0,intent=0,hovered=false,keyboardFocus=false,touchSelected=false,inputMode='keyboard',lastPointerType='mouse',sweep=null;
  let pointer={x:0,y:0},target={x:0,y:0},lastPhase='',lastProgress=-1;
+ const hint=document.getElementById('assemblyHint');
  const eye=[6.6,6.0,8.4],view=lookAt(eye,[0,0,0]),trails=Array.from({length:4},()=>[]);
- const modules=Array.from({length:16},(_,id)=>{const layer=Math.floor(id/4),quadrant=id%4,a=quadrant*Math.PI/2,ca=Math.cos(a),sa=Math.sin(a),tx=pivot*(ca+sa),tz=pivot*(ca-sa);return {layer,quadrant,order:(quadrant*5+layer*3)%16,angle:a,target:[tx,(layer-1.5)*.237,tz],scatter:[tx*1.65+Math.cos(id*2.4)*.27,(layer-1.5)*.68+Math.sin(id*1.7)*.35,tz*1.65+Math.sin(id*1.9)*.27],spin:[Math.sin(id*2.3)*1.05,Math.cos(id*1.4)*.95,Math.sin(id*.9)*.7]};});
+ const modules=Array.from({length:16},(_,id)=>{const layer=Math.floor(id/4),quadrant=id%4,a=quadrant*Math.PI/2,ca=Math.cos(a),sa=Math.sin(a),tx=pivot*(ca+sa),tz=pivot*(ca-sa);return {layer,quadrant,order:(quadrant*4+layer*5)%16,angle:a,target:[tx,(layer-1.5)*.237,tz],scatter:[tx*1.65+Math.cos(id*2.4)*.27,(layer-1.5)*.68+Math.sin(id*1.7)*.35,tz*1.65+Math.sin(id*1.9)*.27],spin:[Math.sin(id*2.3)*1.05,Math.cos(id*1.4)*.95,Math.sin(id*.9)*.7]};});
  function project(p){const q=point(viewProjection,p),z=q[3]||1;return [(q[0]/z*.5+.5)*width,(-q[1]/z*.5+.5)*heightPx];}
  function resize(){
   const rect=canvas.getBoundingClientRect();width=Math.max(1,rect.width||host.clientWidth||600);heightPx=Math.max(1,rect.height||host.clientHeight||660);const dpr=Math.min(devicePixelRatio||1,width<500?1.5:1.8);
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(heightPx*dpr);gl.viewport(0,0,canvas.width,canvas.height);viewProjection=multiply(perspective(width/heightPx),view);field.setAttribute('viewBox','0 0 '+width+' '+heightPx);
   orbitPaths.forEach((path,index)=>{const r=2.66+index*.38,pts=Array.from({length:121},(_,i)=>project([Math.cos(i/120*TAU)*r,-.98,Math.sin(i/120*TAU)*r]));path.setAttribute('d',pts.map((p,i)=>(i?'L':'M')+p.map(x=>x.toFixed(2)).join(' ')).join(' ')+'Z');});
-  trails.forEach(t=>t.length=0);if(!frameId)draw(elapsed);
+  trails.forEach(t=>t.length=0);draw();schedule();
  }
- function assemblyFor(m,t){if(reduced.matches)return 1;if(t<12.8)return smooth((t-1.2-m.order*.105)/4.55);return 1-smooth((t-12.8-(15-m.order)*.055)/3.35);}
- function draw(seconds){
+ function assemblyFor(m){return reduced.matches?1:smooth((progress-m.order*.009)/.865);}
+ function draw(){
   if(contextLost||disposed||!viewProjection)return;
-  const t=seconds%DURATION;pointer.x=mix(pointer.x,target.x,.065);pointer.y=mix(pointer.y,target.y,.065);
-  gl.useProgram(gpu.program);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(gpu.uniforms.uViewProjection,false,viewProjection);gl.uniform3fv(gpu.uniforms.uEye,eye);gl.uniform1f(gpu.uniforms.uTime,t);
-  const amounts=modules.map(m=>assemblyFor(m,t)),assembly=amounts.reduce((s,x)=>s+x,0)/modules.length;
-  const breathing=reduced.matches?0:Math.sin(t/DURATION*TAU),scale=mix(.80,1.13,assembly);
-  const global=multiply(translation(0,reduced.matches?0:Math.sin(t/DURATION*TAU*2)*.055,0),multiply(rotateY(-.12+breathing*.12+pointer.x*.15),multiply(rotateX(pointer.y*.09),scaling(scale))));
+  const t=elapsed;pointer.x=mix(pointer.x,target.x,.16);pointer.y=mix(pointer.y,target.y,.16);
+  gl.useProgram(gpu.program);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(gpu.uniforms.uViewProjection,false,viewProjection);gl.uniform3fv(gpu.uniforms.uEye,eye);gl.uniform1f(gpu.uniforms.uSweep,sweep===null?-1:clamp(sweep/1.2));
+  const amounts=modules.map(assemblyFor),assembly=amounts.reduce((s,x)=>s+x,0)/modules.length;
+  const breathing=reduced.matches?0:Math.sin(t/BREATH_PERIOD*TAU),scale=mix(.80,1.13,assembly);
+  const global=multiply(translation(0,reduced.matches?0:Math.sin(t/BREATH_PERIOD*TAU*2)*.055,0),multiply(rotateY(-.12+breathing*.12+pointer.x*.15),multiply(rotateX(pointer.y*.09),scaling(scale))));
   modules.forEach((m,i)=>{
-   const a=amounts[i],free=1-a,arc=Math.sin(a*Math.PI),drift=reduced.matches?0:Math.sin(t/DURATION*TAU+m.quadrant*1.6+m.layer)*.10*free;
+   const a=amounts[i],free=1-a,arc=Math.sin(a*Math.PI),drift=reduced.matches?0:Math.sin(t/BREATH_PERIOD*TAU+m.quadrant*1.6+m.layer)*.10*free;
    const p=m.target.map((v,j)=>mix(m.scatter[j],v,a));p[0]+=Math.sin(m.angle+a*TAU*.7)*arc*.29;p[2]+=Math.cos(m.angle+a*TAU*.7)*arc*.29;p[1]+=arc*.38+drift;
-   let rotation=multiply(rotateY(m.angle+m.spin[1]*free),multiply(rotateX(m.spin[0]*free),rotateZ(m.spin[2]*free)));
+   const rotation=multiply(rotateY(m.angle+m.spin[1]*free),multiply(rotateX(m.spin[0]*free),rotateZ(m.spin[2]*free)));
    const model=multiply(global,multiply(translation(...p),rotation));gl.uniformMatrix4fv(gpu.uniforms.uModel,false,model);gl.uniform1f(gpu.uniforms.uAssembly,a);
    const tone=m.layer/3;gl.uniform3fv(gpu.uniforms.uCopper,[mix(.49,.71,tone),mix(.215,.40,tone),mix(.145,.245,tone)]);gl.drawArrays(gl.TRIANGLES,0,positions.length/3);
-   if(m.layer===3){const q=project(point(model,[0,0,0])),history=trails[m.quadrant];if(!reduced.matches&&!userPaused){history.push(q);if(history.length>11)history.shift();}const path=trailPaths[m.quadrant];path.setAttribute('d',history.map((x,j)=>(j?'L':'M')+x.map(v=>v.toFixed(2)).join(' ')).join(' '));path.style.opacity=String(Math.sin(a*Math.PI)*.30);}
+   if(m.layer===3){const q=project(point(model,[0,0,0])),history=trails[m.quadrant];if(!reduced.matches){history.push(q);if(history.length>11)history.shift();}const path=trailPaths[m.quadrant];path.setAttribute('d',history.map((x,j)=>(j?'L':'M')+x.map(v=>v.toFixed(2)).join(' ')).join(' '));path.style.opacity=String(Math.sin(a*Math.PI)*.30);}
   });
-  const phase=reduced.matches||assembly>.995?'united':t>12.8?'release':assembly>.025?'joining':'separate';
+  const phase=reduced.matches||assembly>.995?'united':assembly<.002?'separate':intent?'joining':'release';
   if(phase!==lastPhase){lastPhase=phase;host.dataset.assembly=phase;status.textContent={united:'Единый контур',release:'Каждый актив — часть целого',joining:'Активы соединяются',separate:'Разные активы'}[phase];}
-  const progress=Math.round(assembly*100);if(progress!==lastProgress){lastProgress=progress;host.style.setProperty('--assembly-progress',progress+'%');}
+  const amount=Math.round(assembly*100);if(amount!==lastProgress){lastProgress=amount;host.style.setProperty('--assembly-progress',amount+'%');}
   shadow.style.opacity=String(.09+assembly*.16);shadow.style.transform='translateX(-50%) scale('+mix(1.05,.83,assembly)+')';
  }
- function running(){return !userPaused&&!reduced.matches&&visible&&!document.hidden&&!contextLost&&!disposed;}
- function tick(now){frameId=0;if(!running())return;if(last)elapsed+=Math.min((now-last)/1000,.06);last=now;draw(elapsed);frameId=requestAnimationFrame(tick);}
- function schedule(){if(running()&&!frameId){last=0;frameId=requestAnimationFrame(tick);}}
+ function needsFrame(){return Math.abs(intent-progress)>.0003||Math.abs(velocity)>.0018||sweep!==null||Math.abs(pointer.x-target.x)>.001||Math.abs(pointer.y-target.y)>.001;}
+ function running(){return !reduced.matches&&visible&&!document.hidden&&!contextLost&&!disposed&&!printing;}
+ function advance(dt){
+  const previous=progress;
+  // A damped spring preserves velocity when the pointer changes direction.
+  let remaining=dt;while(remaining>0){const step=Math.min(remaining,1/120);velocity+=((intent-progress)*24-velocity*10)*step;progress=clamp(progress+velocity*step);remaining-=step;}
+  if(Math.abs(intent-progress)<.0003&&Math.abs(velocity)<.0018){progress=intent;velocity=0;}
+  if(intent&&previous<.98&&progress>=.98)sweep=0;
+  if(sweep!==null){sweep+=dt;if(sweep>1.2)sweep=null;}
+  elapsed+=dt;
+ }
+ function tick(now){frameId=0;if(!running())return;const dt=last?Math.min((now-last)/1000,.05):1/60;last=now;advance(dt);draw();if(needsFrame())frameId=requestAnimationFrame(tick);else last=0;}
+ function schedule(){if(running()&&needsFrame()&&!frameId){last=0;frameId=requestAnimationFrame(tick);}}
  function stop(){if(frameId)cancelAnimationFrame(frameId);frameId=0;last=0;}
- function updateControls(){pause.disabled=reduced.matches;pause.setAttribute('aria-pressed',String(userPaused));pause.setAttribute('aria-label',reduced.matches?'Анимация отключена в настройках устройства':userPaused?'Продолжить анимацию':'Приостановить анимацию');pause.innerHTML=reduced.matches?'Без движения':userPaused?'<span aria-hidden="true">▷</span> Продолжить':'<span aria-hidden="true">Ⅱ</span> Пауза';replay.hidden=reduced.matches;}
- pause.addEventListener('click',()=>{userPaused=!userPaused;updateControls();userPaused?stop():schedule();});
- replay.addEventListener('click',()=>{if(reduced.matches)return;elapsed=0;last=0;userPaused=false;trails.forEach(t=>t.length=0);updateControls();draw(0);schedule();});
- host.addEventListener('pointermove',e=>{if(!fine.matches||reduced.matches||userPaused)return;const r=host.getBoundingClientRect();target.x=clamp((e.clientX-r.left)/r.width)*2-1;target.y=clamp((e.clientY-r.top)/r.height)*2-1;});
- host.addEventListener('pointerleave',()=>{target={x:0,y:0};});
+ function updateHint(){if(!hint)return;hint.textContent=reduced.matches?'Разные активы — единый контур':!fine.matches||lastPointerType==='touch'?(intent?'Коснитесь, чтобы разделить':'Коснитесь, чтобы собрать'):keyboardFocus?'Фокус собирает активы в единый контур':intent?'Уведите курсор, чтобы разделить':'Наведите курсор, чтобы собрать';}
+ function setIntent(){
+  const next=hovered||keyboardFocus||touchSelected?1:0;
+  if(next!==intent){intent=next;if(!intent)sweep=null;host.dataset.assemblyIntent=intent?'united':'separate';}
+  updateHint();if(reduced.matches)draw();else schedule();
+ }
+ host.addEventListener('pointerenter',e=>{if(e.pointerType==='touch'||!fine.matches)return;hovered=true;lastPointerType=e.pointerType||'mouse';setIntent();});
+ host.addEventListener('pointermove',e=>{if(e.pointerType==='touch'||!fine.matches||reduced.matches)return;const r=host.getBoundingClientRect();target.x=clamp((e.clientX-r.left)/r.width)*2-1;target.y=clamp((e.clientY-r.top)/r.height)*2-1;schedule();});
+ host.addEventListener('pointerleave',e=>{if(e.pointerType==='touch')return;hovered=false;target={x:0,y:0};setIntent();});
+ host.addEventListener('pointerdown',e=>{inputMode='pointer';keyboardFocus=false;lastPointerType=e.pointerType||'mouse';if(lastPointerType==='touch'){hovered=false;target={x:0,y:0};}setIntent();});
+ host.addEventListener('click',e=>{if(e.target.closest('a,button,input,summary'))return;if(!fine.matches||lastPointerType==='touch'){touchSelected=!touchSelected;setIntent();}});
+ addEventListener('keydown',e=>{if(e.key==='Tab')inputMode='keyboard';});
+ host.addEventListener('focusin',()=>{if(inputMode==='keyboard'){keyboardFocus=true;setIntent();}});
+ host.addEventListener('focusout',e=>{if(!host.contains(e.relatedTarget)){keyboardFocus=false;setIntent();}});
  document.addEventListener('visibilitychange',()=>{document.hidden?stop():schedule();});
  if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;visible?schedule():stop();},{rootMargin:'80px'});observer.observe(host);}
- const onMotion=()=>{stop();pointer=target={x:0,y:0};trails.forEach(t=>t.length=0);updateControls();draw(elapsed);schedule();};
+ const onMotion=()=>{stop();pointer=target={x:0,y:0};velocity=0;sweep=null;if(reduced.matches)progress=1;trails.forEach(t=>t.length=0);updateHint();draw();schedule();};
  if(reduced.addEventListener)reduced.addEventListener('change',onMotion);else if(reduced.addListener)reduced.addListener(onMotion);
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;stop();host.classList.remove('assembly-ready');});
  canvas.addEventListener('webglcontextrestored',()=>{try{gpu=createRenderer();contextLost=false;host.classList.add('assembly-ready');resize();schedule();}catch{contextLost=true;}});
  addEventListener('resize',resize,{passive:true});
  if('ResizeObserver'in window){const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(host);}
- addEventListener('beforeprint',()=>{stop();host.classList.add('assembly-print');});
- addEventListener('afterprint',()=>{host.classList.remove('assembly-print');schedule();});
+ addEventListener('beforeprint',()=>{printing=true;stop();host.classList.add('assembly-print');});
+ addEventListener('afterprint',()=>{printing=false;host.classList.remove('assembly-print');schedule();});
  addEventListener('pagehide',e=>{stop();if(!e.persisted)disposed=true;});
  addEventListener('pageshow',e=>{if(e.persisted)schedule();});
- host.classList.add('assembly-ready');updateControls();resize();schedule();
+ host.classList.add('assembly-ready');host.dataset.assemblyIntent='separate';updateHint();resize();
+ if(fine.matches&&host.matches(':hover')){hovered=true;setIntent();}
+
 })();
 
 let printDetails=[];addEventListener('beforeprint',()=>{printDetails=$$('details').map(d=>({d,open:d.open}));printDetails.forEach(x=>x.d.open=true);});addEventListener('afterprint',()=>printDetails.forEach(x=>x.d.open=x.open));$('#printButton').addEventListener('click',()=>window.print());
