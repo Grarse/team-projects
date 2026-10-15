@@ -17,6 +17,12 @@
     .label { color: #6b7c93; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
     h2 { margin: 10px 0 8px; font-size: 25px; }
     .description { margin: 0; font-size: 16px; }
+    .card-meta { display:flex; align-items:baseline; justify-content:space-between; gap:12px 24px; flex-wrap:wrap; }
+    .updated { font-size:12px; line-height:1.6; color:#78879a; white-space:nowrap; }
+    .card { transition:transform .18s, border-color .18s; }
+    .card:focus-visible { outline:3px solid #8aa6c8; outline-offset:5px; }
+    @media(max-width:600px) { main { padding:42px 0; } .card { padding:23px; } h2 { font-size:22px; } .updated { font-size:11px; } }
+    @media(prefers-reduced-motion:reduce) { .card { transition:none; } .card:hover { transform:none; } }
   </style>
 </head>
 <body>
@@ -24,42 +30,48 @@
     <h1>Совместные проекты</h1>
     <p>Рабочие веб-инструменты команды.</p>
     <div class="projects">
-      <a class="card" href="./dividend-tax-effect/">
-        <span class="label">Калькулятор отсрочки дивидендов</span>
+      <a class="card" data-project="personal-fund-guide" data-updated="2026-10-15T15:10:37+05:00" href="./personal-fund-guide/">
+        <div class="card-meta"><span class="label">Интерактивный гид · личный капитал</span><span class="updated">Обновлено <time datetime="2026-10-15T15:10:37+05:00" title="15.10.2026, 15:10 (UTC+5)">15.10.2026, 15:10</time></span></div>
+        <h2>Личный фонд — архитектура капитала</h2>
+        <p class="description">Защита бизнеса и имущества, передача активов, обеспечение семьи, налоги и схема работы с ЗПИФ — с интерактивными схемами и пояснениями.</p>
+      </a>
+      <a class="card" data-project="dividend-tax-effect" data-updated="2026-10-14T19:42:03+05:00" href="./dividend-tax-effect/">
+        <div class="card-meta"><span class="label">Калькулятор отсрочки дивидендов</span><span class="updated">Обновлено <time datetime="2026-10-14T19:42:03+05:00" title="14.10.2026, 19:42 (UTC+5)">14.10.2026, 19:42</time></span></div>
         <h2>Дополнительный доход на отложенном НДФЛ</h2>
         <p class="description">Дополнительный заработок на деньгах, которые при ежегодной выплате дивидендов ушли бы на НДФЛ. Два результата: заработок в компании и деньги владельцев после налогов.</p>
       </a>
-      <a class="card" href="./club-bonds-calculator/">
-        <span class="label">Клубный выпуск · версия 4</span>
+      <a class="card" data-project="club-bonds-calculator" data-updated="2026-10-14T15:32:53+05:00" href="./club-bonds-calculator/">
+        <div class="card-meta"><span class="label">Клубный выпуск · версия 4</span><span class="updated">Обновлено <time datetime="2026-10-14T15:32:53+05:00" title="14.10.2026, 15:32 (UTC+5)">14.10.2026, 15:32</time></span></div>
         <h2>Клубные облигации и ИИС-3</h2>
         <p class="description">Подбор выпуска под вычет ИИС: ставки 10%, 15% и 20%, разные взносы на 5, 6 и 7 лет, реинвестирование и долг компании.</p>
       </a>
-      <a class="card" href="./alfa-policy-calculator/">
-        <span class="label">Страница 1 · базовое сравнение</span>
-        <h2>Альфа, ИИС-3 и брокерский счет</h2>
-        <p class="description">Сравнение итогового капитала, комиссий и НДФЛ по действующей и сценарной шкалам.</p>
-      </a>
-      <a class="card" href="./iis-kontur-calculator/">
-        <span class="label">Финансовый калькулятор</span>
-        <h2>ИИС-3, Контур и брокерский счет</h2>
-        <p class="description">Сравнение итогового капитала, комиссий и НДФЛ по нескольким сценариям.</p>
-      </a>
-      <a class="card" href="./ofz-26253-calculator/">
-        <span class="label">Облигационный калькулятор</span>
-        <h2>ОФЗ 26253</h2>
-        <p class="description">Расчет портфеля и доходности с купонами, реинвестированием и выбранным сроком инвестирования.</p>
-      </a>
-      <a class="card" href="./tax-capital-structure-2026/">
-        <span class="label">Калькулятор налоговой структуры</span>
+      <a class="card" data-project="tax-capital-structure-2026" data-updated="2026-10-08T11:02:24+05:00" href="./tax-capital-structure-2026/">
+        <div class="card-meta"><span class="label">Калькулятор налоговой структуры</span><span class="updated">Обновлено <time datetime="2026-10-08T11:02:24+05:00" title="08.10.2026, 11:02 (UTC+5)">08.10.2026, 11:02</time></span></div>
         <h2>ИИС-3 и страховой договор</h2>
         <p class="description">Сравнение налоговых сценариев и расчет доступной льготы для ИИС-3, страхового договора или их сочетания.</p>
       </a>
-      <a class="card" href="./tax-changes-landing/">
-        <span class="label">Информационный лендинг</span>
+      <a class="card" data-project="ofz-26253-calculator" data-updated="2026-09-29T17:13:25+05:00" href="./ofz-26253-calculator/">
+        <div class="card-meta"><span class="label">Облигационный калькулятор</span><span class="updated">Обновлено <time datetime="2026-09-29T17:13:25+05:00" title="29.09.2026, 17:13 (UTC+5)">29.09.2026, 17:13</time></span></div>
+        <h2>ОФЗ 26253</h2>
+        <p class="description">Расчет портфеля и доходности с купонами, реинвестированием и выбранным сроком инвестирования.</p>
+      </a>
+      <a class="card" data-project="tax-changes-landing" data-updated="2026-09-29T16:43:11+05:00" href="./tax-changes-landing/">
+        <div class="card-meta"><span class="label">Информационный лендинг</span><span class="updated">Обновлено <time datetime="2026-09-29T16:43:11+05:00" title="29.09.2026, 16:43 (UTC+5)">29.09.2026, 16:43</time></span></div>
         <h2>Налоги на инвестиции: сейчас и возможные изменения</h2>
         <p class="description">Наглядное сравнение шкал 13/15% и 13–22%, примеры и решения для долгосрочного капитала.</p>
       </a>
+      <a class="card" data-project="alfa-policy-calculator" data-updated="2026-09-29T16:42:52+05:00" href="./alfa-policy-calculator/">
+        <div class="card-meta"><span class="label">Страница 1 · базовое сравнение</span><span class="updated">Обновлено <time datetime="2026-09-29T16:42:52+05:00" title="29.09.2026, 16:42 (UTC+5)">29.09.2026, 16:42</time></span></div>
+        <h2>Альфа, ИИС-3 и брокерский счет</h2>
+        <p class="description">Сравнение итогового капитала, комиссий и НДФЛ по действующей и сценарной шкалам.</p>
+      </a>
+      <a class="card" data-project="iis-kontur-calculator" data-updated="2026-09-29T16:42:52+05:00" href="./iis-kontur-calculator/">
+        <div class="card-meta"><span class="label">Финансовый калькулятор</span><span class="updated">Обновлено <time datetime="2026-09-29T16:42:52+05:00" title="29.09.2026, 16:42 (UTC+5)">29.09.2026, 16:42</time></span></div>
+        <h2>ИИС-3, Контур и брокерский счет</h2>
+        <p class="description">Сравнение итогового капитала, комиссий и НДФЛ по нескольким сценариям.</p>
+      </a>
     </div>
   </main>
+  <script src="./project-updates.js" defer></script>
 </body>
 </html>
