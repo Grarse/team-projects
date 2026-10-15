@@ -457,7 +457,8 @@ selectReformTab('lf');
  if(!host||!canvas||typeof WebGLRenderingContext==='undefined')return;
  let gl;try{gl=canvas.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:false,powerPreference:'low-power'});}catch{return;}
  if(!gl)return;
- const reduced=matchMedia('(prefers-reduced-motion: reduce)'),fine=matchMedia('(pointer: fine)');
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)'),fine=matchMedia('(pointer: fine)'),mobile=matchMedia('(max-width: 650px)');
+ const scrollMode=()=>mobile.matches||!fine.matches;
  const field=document.getElementById('assemblyField'),shadow=document.getElementById('assemblyShadow');
  const orbitPaths=Array.from(field.querySelectorAll('[data-assembly-orbit]')),trailPaths=Array.from(field.querySelectorAll('[data-assembly-trail]'));
  const TAU=Math.PI*2,BREATH_PERIOD=17.6;
@@ -507,7 +508,7 @@ selectReformTab('lf');
  }
  let gpu;try{gpu=createRenderer();}catch{return;}
  let width=1,heightPx=1,viewProjection,frameId=0,last=0,elapsed=0,visible=true,contextLost=false,disposed=false,printing=false;
- let progress=reduced.matches?1:0,velocity=0,intent=0,hovered=false,keyboardFocus=false,touchSelected=false,inputMode='keyboard',lastPointerType='mouse',sweep=null;
+ let progress=reduced.matches||scrollMode()?1:0,velocity=0,intent=0,hovered=false,keyboardFocus=false,inputMode='keyboard',lastPointerType='mouse',sweep=null;
  let pointer={x:0,y:0},target={x:0,y:0},lastPhase='',lastGlow=-1;
  const hint=document.getElementById('assemblyHint');
  const eye=[6.6,6.0,8.4],view=lookAt(eye,[0,0,0]),trails=Array.from({length:4},()=>[]);
@@ -517,7 +518,7 @@ selectReformTab('lf');
   const rect=canvas.getBoundingClientRect();width=Math.max(1,rect.width||host.clientWidth||600);heightPx=Math.max(1,rect.height||host.clientHeight||660);const dpr=Math.min(devicePixelRatio||1,width<500?1.5:1.8);
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(heightPx*dpr);gl.viewport(0,0,canvas.width,canvas.height);viewProjection=multiply(perspective(width/heightPx),view);field.setAttribute('viewBox','0 0 '+width+' '+heightPx);
   orbitPaths.forEach((path,index)=>{const r=2.66+index*.38,pts=Array.from({length:121},(_,i)=>project([Math.cos(i/120*TAU)*r,-.98,Math.sin(i/120*TAU)*r]));path.setAttribute('d',pts.map((p,i)=>(i?'L':'M')+p.map(x=>x.toFixed(2)).join(' ')).join(' ')+'Z');});
-  trails.forEach(t=>t.length=0);draw();schedule();
+  trails.forEach(t=>t.length=0);if(scrollMode())syncScroll();draw();schedule();
  }
  function assemblyFor(m){return reduced.matches?1:smooth((progress-m.order*.011)/.835);}
  function draw(){
@@ -535,7 +536,7 @@ selectReformTab('lf');
    const tone=m.layer/3;gl.uniform3fv(gpu.uniforms.uCopper,[mix(.49,.71,tone),mix(.215,.40,tone),mix(.145,.245,tone)]);gl.drawArrays(gl.TRIANGLES,0,positions.length/3);
    if(m.layer===3){const q=project(point(model,[0,0,0])),history=trails[m.quadrant];if(!reduced.matches){history.push(q);if(history.length>11)history.shift();}const path=trailPaths[m.quadrant];path.setAttribute('d',history.map((x,j)=>(j?'L':'M')+x.map(v=>v.toFixed(2)).join(' ')).join(' '));path.style.opacity=String(Math.sin(a*Math.PI)*.30);}
   });
-  const phase=reduced.matches||assembly>.995?'united':assembly<.002?'separate':intent?'joining':'release';
+  const phase=reduced.matches||assembly>.995?'united':assembly<.002?'separate':intent>=progress?'joining':'release';
   if(phase!==lastPhase){lastPhase=phase;host.dataset.assembly=phase;}
   const glow=reduced.matches||sweep===null?0:Math.round(Math.pow(Math.sin(Math.PI*clamp(sweep/1.8)),1.2)*650)/1000;if(glow!==lastGlow){lastGlow=glow;host.style.setProperty('--assembly-glow',String(glow));}
   shadow.style.opacity=String(.09+assembly*.16);shadow.style.transform='translateX(-50%) scale('+mix(1.05,.83,assembly)+')';
@@ -547,41 +548,57 @@ selectReformTab('lf');
   // A damped spring preserves velocity when the pointer changes direction.
   let remaining=dt;while(remaining>0){const step=Math.min(remaining,1/120);velocity+=((intent-progress)*13.2-velocity*7.4)*step;progress=clamp(progress+velocity*step);remaining-=step;}
   if(Math.abs(intent-progress)<.0003&&Math.abs(velocity)<.0018){progress=intent;velocity=0;}
-  if(intent&&previous<.98&&progress>=.98)sweep=0;
+  if(intent>.985&&previous<.98&&progress>=.98)sweep=0;
   if(sweep!==null){sweep+=dt;if(sweep>1.8)sweep=null;}
   elapsed+=dt;
  }
  function tick(now){frameId=0;if(!running())return;const dt=last?Math.min((now-last)/1000,.05):1/60;last=now;advance(dt);draw();if(needsFrame())frameId=requestAnimationFrame(tick);else last=0;}
  function schedule(){if(running()&&needsFrame()&&!frameId){last=0;frameId=requestAnimationFrame(tick);}}
  function stop(){if(frameId)cancelAnimationFrame(frameId);frameId=0;last=0;}
- function updateHint(){if(!hint)return;hint.textContent=!fine.matches||lastPointerType==='touch'?'Касание — собрать / разделить':'Наведение — собрать · уход — разделить';}
+ function updateHint(){if(!hint)return;hint.textContent=scrollMode()?'Прокрутка вниз — сборка · вверх — разборка':'Наведение — собрать · уход — разделить';}
+ function updateIntent(next){
+  if(Math.abs(next-intent)>.00001){intent=next;if(intent<.98)sweep=null;host.dataset.assemblyIntent=intent>.98?'united':intent<.02?'separate':'joining';}
+ }
+ function scrollPose(){
+  const rect=host.getBoundingClientRect(),viewport=window.visualViewport;
+  const vh=viewport&&viewport.height||window.innerHeight||document.documentElement.clientHeight||700,offset=viewport&&viewport.offsetTop||0;
+  const top=rect.top-offset,h=rect.height||heightPx;
+  const center=top+h*.5;
+  return {visible:top+h*.18<vh&&top+h*.82>0,value:smooth((vh*.88-center)/(vh*.40))};
+ }
+ function syncScroll(){
+  if(!scrollMode()||printing||disposed)return;
+  const pose=scrollPose();visible=pose.visible;updateIntent(pose.value);
+  if(visible)schedule();else stop();
+ }
  function setIntent(){
-  const next=hovered||keyboardFocus||touchSelected?1:0;
-  if(next!==intent){intent=next;if(!intent)sweep=null;host.dataset.assemblyIntent=intent?'united':'separate';}
+  if(scrollMode())syncScroll();else updateIntent(hovered||keyboardFocus?1:0);
   updateHint();if(reduced.matches)draw();else schedule();
  }
- host.addEventListener('pointerenter',e=>{if(e.pointerType==='touch'||!fine.matches)return;hovered=true;lastPointerType=e.pointerType||'mouse';setIntent();});
- host.addEventListener('pointermove',e=>{if(e.pointerType==='touch'||!fine.matches||reduced.matches)return;const r=host.getBoundingClientRect();target.x=clamp((e.clientX-r.left)/r.width)*2-1;target.y=clamp((e.clientY-r.top)/r.height)*2-1;schedule();});
+ host.addEventListener('pointerenter',e=>{if(e.pointerType==='touch'||scrollMode()||!fine.matches)return;hovered=true;lastPointerType=e.pointerType||'mouse';setIntent();});
+ host.addEventListener('pointermove',e=>{if(e.pointerType==='touch'||scrollMode()||!fine.matches||reduced.matches)return;const r=host.getBoundingClientRect();target.x=clamp((e.clientX-r.left)/r.width)*2-1;target.y=clamp((e.clientY-r.top)/r.height)*2-1;schedule();});
  host.addEventListener('pointerleave',e=>{if(e.pointerType==='touch')return;hovered=false;target={x:0,y:0};setIntent();});
  host.addEventListener('pointerdown',e=>{inputMode='pointer';keyboardFocus=false;lastPointerType=e.pointerType||'mouse';if(lastPointerType==='touch'){hovered=false;target={x:0,y:0};}setIntent();});
- host.addEventListener('click',e=>{if(e.target.closest('a,button,input,summary'))return;if(!fine.matches||lastPointerType==='touch'){touchSelected=!touchSelected;setIntent();}});
+ addEventListener('scroll',syncScroll,{passive:true});
  addEventListener('keydown',e=>{if(e.key==='Tab')inputMode='keyboard';});
  host.addEventListener('focusin',()=>{if(inputMode==='keyboard'){keyboardFocus=true;setIntent();}});
  host.addEventListener('focusout',e=>{if(!host.contains(e.relatedTarget)){keyboardFocus=false;setIntent();}});
- document.addEventListener('visibilitychange',()=>{document.hidden?stop():schedule();});
- if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;visible?schedule():stop();},{rootMargin:'80px'});observer.observe(host);}
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(scrollMode())syncScroll();else schedule();});
+ if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(scrollMode())syncScroll();else visible?schedule():stop();},{rootMargin:scrollMode()?'0px':'80px'});observer.observe(host);}
  const onMotion=()=>{stop();pointer=target={x:0,y:0};velocity=0;sweep=null;if(reduced.matches)progress=1;trails.forEach(t=>t.length=0);updateHint();draw();schedule();};
  if(reduced.addEventListener)reduced.addEventListener('change',onMotion);else if(reduced.addListener)reduced.addListener(onMotion);
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;stop();host.classList.remove('assembly-ready');});
  canvas.addEventListener('webglcontextrestored',()=>{try{gpu=createRenderer();contextLost=false;host.classList.add('assembly-ready');resize();schedule();}catch{contextLost=true;}});
  addEventListener('resize',resize,{passive:true});
+ if(window.visualViewport)window.visualViewport.addEventListener('resize',resize,{passive:true});
+ for(const query of [mobile,fine])if(query.addEventListener)query.addEventListener('change',()=>{hovered=false;keyboardFocus=false;target={x:0,y:0};setIntent();});
  if('ResizeObserver'in window){const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(host);}
  addEventListener('beforeprint',()=>{printing=true;stop();host.classList.add('assembly-print');});
  addEventListener('afterprint',()=>{printing=false;host.classList.remove('assembly-print');schedule();});
  addEventListener('pagehide',e=>{stop();if(!e.persisted)disposed=true;});
- addEventListener('pageshow',e=>{if(e.persisted)schedule();});
+ addEventListener('pageshow',e=>{if(e.persisted){if(scrollMode())syncScroll();else schedule();}});
  host.classList.add('assembly-ready');host.dataset.assemblyIntent='separate';updateHint();resize();
- if(fine.matches&&host.matches(':hover')){hovered=true;setIntent();}
+ if(!scrollMode()&&fine.matches&&host.matches(':hover')){hovered=true;setIntent();}
 
 })();
 
