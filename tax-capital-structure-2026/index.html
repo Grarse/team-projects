@@ -6,6 +6,7 @@
   <title>ЛДВ, ИИС-3 и страховой договор — калькулятор налоговой структуры</title>
   <meta name="description" content="Калькулятор капитала и налоговой экономии: ЛДВ, ИИС-3 и страховой договор. Ежедневная капитализация, квартальная комиссия страховки и сценарий НДФЛ 13–22%.">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230b1730'/%3E%3Cpath d='M16 43V31h8v12zm12 0V21h8v22zm12 0V12h8v31z' fill='%2365e6b4'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="ofz-comparison.css">
   <style>
     :root {
       color-scheme: light;
@@ -429,6 +430,102 @@
       </div>
     </section>
 
+    <section id="ofz-comparison" class="ofz-section shell" aria-labelledby="ofz-title">
+      <div class="section-intro">
+        <p class="section-kicker">Сравнение после всех налогов и расходов</p>
+        <h2 id="ofz-title">Одна ОФЗ. Две инвестиционные оболочки.</h2>
+        <p>Сравните прямое владение на брокерском счете и страховой договор «Контур». Купоны, покупки, комиссии и выплаты учитываются по датам. Победитель не задан заранее.</p>
+      </div>
+      <div class="ofz-notice">Эталон — ОФЗ 26248: купон 12,25% от номинала, погашение 16.05.2040. Включение именно этой ОФЗ в «Контур» нужно согласовать со страховщиком. Сравнение моделирует одинаковый актив; это не подтвержденное продуктовое предложение.</div>
+      <p class="ofz-caption">У этого блока свои параметры: реальные даты купонов вместо ежедневной капитализации, ежемесячное списание страховой комиссии вместо упрощенной квартальной модели выше. Кнопка переноса копирует только сумму и годовую комиссию.</p>
+      <form id="ofz-form" class="ofz-form" novalidate>
+        <div class="ofz-fields">
+          <label>Общая сумма, ₽<input id="ofz-amount" type="text" inputmode="numeric" value="35 000 000" autocomplete="off"></label>
+          <label>Дата расчетов покупки<input id="ofz-start" type="date" value="2026-10-19" min="2025-01-01" max="2040-05-15"></label>
+          <label>Сравниваем на дату<input id="ofz-end" type="date" value="2041-10-19"></label>
+          <label>Цена покупки, % от номинала<input id="ofz-price" type="number" min="1" max="200" step="0.01" value="80"><span>Сценарная цена, не текущая котировка. НКД добавляется отдельно.</span></label>
+          <label>Страховая комиссия, % годовых<input id="ofz-fee" type="number" min="0" max="5" step="0.1" value="1.5"><span>Начисление ежедневно, списание ежемесячно.</span></label>
+          <label>Количество договоров<select id="ofz-count"><option value="1">1 договор</option><option value="2">2 договора</option><option value="3" selected>3 договора</option></select><span>Сумма делится поровну. Лимит за один год общий.</span></label>
+        </div>
+        <fieldset class="ofz-payouts"><legend>Даты полных выплат по страховым договорам</legend>
+          <label>Договор 1<input id="ofz-close-1" type="date" value="2039-10-19"></label>
+          <label>Договор 2<input id="ofz-close-2" type="date" value="2040-10-19"></label>
+          <label>Договор 3<input id="ofz-close-3" type="date" value="2041-10-19"></label>
+          <p>После выплаты деньги поступают в обычный брокерский портфель. При включенном реинвестировании они снова покупают ту же ОФЗ, если она еще не погашена.</p>
+        </fieldset>
+        <div class="ofz-choice-row">
+          <label><input id="ofz-reinvest" type="checkbox" checked> Реинвестировать купоны в ту же ОФЗ</label>
+          <label><input id="ofz-ldv" type="checkbox" checked> Применять ЛДВ к подходящим продажам и погашению</label>
+        </div>
+        <details class="ofz-settings"><summary>Налоги, расходы и сценарий цены</summary>
+          <div class="ofz-fields">
+            <label>Налоговая шкала<select id="ofz-tax"><option value="current">Действующая: 13 / 15%</option><option value="scenario">Гипотеза: 13 / 15 / 18 / 20 / 22%</option></select><span>Сценарий 13–22% не является действующим правилом.</span></label>
+            <label>Цена на горизонте, % от номинала<input id="ofz-exit-price" type="number" min="1" max="200" step="0.01" value="100"><span id="ofz-exit-hint">Если горизонт после погашения, используется номинал 100%.</span></label>
+            <label>Путь рыночной цены<select id="ofz-path"><option value="linear">Плавно от цены покупки к цене выхода</option><option value="flat">Не меняется до выхода или погашения</option></select><span>Это предположение для промежуточных покупок и продаж, не прогноз.</span></label>
+            <label>Комиссия сделок у брокера, %<input id="ofz-broker-fee" type="number" min="0" max="2" step="0.01" value="0.05"><span>На покупку и продажу, кроме погашения. Укажите свой тариф.</span></label>
+            <label>Комиссия сделок внутри страховки, %<input id="ofz-trade-fee" type="number" min="0" max="2" step="0.01" value="0.05"><span>Расход на сделки с ОФЗ сверх страховой комиссии.</span></label>
+            <label>Доп. расходы портфеля страховки, % в год<input id="ofz-portfolio-fee" type="number" min="0" max="5" step="0.1" value="0"><span>Для прямой ОФЗ по умолчанию 0%. Не учитывайте расходы фонда дважды.</span></label>
+            <label>Другой доход той же налоговой базы, ₽ в год<input id="ofz-other-income" type="text" inputmode="numeric" value="0"><span>Только налогооблагаемый доход соответствующей группы, не зарплата и не дивиденды. Влияет на доплату ФНС.</span></label>
+          </div>
+        </details>
+        <p id="ofz-bond-info" class="ofz-caption"></p>
+        <div class="ofz-actions">
+          <button type="submit" class="ofz-button">Пересчитать сравнение</button>
+          <button type="button" class="ofz-button secondary" id="ofz-copy-main">Взять сумму и комиссию сверху</button>
+          <button type="button" class="ofz-button secondary" id="ofz-until-maturity">Горизонт до погашения ОФЗ</button>
+        </div>
+        <p id="ofz-input-error" class="ofz-error" role="alert" hidden></p>
+      </form>
+      <div id="ofz-output" aria-busy="false">
+        <div id="ofz-warnings" class="ofz-warnings" aria-live="polite"></div>
+        <div class="ofz-result-pair">
+          <article class="ofz-result broker"><p>Прямое владение ОФЗ</p><h3 id="ofz-direct-net">—</h3><span>После продажи / погашения и всех расчетных налогов</span><dl>
+            <div><dt>НДФЛ, включая финальный расчет</dt><dd id="ofz-direct-tax">—</dd></div>
+            <div><dt>Комиссии на сделки</dt><dd id="ofz-direct-fees">—</dd></div>
+            <div><dt>Использованная ЛДВ</dt><dd id="ofz-direct-ldv">—</dd></div>
+          </dl></article>
+          <article class="ofz-result insurance"><p>«Контур» и последующее реинвестирование</p><h3 id="ofz-insurance-net">—</h3><span>После страховых выплат и всех расчетных налогов</span><dl>
+            <div><dt>НДФЛ, включая финальный расчет</dt><dd id="ofz-insurance-tax">—</dd></div>
+            <div><dt>Страховые и дополнительные годовые расходы</dt><dd id="ofz-insurance-fees">—</dd></div>
+            <div><dt>Комиссии на сделки</dt><dd id="ofz-insurance-trades">—</dd></div>
+            <div><dt>Фактически использованная льгота страховки</dt><dd id="ofz-used-benefit">—</dd></div>
+          </dl></article>
+        </div>
+        <div class="ofz-verdict" aria-live="polite"><span id="ofz-winner-label">Разница после налогов и расходов</span><strong id="ofz-difference">—</strong><p id="ofz-verdict-note"></p></div>
+        <section class="ofz-chart-card" aria-labelledby="ofz-chart-title">
+          <div class="ofz-chart-head"><div><p class="section-kicker">Движение капитала</p><h3 id="ofz-chart-title">Сколько остается инвестору</h3></div>
+            <label>Показывать<select id="ofz-chart-mode"><option value="net">После условного полного выхода и налогов</option><option value="assets">Стоимость активов до финального налога</option></select></label>
+          </div>
+          <div class="ofz-legend"><span class="broker">Прямое владение</span><span class="insurance">Контур</span></div>
+          <div id="ofz-chart" class="ofz-chart" role="img" aria-label="Интерактивный график капитала: прямое владение ОФЗ и Контур"></div>
+          <div id="ofz-chart-readout" class="ofz-chart-readout" aria-live="polite"></div>
+          <label class="ofz-cursor-label" for="ofz-cursor">Выберите дату на графике или ползунком</label>
+          <input id="ofz-cursor" type="range" min="0" max="1" value="1" aria-label="Дата на графике сравнения">
+          <p class="ofz-caption">Линия «после выхода» учитывает продажу всех оставшихся бумаг и закрытие всех еще открытых договоров именно на выбранную дату. До минимального срока льготы страховки нет; при одновременном выходе общий годовой лимит — 30 млн ₽. Это отличается от стоимости активов без финального выхода.</p>
+        </section>
+        <details class="ofz-table-wrap"><summary>Расчет по налоговым годам и выгрузка</summary>
+          <p>Налог за год показан как обязательство, включая последующее удержание и доплату. Это не второй налог на уже обложенные купоны.</p>
+          <div class="ofz-table-scroll"><table><thead><tr><th>Год</th><th>Купоны брокера, база</th><th>ЛДВ брокера</th><th>НДФЛ прямого владения</th><th>Льгота страховки</th><th>НДФЛ ветки «Контур»</th></tr></thead><tbody id="ofz-year-rows"></tbody></table></div>
+          <button id="ofz-export" class="ofz-button secondary" type="button">Скачать подробный журнал CSV</button>
+        </details>
+      </div>
+      <details class="ofz-methodology"><summary>Как считаются налоги и что остается допущением</summary>
+        <p>Официальные разъяснения ФНС: <a href="https://www.nalog.gov.ru/nu/" target="_blank" rel="noopener">ставки и агрегация НДФЛ</a>; <a href="https://www.nalog.gov.ru/rn77/taxation/taxes/ndfl/nalog_vichet/inv_vichet/" target="_blank" rel="noopener">инвестиционный вычет при долгосрочном владении</a>.</p>
+        <ol>
+          <li><strong>Одни и те же исходные активы.</strong> Начальная сумма, цена ОФЗ, НКД и будущая траектория цены одинаковы. Покупаются целые облигации; остаток денег не приносит дохода. Купоны и погашение взяты из графика MOEX, а не заменены ежедневными «14%».</li>
+          <li><strong>Купоны поступают на брокерский счет.</strong> Нет промежуточных выводов. Удержание годового НДФЛ моделируется 31 января следующего года, окончательный выход — сразу. Это расчетная дата в пределах порядка ст. 226.1, не обещание даты удержания конкретным брокером. Рабочие дни и индивидуальный порядок брокера могут изменить момент списания.</li>
+          <li><strong>Налоги оплачиваются из портфеля.</strong> При нехватке денег продается часть бумаг, а ее финансовый результат относится к году продажи. Уплаченный при покупке НКД уменьшает первый купон либо результат продажи и не вычитается повторно.</li>
+          <li><strong>ЛДВ применяется по лотам ФИФО.</strong> Более трех лет владения, собственный срок для каждой покупки за купоны. Лимит 3 млн ₽ × коэффициент Кцб рассчитывается по доходам от подходящих продаж за налоговый год. Купонные выплаты не освобождаются. Предполагаются право на вычет и подача нужного заявления.</li>
+          <li><strong>Страховой налог — при полной выплате.</strong> Не более 30 млн ₽ прибыли на договор и не более 30 млн ₽ суммарно за календарный год. Срок определяется годом открытия; число договоров не выше трех. Все условия получения льготы, кроме проверяемых срока и дат, предполагаются выполненными. Частичные выплаты до заданных дат, восстановление вычетов на взносы, гарантированные страховые суммы и выплаты по смерти не моделируются.</li>
+          <li><strong>Комиссия страховки.</strong> Ежедневное начисление ACT/365 на стоимость активов, включая НКД; списание в конце месяца или при выходе. Это приближение к п. 5.4 образца полиса. Отсрочка списаний и индивидуальные условия страховщика могут отличаться.</li>
+          <li><strong>Агрегация доходов.</strong> Брокер и страховщик рассчитываются как отдельные налоговые агенты. Доплата по общей прогрессии и заданному внешнему доходу учитывается на 1 декабря следующего года. К финальному капиталу все оставшиеся обязательства уже вычтены. Текущая годовая ставка и льготы условно сохраняются на всем горизонте: будущие законы неизвестны.</li>
+          <li><strong>Не включены:</strong> перенос убытков прошлых лет через декларацию, внешние вычеты и другие сделки, спред, задержки зачисления купонов, торговый календарь и изменение налогового резидентства. Цена в будущем неизвестна. Возможность покупки ОФЗ внутри «Контура» и все тарифы требуется подтвердить. После погашения ОФЗ доход на деньги принят равным нулю; это явно показано в предупреждении.</li>
+        </ol>
+        <p>Источники, проверка 19.10.2026: <a href="https://iss.moex.com/iss/statistics/engines/stock/markets/bonds/bondization/SU26248RMFS3.json?iss.meta=off&amp;limit=100" target="_blank" rel="noopener">график MOEX ISS</a>; <a href="https://www.consultant.ru/document/cons_doc_LAW_28165/8929ac9adb919db90df29bad67daef34b7d6543f/" target="_blank" rel="noopener">НК РФ, ст. 226.1</a>; <a href="https://www.consultant.ru/document/cons_doc_LAW_28165/692cfdd882708959e9d6fbbc07b187b0d8cd1ac7/" target="_blank" rel="noopener">ст. 213</a>; <a href="https://www.consultant.ru/document/cons_doc_LAW_28165/2b69106f66601ba5b58aaeb82395674581c66c20/" target="_blank" rel="noopener">ст. 219.1</a>; <a href="https://www.consultant.ru/document/cons_doc_LAW_28165/0375af18206421d6eb3aca82f77ab02a00b19641/" target="_blank" rel="noopener">ст. 219.2</a>. Договор «Контур» от 01.07.2026, пп. 5.4.1–5.4.4 и 5.5.1.4 (материалы проекта).</p>
+      </details>
+      <p class="ofz-caption">Сравнение — инструмент проверки сценариев, не индивидуальная инвестиционная рекомендация и не расчет фактического налога брокером или страховщиком.</p>
+    </section>
+
     <section class="closing shell">
       <h2>Зафиксируйте условия 2026 года, пока минимальный срок составляет 5 лет</h2>
       <p>ИИС-3 можно открыть без пополнения. Чем раньше начинается срок владения счетом или договором, тем раньше появляется возможность использовать льготы при соблюдении остальных условий.</p>
@@ -446,7 +543,7 @@
       const calculatorHost = document.createElement('section');
       calculatorHost.className = 'calculator-host shell';
       calculatorHost.id = 'calculator';
-      document.querySelector('.closing').before(calculatorHost);
+      document.querySelector('#ofz-comparison').before(calculatorHost);
       calculatorHost.append(document.querySelector('.hero-facts'));
       calculatorHost.append(calculatorBlock);
 
@@ -810,5 +907,7 @@
       calculate();
     })();
   </script>
+  <script src="ofz-comparison-engine.js"></script>
+  <script src="ofz-comparison-ui.js"></script>
 </body>
 </html>
