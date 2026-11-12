@@ -1,45 +1,60 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-design="cream">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
-  <meta name="theme-color" content="#101b2b">
+  <meta name="theme-color" content="#e9d9ca">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=5">
+  <link rel="stylesheet" href="./style.css?v=9">
   <script defer src="./model.js?v=5"></script>
-  <script defer src="./app.js?v=8"></script>
+  <script defer src="./app.js?v=9"></script>
 </head>
 <body>
   <main class="shell">
-    <nav class="topbar" aria-label="Навигация">
-      <a href="../">← Все проекты</a>
-      <a href="../tax-capital-structure-2026/#calculator">Общий калькулятор ↗</a>
-    </nav>
+    <div class="topbar">
+      <nav aria-label="Навигация">
+        <a href="../">← Все проекты</a>
+        <a href="../tax-capital-structure-2026/#calculator">Общий калькулятор ↗</a>
+      </nav>
+      <div class="design-switch" role="group" aria-label="Оформление калькулятора">
+        <button type="button" data-design-choice="cream" aria-pressed="true">Крем и апельсин</button>
+        <button type="button" data-design-choice="alpine" aria-pressed="false">Альпийский лёд</button>
+      </div>
+    </div>
 
     <header class="hero">
-      <p class="eyebrow"><span></span> ИИС‑3 / Планировщик</p>
-      <h1>Распределение капитала<br class="desktop"> по ИИС‑3</h1>
-      <p class="lead">Выберите, что выровнять: прибыль к закрытию или взносы. В обоих режимах калькулятор использует свободные лимиты всех ИИС, прежде чем начислять НДФЛ с превышения.</p>
+      <div>
+        <p class="eyebrow"><span></span> ИИС‑3 / Планировщик</p>
+        <h1><span class="title-cream">Капитал по счетам</span><span class="title-alpine">Распределение капитала</span></h1>
+        <p class="lead">Сравните, сколько вложить в каждый ИИС и какой капитал получится к закрытию счетов.</p>
+      </div>
+      <div class="hero-total" id="hero-total" hidden>
+        <span>Капитал после НДФЛ</span>
+        <strong id="hero-net">—</strong>
+        <small>Суммарно к датам закрытия ИИС</small>
+      </div>
     </header>
 
     <div class="workspace">
       <form class="settings" id="settings" novalidate>
-        <p class="eyebrow muted">01 / Вводные</p>
-        <h2>Ваш сценарий</h2>
-        <div class="field">
+        <header class="settings-heading">
+          <p class="eyebrow muted">Параметры</p>
+          <h2>Ваш сценарий</h2>
+        </header>
+        <div class="field field-amount">
           <label for="amount">Общая сумма на все счета</label>
           <div class="input-shell"><input id="amount" type="text" inputmode="numeric" value="30 000 000" autocomplete="off" aria-describedby="amount-hint"><span>₽</span></div>
           <p class="hint" id="amount-hint">Единовременный взнос в начале срока.</p>
         </div>
-        <div class="field">
+        <div class="field field-rate">
           <label for="rate">Ожидаемая доходность</label>
           <div class="input-shell"><input id="rate" type="text" inputmode="decimal" value="15" autocomplete="off" aria-describedby="rate-hint"><span>% годовых</span></div>
           <input id="rate-slider" class="rate-slider" type="range" min="5" max="30" step="0.1" value="15" aria-label="Ожидаемая доходность, ползунок" aria-valuetext="15% годовых">
           <div class="rate-endpoints" aria-hidden="true"><span>5%</span><span>30%</span></div>
           <p class="hint" id="rate-hint">Номинальная ставка с ежедневной капитализацией.</p>
         </div>
-        <fieldset>
+        <fieldset class="field-count">
           <legend>Количество ИИС</legend>
           <div class="segments">
             <label><input type="radio" name="count" value="1"><span>1</span></label>
@@ -47,7 +62,7 @@
             <label><input type="radio" name="count" value="3" checked><span>3</span></label>
           </div>
         </fieldset>
-        <div class="field">
+        <div class="field field-balance">
           <label for="balance-mode">Что выровнять</label>
           <select id="balance-mode" aria-describedby="balance-hint">
             <option value="profit">Прибыль к закрытию</option>
@@ -55,11 +70,13 @@
           </select>
           <p class="hint" id="balance-hint">На более короткий срок нужен больший взнос, чтобы прибыль была близкой.</p>
         </div>
-        <div class="schedule">
-          <div class="field"><label for="opening">Год открытия</label><input id="opening" type="number" min="2024" max="2100" step="1" value="2026"></div>
-          <div class="field"><label for="term">Первое закрытие, лет</label><input id="term" type="number" min="5" max="30" step="1" value="5"></div>
+        <div class="field-schedule">
+          <div class="schedule">
+            <div class="field"><label for="opening">Год открытия</label><input id="opening" type="number" min="2024" max="2100" step="1" value="2026"></div>
+            <div class="field"><label for="term">Первое закрытие, лет</label><input id="term" type="number" min="5" max="30" step="1" value="5"></div>
+          </div>
+          <p class="hint" id="term-hint">Минимум по сроку — 5 лет для всех счетов в этом сценарии.</p>
         </div>
-        <p class="hint" id="term-hint">Минимум по сроку — 5 лет для всех счетов в этом сценарии.</p>
         <details class="options">
           <summary>Как задана доходность</summary>
           <label for="convention" class="sr-only">Способ капитализации</label>
@@ -68,7 +85,7 @@
             <option value="effective">Эффективная годовая ставка</option>
           </select>
         </details>
-        <div class="field">
+        <div class="field field-tax">
           <label for="tax-scale">Шкала НДФЛ</label>
           <select id="tax-scale" aria-describedby="tax-hint">
             <option value="current">13% / 15% — действующая</option>
@@ -76,16 +93,17 @@
           </select>
           <p class="hint" id="tax-hint">Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.</p>
         </div>
-        <div class="actions">
-          <button id="fill-limit" type="button">Взнос без превышения</button>
-          <button id="reset-example" type="button" class="ghost">Пример: 30 млн ₽</button>
+        <div class="settings-actions">
+          <div class="actions">
+            <button id="fill-limit" type="button">Взнос без превышения</button>
+            <button id="reset-example" type="button" class="ghost">Пример: 30 млн ₽</button>
+          </div>
+          <p class="hint" id="fill-hint">Подставит максимальный общий взнос без превышения лимита прибыли при таком распределении.</p>
         </div>
-        <p class="hint" id="fill-hint">Подставит максимальный общий взнос без превышения лимита прибыли при таком распределении.</p>
         <p id="error" class="error" role="alert" hidden></p>
       </form>
 
       <section class="overview" id="overview" aria-labelledby="chart-title">
-        <p class="eyebrow muted">02 / Счета</p>
         <h2 id="chart-title">Сравнение ИИС</h2>
         <div id="comparison-panel">
           <p class="compare-intro">Суммы на дату закрытия каждого счета. Масштаб одинаковый для всех полос.</p>

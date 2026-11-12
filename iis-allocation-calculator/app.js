@@ -11,8 +11,35 @@
   const decimal = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
   const rub = (n) => fmt.format(n) + ' ₽';
   const pct = (n) => decimal.format(n) + '%';
-  const colors = ['#69e2bd', '#afbbff', '#ffc18b'];
+  const metrics = [
+    ['Вложено', 'invested', 'contribution'],
+    ['Прибыль', 'profit', 'profit'],
+    ['Капитал до НДФЛ', 'gross', 'capital'],
+    ['НДФЛ', 'tax', 'tax'],
+    ['Капитал после НДФЛ', 'net', 'netCapital']
+  ];
+  const designButtons = [...document.querySelectorAll('[data-design-choice]')];
+  const designColors = { cream: '#e9d9ca', alpine: '#ebecee' };
+  const designKey = 'iis-allocation-design';
   let plan = null;
+
+  function applyDesign(design) {
+    if (!Object.hasOwn(designColors, design)) return;
+    document.documentElement.dataset.design = design;
+    document.querySelector('meta[name="theme-color"]').content = designColors[design];
+    designButtons.forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.designChoice === design));
+    });
+  }
+
+  try { applyDesign(localStorage.getItem(designKey)); } catch { /* Storage is optional. */ }
+  designButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const design = button.dataset.designChoice;
+      applyDesign(design);
+      try { localStorage.setItem(designKey, design); } catch { /* Still switch in this tab. */ }
+    });
+  });
 
   function parseField(el, mode) {
     const raw = el.value.trim();
@@ -56,7 +83,8 @@
     $('profit').textContent = rub(plan.totalProfit);
     $('capital').textContent = rub(plan.totalCapital);
     $('total-tax').textContent = rub(plan.totalTax);
-    $('total-net').textContent = rub(plan.totalNet);
+    $('hero-net').textContent = $('total-net').textContent = rub(plan.totalNet);
+    $('hero-total').hidden = false;
     $('tax-hint').textContent = plan.taxScale === 'current'
       ? '13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.'
       : 'Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.';
@@ -108,6 +136,7 @@
       $('error').textContent = error.message;
       $('error').hidden = false;
       $('results').hidden = true;
+      $('hero-total').hidden = true;
       $('fill-limit').disabled = true;
       comparisonChart.innerHTML = '<p class="compare-empty">Исправьте параметры, чтобы пересчитать график.</p>';
     }
@@ -134,6 +163,7 @@
     const scale = ticks * step;
     const position = (amount) => (100 * amount / scale).toFixed(5) + '%';
     comparisonChart.style.setProperty('--limit-position', position(model.LIMIT));
+    comparisonChart.style.setProperty('--account-count', plan.accounts.length);
 
     const axis = Array.from({ length: ticks + 1 }, (_, i) =>
       '<span style="--position:' + position(i * step) + '">' + axisAmount(i * step) + '</span>'
@@ -141,15 +171,12 @@
     const grid = Array.from({ length: ticks + 1 }, (_, i) =>
       '<i class="compare-gridline" style="--position:' + position(i * step) + '"></i>'
     ).join('');
-    const accounts = plan.accounts.map((a, i) => {
-      const metrics = [
-        ['Вложено', 'invested', a.contribution],
-        ['Прибыль', 'profit', a.profit],
-        ['Капитал до НДФЛ', 'gross', a.capital],
-        ['НДФЛ', 'tax', a.tax],
-        ['Капитал после НДФЛ', 'net', a.netCapital]
-      ];
-      const rows = metrics.map(([label, kind, amount]) => {
+    const matrixLabels = metrics.map(([label, kind]) =>
+      '<span class="matrix-label compare-' + kind + '">' + label + '</span>'
+    ).join('');
+    const accounts = plan.accounts.map((a) => {
+      const rows = metrics.map(([label, kind, key]) => {
+        const amount = a[key];
         const taxable = kind === 'profit' && a.taxable > 0;
         const fill = taxable
           ? '<span class="compare-fill" style="--size:' + position(a.deduction) + '"></span>' +
@@ -162,15 +189,17 @@
           '<dd class="compare-track" aria-hidden="true">' + fill + '</dd>' +
           '<dd class="compare-value">' + rub(amount) + excess + '</dd></div>';
       }).join('');
-      return '<section class="compare-group" aria-label="ИИС ' + a.id + '">' +
-        '<header><h3><i style="--series:' + colors[i] + '"></i>ИИС ' + a.id + '</h3>' +
+      return '<section class="compare-group" aria-label="ИИС ' + a.id + '" style="--account-column:' + (a.id + 1) + '">' +
+        '<header><h3><i aria-hidden="true"></i>ИИС ' + a.id + '</h3>' +
         '<span>' + a.closeYear + ' · ' + yearsText(a.term) + (a.contribution ? '' : ' · без взноса') + '</span></header>' +
         '<dl>' + rows + '</dl></section>';
     }).join('');
     comparisonChart.innerHTML = '<div class="compare-axis" aria-hidden="true">' +
       '<span class="compare-axis-unit">Шкала, ₽</span><div class="compare-axis-plot">' + axis + '</div></div>' +
+      '<p class="matrix-axis">Общая шкала: 0 – ' + axisAmount(scale) + ' ₽</p>' +
       '<div class="compare-groups"><div class="compare-grid" aria-hidden="true">' + grid +
-      '<i class="compare-reference"></i></div>' + accounts + '</div>';
+      '<i class="compare-reference"></i></div><div class="matrix-labels" aria-hidden="true">' +
+      matrixLabels + '</div>' + accounts + '</div>';
   }
 
   form.addEventListener('submit', (event) => { event.preventDefault(); update(true); });
