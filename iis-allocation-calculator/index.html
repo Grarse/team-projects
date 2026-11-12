@@ -6,9 +6,9 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#101b2b">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=2">
+  <link rel="stylesheet" href="./style.css?v=3">
   <script defer src="./model.js?v=2"></script>
-  <script defer src="./app.js?v=2"></script>
+  <script defer src="./app.js?v=3"></script>
 </head>
 <body>
   <main class="shell">
@@ -74,26 +74,45 @@
         <p id="error" class="error" role="alert" hidden></p>
       </form>
 
-      <section class="overview" aria-labelledby="chart-title">
+      <section class="overview" id="overview" data-chart-mode="compare" aria-labelledby="chart-title">
         <div class="chart-head">
-          <div><p class="eyebrow">02 / Горизонт</p><h2 id="chart-title">Динамика по счетам</h2></div>
+          <div><p class="eyebrow">02 / Счета</p><h2 id="chart-title">Сравнение ИИС</h2></div>
           <fieldset class="view-switch">
-            <legend class="sr-only">Показатель графика</legend>
+            <legend class="sr-only">Вид графика</legend>
             <div class="segments">
-              <label><input type="radio" name="view" value="profit" checked><span>Прибыль</span></label>
-              <label><input type="radio" name="view" value="capital"><span>Капитал до НДФЛ</span></label>
+              <label><input type="radio" name="chart-mode" value="compare" checked><span>Сравнение</span></label>
+              <label><input type="radio" name="chart-mode" value="timeline"><span>По годам</span></label>
             </div>
           </fieldset>
         </div>
-        <div class="legend" id="legend"></div>
-        <div id="chart" class="chart"></div>
-        <div class="scrubber">
-          <label for="cursor">С момента открытия <output id="cursor-label" for="cursor"></output></label>
-          <input id="cursor" type="range" min="0" max="7" step="1" value="7">
-          <div id="readout" class="readout"></div>
+        <div id="comparison-panel">
+          <p class="compare-intro">Суммы на дату закрытия каждого счета. Масштаб одинаковый для всех полос.</p>
+          <div class="compare-key">
+            <span><i class="limit-key"></i>30 млн ₽ — лимит вычета по прибыли</span>
+            <span><i class="excess-key"></i>Прибыль сверх вычета</span>
+          </div>
+          <div id="comparison-chart" class="comparison-chart"></div>
         </div>
-        <p class="chart-note">Линия каждого счета заканчивается на его плановом закрытии. Дальнейший рост выведенных денег не моделируется.</p>
-        <div class="close-plan" id="close-plan" aria-label="Плановые закрытия"></div>
+        <div id="timeline-panel" hidden>
+          <div class="timeline-controls">
+            <div class="legend" id="legend"></div>
+            <fieldset class="view-switch">
+              <legend class="sr-only">Показатель по годам</legend>
+              <div class="segments">
+                <label><input type="radio" name="view" value="profit" checked><span>Прибыль</span></label>
+                <label><input type="radio" name="view" value="capital"><span>Капитал до НДФЛ</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div id="chart" class="chart"></div>
+          <div class="scrubber">
+            <label for="cursor">С момента открытия <output id="cursor-label" for="cursor"></output></label>
+            <input id="cursor" type="range" min="0" max="7" step="1" value="7">
+            <div id="readout" class="readout"></div>
+          </div>
+          <p class="chart-note">Линия каждого счета заканчивается на его плановом закрытии. Дальнейший рост выведенных денег не моделируется.</p>
+          <div class="close-plan" id="close-plan" aria-label="Плановые закрытия"></div>
+        </div>
       </section>
     </div>
 

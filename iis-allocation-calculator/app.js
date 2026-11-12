@@ -5,6 +5,7 @@
   const $ = (id) => document.getElementById(id);
   const form = $('settings');
   const chart = $('chart');
+  const comparisonChart = $('comparison-chart');
   const fmt = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
   const decimal = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
   const rub = (n) => fmt.format(n) + ' ₽';
@@ -109,6 +110,7 @@
     }).join('');
     $('cursor').max = String(plan.lastTerm);
     $('cursor').value = String(cursor);
+    drawComparison();
     drawChart();
   }
 
@@ -134,6 +136,7 @@
       $('close-plan').replaceChildren();
       $('cursor-label').textContent = '—';
       $('readout').replaceChildren();
+      comparisonChart.innerHTML = '<p class="compare-empty">Исправьте параметры, чтобы пересчитать график.</p>';
       chart.textContent = 'Исправьте параметры, чтобы пересчитать график.';
       chart.classList.add('chart-empty');
     }
@@ -148,8 +151,59 @@
     return fmt.format(value);
   }
 
+  function chartStep(value) {
+    const power = 10 ** Math.floor(Math.log10(value));
+    return [1, 2, 2.5, 5, 10].find((factor) => factor * power >= value) * power;
+  }
+
+  function drawComparison() {
+    const max = Math.max(model.LIMIT * 1.1, ...plan.accounts.map((a) => a.capital));
+    const step = chartStep(max / 4);
+    const ticks = Math.ceil(max / step);
+    const scale = ticks * step;
+    const position = (amount) => (100 * amount / scale).toFixed(5) + '%';
+    comparisonChart.style.setProperty('--limit-position', position(model.LIMIT));
+
+    const axis = Array.from({ length: ticks + 1 }, (_, i) =>
+      '<span style="--position:' + position(i * step) + '">' + axisAmount(i * step) + '</span>'
+    ).join('');
+    const grid = Array.from({ length: ticks + 1 }, (_, i) =>
+      '<i class="compare-gridline" style="--position:' + position(i * step) + '"></i>'
+    ).join('');
+    const accounts = plan.accounts.map((a, i) => {
+      const metrics = [
+        ['Вложено', 'invested', a.contribution],
+        ['Прибыль', 'profit', a.profit],
+        ['Капитал до НДФЛ', 'gross', a.capital],
+        ['НДФЛ', 'tax', a.tax],
+        ['Капитал после НДФЛ', 'net', a.netCapital]
+      ];
+      const rows = metrics.map(([label, kind, amount]) => {
+        const taxable = kind === 'profit' && a.taxable > 0;
+        const fill = taxable
+          ? '<span class="compare-fill" style="--size:' + position(a.deduction) + '"></span>' +
+            '<span class="compare-fill compare-excess" style="--from:' + position(a.deduction) + ';--size:' + position(a.taxable) + '"></span>'
+          : '<span class="compare-fill" style="--size:' + position(amount) + '"></span>';
+        const excess = taxable
+          ? '<small class="compare-extra">Сверх вычета: ' + rub(a.taxable) + '</small>'
+          : '';
+        return '<div class="compare-row compare-' + kind + '"><dt>' + label + '</dt>' +
+          '<dd class="compare-track" aria-hidden="true">' + fill + '</dd>' +
+          '<dd class="compare-value">' + rub(amount) + excess + '</dd></div>';
+      }).join('');
+      return '<section class="compare-group" aria-label="ИИС ' + a.id + '">' +
+        '<header><h3><i style="--series:' + colors[i] + '"></i>ИИС ' + a.id + '</h3>' +
+        '<span>' + a.closeYear + ' · ' + yearsText(a.term) + (a.contribution ? '' : ' · без взноса') + '</span></header>' +
+        '<dl>' + rows + '</dl></section>';
+    }).join('');
+    comparisonChart.innerHTML = '<div class="compare-axis" aria-hidden="true">' +
+      '<span class="compare-axis-unit">Шкала, ₽</span><div class="compare-axis-plot">' + axis + '</div></div>' +
+      '<div class="compare-groups"><div class="compare-grid" aria-hidden="true">' + grid +
+      '<i class="compare-reference"></i></div>' + accounts + '</div>';
+  }
+
   function drawChart() {
-    if (!plan) return;
+    if (!plan || $('timeline-panel').hidden) return;
     chart.classList.remove('chart-empty');
     const width = Math.max(240, chart.clientWidth);
     const height = width < 450 ? 235 : 300;
@@ -157,9 +211,7 @@
     const maxData = Math.max(1, ...plan.accounts.map((a) => a[view]));
     let step = 10_000_000, ceiling = 33_000_000;
     if (view === 'capital' || maxData > model.LIMIT) {
-      const interval = maxData / 4;
-      const power = 10 ** Math.floor(Math.log10(interval));
-      step = [1, 2, 2.5, 5, 10].find((k) => k * power >= interval) * power;
+      step = chartStep(maxData / 4);
       ceiling = Math.ceil(maxData / step) * step * 1.04;
     }
     const x = (year) => left + year / plan.lastTerm * (width - left - right);
@@ -230,6 +282,14 @@
     cursor = 7;
     update(true);
   });
+  document.querySelectorAll('[name="chart-mode"]').forEach((input) => input.addEventListener('change', () => {
+    const compare = input.value === 'compare';
+    $('overview').dataset.chartMode = input.value;
+    $('comparison-panel').hidden = !compare;
+    $('timeline-panel').hidden = compare;
+    $('chart-title').textContent = compare ? 'Сравнение ИИС' : 'Динамика по счетам';
+    drawChart();
+  }));
   document.querySelectorAll('[name="view"]').forEach((input) => input.addEventListener('change', () => {
     view = input.value;
     drawChart();
