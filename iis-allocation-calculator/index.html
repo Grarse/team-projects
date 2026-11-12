@@ -6,9 +6,9 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#101b2b">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=4">
+  <link rel="stylesheet" href="./style.css?v=5">
   <script defer src="./model.js?v=5"></script>
-  <script defer src="./app.js?v=7"></script>
+  <script defer src="./app.js?v=8"></script>
 </head>
 <body>
   <main class="shell">
@@ -72,9 +72,9 @@
           <label for="tax-scale">Шкала НДФЛ</label>
           <select id="tax-scale" aria-describedby="tax-hint">
             <option value="current">13% / 15% — действующая</option>
-            <option value="scenario">13–22% — сценарий</option>
+            <option value="scenario" selected>13–22% — сценарий</option>
           </select>
-          <p class="hint" id="tax-hint">13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.</p>
+          <p class="hint" id="tax-hint">Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.</p>
         </div>
         <div class="actions">
           <button id="fill-limit" type="button">Взнос без превышения</button>
@@ -84,17 +84,9 @@
         <p id="error" class="error" role="alert" hidden></p>
       </form>
 
-      <section class="overview" id="overview" data-chart-mode="compare" aria-labelledby="chart-title">
-        <div class="chart-head">
-          <div><p class="eyebrow">02 / Счета</p><h2 id="chart-title">Сравнение ИИС</h2></div>
-          <fieldset class="view-switch">
-            <legend class="sr-only">Вид графика</legend>
-            <div class="segments">
-              <label><input type="radio" name="chart-mode" value="compare" checked><span>Сравнение</span></label>
-              <label><input type="radio" name="chart-mode" value="timeline"><span>По годам</span></label>
-            </div>
-          </fieldset>
-        </div>
+      <section class="overview" id="overview" aria-labelledby="chart-title">
+        <p class="eyebrow muted">02 / Счета</p>
+        <h2 id="chart-title">Сравнение ИИС</h2>
         <div id="comparison-panel">
           <p class="compare-intro">Суммы на дату закрытия каждого счета. Масштаб одинаковый для всех полос.</p>
           <div class="compare-key">
@@ -102,26 +94,6 @@
             <span><i class="excess-key"></i>Прибыль сверх вычета</span>
           </div>
           <div id="comparison-chart" class="comparison-chart"></div>
-        </div>
-        <div id="timeline-panel" hidden>
-          <div class="timeline-controls">
-            <div class="legend" id="legend"></div>
-            <fieldset class="view-switch">
-              <legend class="sr-only">Показатель по годам</legend>
-              <div class="segments">
-                <label><input type="radio" name="view" value="profit" checked><span>Прибыль</span></label>
-                <label><input type="radio" name="view" value="capital"><span>Капитал до НДФЛ</span></label>
-              </div>
-            </fieldset>
-          </div>
-          <div id="chart" class="chart"></div>
-          <div class="scrubber">
-            <label for="cursor">С момента открытия <output id="cursor-label" for="cursor"></output></label>
-            <input id="cursor" type="range" min="0" max="7" step="1" value="7">
-            <div id="readout" class="readout"></div>
-          </div>
-          <p class="chart-note">Линия каждого счета заканчивается на его плановом закрытии. Дальнейший рост выведенных денег не моделируется.</p>
-          <div class="close-plan" id="close-plan" aria-label="Плановые закрытия"></div>
         </div>
       </section>
     </div>
@@ -136,12 +108,6 @@
       </section>
       <p class="result-note" id="allocation-note" aria-live="polite"></p>
       <p class="result-note" id="equal-note" hidden></p>
-
-      <section class="accounts-section" aria-labelledby="accounts-title">
-        <p class="eyebrow muted">03 / Раскладка</p>
-        <h2 id="accounts-title">Что на каждом ИИС</h2>
-        <div class="accounts" id="accounts"></div>
-      </section>
     </div>
 
     <details class="method">
@@ -149,7 +115,7 @@
       <p>Все счета в модели открываются и пополняются одновременно. Минимальный срок договора зависит от года открытия: 5 лет для 2024–2026 годов, 6 лет для 2027 года, затем по одному году до 10 лет с 2031 года. Закрытия через 5, 6 и 7 лет в исходном сценарии — выбор графика, а не разные минимальные сроки для трех счетов.</p>
       <p>Лимит вычета по положительному финансовому результату — 30 млн ₽ на все ИИС, закрытые одним налогоплательщиком в одном календарном году. Счета в калькуляторе закрываются в разные годы. Модель предполагает, что на соответствующий год нет других закрытий ИИС и все остальные условия вычета соблюдены. См. <a href="https://www.nalog.gov.ru/rn77/taxation/taxes/ndfl/nalog_vichet/long_term_savings/" target="_blank" rel="noopener noreferrer">разъяснения ФНС</a> и <a href="https://www.nalog.gov.ru/rn49/news/activities_fts/16641677/" target="_blank" rel="noopener noreferrer">переходные сроки</a>.</p>
       <p>Для каждого счета расчетный порог взноса равен 30 млн ₽, деленным на прирост одного рубля за срок до закрытия. Режим «Прибыль к закрытию» распределяет взносы обратно пропорционально этому приросту; из-за округления взносов до целого рубля прибыль может немного различаться. Режим «Взносы с учетом лимитов» распределяет деньги как можно равномернее между счетами, где есть свободный лимит. Если все лимиты заполнены, остаток в обоих режимах добавляется к последнему ИИС, поэтому его прибыль может оказаться выше. Суммы на экране округляются до ближайшего рубля; результаты на разные даты не сопоставляются как выплаты в один день. Для номинальной ставки используется условный год из 365 дней, для эффективной — сложный процент по годам.</p>
-      <p>Налоговая база — прибыль сверх доступного вычета, а не взнос. Налог для резидента РФ рассчитывается отдельно за каждый год закрытия. По умолчанию применяется шкала 13/15% для доходов от операций с ценными бумагами (<a href="https://www.nalog.gov.ru/nu/" target="_blank" rel="noopener noreferrer">ставки ФНС</a>); 13–22% — только сценарий. Другие доходы той же налоговой группы, комиссии и вычет на взносы не учтены. Модель предполагает, что весь прирост относится к подходящим для вычета операциям, и не прогнозирует изменение ставок или доходности.</p>
+      <p>Налоговая база — прибыль сверх доступного вычета, а не взнос. Налог для резидента РФ рассчитывается отдельно за каждый год закрытия. По умолчанию выбран гипотетический сценарий 13–22%. Для расчета по действующей шкале доходов от операций с ценными бумагами выберите 13/15% (<a href="https://www.nalog.gov.ru/nu/" target="_blank" rel="noopener noreferrer">ставки ФНС</a>). Другие доходы той же налоговой группы, комиссии и вычет на взносы не учтены. Модель предполагает, что весь прирост относится к подходящим для вычета операциям, и не прогнозирует изменение ставок или доходности.</p>
     </details>
   </main>
 </body>
