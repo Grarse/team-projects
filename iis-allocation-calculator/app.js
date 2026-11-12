@@ -64,9 +64,6 @@
     $('total-tax').textContent = rub(plan.totalTax);
     $('hero-net').textContent = $('total-net').textContent = rub(plan.totalNet);
     $('hero-total').hidden = false;
-    $('tax-hint').textContent = plan.taxScale === 'current'
-      ? '13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.'
-      : 'Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.';
     $('balance-hint').textContent = plan.balance === 'profit'
       ? 'На более короткий срок нужен больший взнос, чтобы прибыль была близкой.'
       : 'Сохраняем взносы близкими, а излишек переносим на счета со свободным лимитом.';
@@ -105,6 +102,12 @@
   }
 
   function update(adjustTerm = false) {
+    const taxScale = $('tax-scale');
+    const showTaxHint = taxScale.value === 'current';
+    $('tax-hint').hidden = !showTaxHint;
+    if (showTaxHint) taxScale.setAttribute('aria-describedby', 'tax-hint');
+    else taxScale.removeAttribute('aria-describedby');
+
     try {
       plan = model.allocate(readInputs(adjustTerm));
       $('error').hidden = true;
