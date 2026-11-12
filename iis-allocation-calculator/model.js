@@ -52,19 +52,28 @@
     if (!['daily', 'effective'].includes(convention)) throw new RangeError('Неизвестный тип доходности.');
     if (!Object.hasOwn(TAX_SCALES, taxScale)) throw new RangeError('Неизвестная шкала НДФЛ.');
 
-    let remaining = amount;
+    const equalShare = Math.floor(amount / count);
+    const extraRubles = amount % count;
     const accounts = Array.from({ length: count }, (_, i) => {
       const term = firstTerm + i;
       const factor = profitFactor(rate, term, convention);
       // Floor to a whole ruble so rounding the contribution cannot exceed the cap.
       const maxContribution = factor === 0 ? Infinity : Math.floor(LIMIT / factor);
-      const contribution = Math.min(remaining, maxContribution);
-      remaining -= contribution;
-      return { id: i + 1, term, closeYear: openingYear + term, factor, maxContribution, contribution };
+      const initialContribution = equalShare + (i < extraRubles ? 1 : 0);
+      return { id: i + 1, term, closeYear: openingYear + term, factor, maxContribution, initialContribution, contribution: initialContribution };
     });
 
-    // Preserve the cap-first allocation, then invest the entire excess in the final account.
-    accounts[accounts.length - 1].contribution += remaining;
+    const transfers = [];
+    for (let i = 0; i < accounts.length - 1; i++) {
+      const from = accounts[i], to = accounts[i + 1];
+      const excess = Math.max(0, from.contribution - from.maxContribution);
+      if (excess === 0) continue;
+      from.contribution -= excess;
+      to.contribution += excess;
+      transfers.push({ from: from.id, to: to.id, amount: excess });
+    }
+    const last = accounts[accounts.length - 1];
+    const overflow = Math.max(0, last.contribution - last.maxContribution);
     for (const a of accounts) {
       a.profit = a.contribution * a.factor;
       a.capital = a.contribution + a.profit;
@@ -75,14 +84,16 @@
       a.netCapital = a.capital - a.tax;
     }
     const totalProfit = accounts.reduce((total, account) => total + account.profit, 0);
-    const fullContribution = accounts.reduce((total, account) => total + account.maxContribution, 0);
+    // With the same rate and increasing terms, the last account has the smallest cap.
+    // Whole-ruble remainders can go to earlier accounts that can accept one more ruble.
+    const maxWithoutExcess = last.maxContribution * count +
+      accounts.filter((a) => a.maxContribution > last.maxContribution).length;
     const totalTax = accounts.reduce((total, account) => total + account.tax, 0);
     return {
-      openingYear, firstTerm, minTerm, rate, convention, taxScale, accounts,
-      invested: amount, overflow: remaining, totalProfit, totalCapital: amount + totalProfit,
+      openingYear, firstTerm, minTerm, rate, convention, taxScale, accounts, transfers,
+      invested: amount, overflow, totalProfit, totalCapital: amount + totalProfit,
       totalTax, totalNet: amount + totalProfit - totalTax,
-      fullContribution, additional: Math.max(0, fullContribution - amount),
-      lastTerm: accounts[accounts.length - 1].term
+      maxWithoutExcess, lastTerm: last.term
     };
   }
 

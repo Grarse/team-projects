@@ -81,19 +81,24 @@
       ? '13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.'
       : 'Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.';
 
-    $('allocation-note').textContent = plan.overflow > 0
-      ? 'Сверх взносов до расчетных лимитов: ' + rub(plan.overflow) + ' на ИИС ' + plan.accounts.length +
-        '. НДФЛ начисляется только на прибыль сверх вычета, не на сумму взноса.'
-      : plan.rate === 0
-        ? 'При нулевой доходности прибыль не возникает, поэтому вся сумма направляется на первый ИИС.'
-        : 'Чтобы использовать расчетный лимит прибыли на всех выбранных ИИС, нужен общий взнос ' + rub(plan.fullContribution) +
-          (plan.additional > 0 ? ' (еще ' + rub(plan.additional) + ').' : '.');
-    $('fill-limit').disabled = !Number.isFinite(plan.fullContribution) || plan.fullContribution > model.MAX_AMOUNT;
+    const distribution = plan.transfers.length
+      ? 'После равного деления переносим взносы: ' + plan.transfers.map((t) =>
+        'ИИС ' + t.from + ' → ИИС ' + t.to + ': ' + rub(t.amount)).join('; ') + '.'
+      : plan.accounts.length === 1
+        ? 'Вся сумма вложена на один ИИС.'
+        : plan.invested % plan.accounts.length === 0
+          ? 'Взнос разделен поровну: по ' + rub(plan.accounts[0].initialContribution) + ' на счет.'
+          : 'Взнос разделен поровну с точностью до рубля.';
+    $('allocation-note').textContent = distribution + (plan.overflow > 0
+      ? ' На ИИС ' + plan.accounts.length + ' осталось ' + rub(plan.overflow) +
+        ' взноса сверх расчетного порога. НДФЛ начисляется на прибыль сверх вычета, не на взнос.'
+      : '');
+    $('fill-limit').disabled = plan.maxWithoutExcess > model.MAX_AMOUNT;
     $('fill-hint').textContent = plan.rate === 0
-      ? 'При нулевой доходности заполнить лимит прибыли невозможно.'
-      : plan.fullContribution > model.MAX_AMOUNT
-        ? 'Расчетный взнос для заполнения превышает предел ввода.'
-        : 'Подставит ' + rub(plan.fullContribution) + ' — взнос без превышения расчетных лимитов прибыли.';
+      ? 'При нулевой доходности лимит прибыли не превышается.'
+      : plan.maxWithoutExcess > model.MAX_AMOUNT
+        ? 'В пределах доступных сумм лимит прибыли не превышается.'
+        : 'Подставит ' + rub(plan.maxWithoutExcess) + ' — максимальный общий взнос без превышения при таком распределении.';
     $('rate-hint').textContent = plan.convention === 'daily'
       ? 'Номинальная ставка с ежедневной капитализацией.'
       : 'Эффективная ставка: годовой рост уже включает капитализацию.';
@@ -284,8 +289,8 @@
     if (Number.isInteger(value) && value <= model.MAX_AMOUNT) $('amount').value = fmt.format(value);
   });
   $('fill-limit').addEventListener('click', () => {
-    if (!plan || !Number.isFinite(plan.fullContribution) || plan.fullContribution > model.MAX_AMOUNT) return;
-    $('amount').value = fmt.format(plan.fullContribution);
+    if (!plan || plan.maxWithoutExcess > model.MAX_AMOUNT) return;
+    $('amount').value = fmt.format(plan.maxWithoutExcess);
     update();
   });
   $('reset-example').addEventListener('click', () => {
