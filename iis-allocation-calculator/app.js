@@ -191,9 +191,5 @@
     $('amount').value = fmt.format(plan.maxWithoutExcess);
     update();
   });
-  $('reset-example').addEventListener('click', () => {
-    form.reset();
-    update(true);
-  });
   update();
 })();

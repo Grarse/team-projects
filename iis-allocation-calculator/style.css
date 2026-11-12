@@ -66,6 +66,7 @@ h2 { font-size: 1.5rem; letter-spacing: -.03em; }
 .field select { font-size: .84rem; }
 .rate-slider { display: block; width: 100%; height: 24px; margin: 5px 0 0; accent-color: var(--accent); cursor: pointer; }
 .rate-endpoints { display: flex; justify-content: space-between; color: var(--muted); font-size: .72rem; }
+.limit-action { margin-top: 10px; }
 .schedule { display: grid; grid-template-columns: 1fr 1.25fr; gap: 10px; }
 .schedule .field { display: flex; flex-direction: column; }
 .schedule input { margin-top: auto; }
@@ -80,11 +81,8 @@ legend { padding: 0; }
 .options { margin-top: 14px; font-size: .8rem; }
 summary { cursor: pointer; font-weight: 650; color: var(--strong); }
 .options select { margin-top: 7px; font-size: .76rem; }
-.actions { display: flex; gap: 7px; margin-top: 14px; flex-wrap: wrap; }
 button { min-height: 36px; padding: 6px 9px; border: 1px solid transparent; background: var(--accent); color: var(--accent-ink); border-radius: min(8px, var(--round)); font-size: .77rem; font-weight: 700; cursor: pointer; }
 button:hover:not(:disabled) { background: color-mix(in srgb, var(--accent), var(--accent-ink) 10%); }
-button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-button.ghost:hover { background: var(--input); }
 button:disabled { opacity: .55; cursor: not-allowed; }
 .error { margin: 12px 0 0; color: #9d342a; background: #fff0ee; padding: 10px; border-radius: 8px; font-size: .82rem; }
 

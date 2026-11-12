@@ -6,9 +6,9 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#e9d9ca">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=11">
+  <link rel="stylesheet" href="./style.css?v=12">
   <script defer src="./model.js?v=5"></script>
-  <script defer src="./app.js?v=12"></script>
+  <script defer src="./app.js?v=13"></script>
 </head>
 <body>
   <main class="shell">
@@ -47,6 +47,10 @@
           <input id="rate-slider" class="rate-slider" type="range" min="5" max="30" step="0.1" value="15" aria-label="Ожидаемая доходность, ползунок" aria-valuetext="15% годовых">
           <div class="rate-endpoints" aria-hidden="true"><span>5%</span><span>30%</span></div>
           <p class="hint" id="rate-hint">Номинальная ставка с ежедневной капитализацией.</p>
+          <div class="limit-action">
+            <button id="fill-limit" type="button" aria-describedby="fill-hint">Взнос без превышения</button>
+            <p class="hint" id="fill-hint">Подставит максимальный общий взнос без превышения лимита прибыли при таком распределении.</p>
+          </div>
         </div>
         <fieldset>
           <legend>Количество ИИС</legend>
@@ -86,13 +90,6 @@
             <option value="scenario" selected>13–22% — сценарий</option>
           </select>
           <p class="hint" id="tax-hint">Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.</p>
-        </div>
-        <div>
-          <div class="actions">
-            <button id="fill-limit" type="button">Взнос без превышения</button>
-            <button id="reset-example" type="button" class="ghost">Пример: 30 млн ₽</button>
-          </div>
-          <p class="hint" id="fill-hint">Подставит максимальный общий взнос без превышения лимита прибыли при таком распределении.</p>
         </div>
         <p id="error" class="error" role="alert" hidden></p>
       </form>
