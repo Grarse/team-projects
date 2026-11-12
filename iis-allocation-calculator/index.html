@@ -8,7 +8,7 @@
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
   <link rel="stylesheet" href="./style.css?v=13">
   <script defer src="./model.js?v=5"></script>
-  <script defer src="./app.js?v=14"></script>
+  <script defer src="./app.js?v=15"></script>
 </head>
 <body>
   <main class="shell">
@@ -48,7 +48,7 @@
           <p class="hint" id="rate-hint">Номинальная ставка с ежедневной капитализацией.</p>
           <div class="limit-action">
             <button id="fill-limit" type="button" aria-describedby="fill-hint">Взнос без превышения</button>
-            <p class="hint" id="fill-hint">Подставит максимальный общий взнос без превышения лимита прибыли при таком распределении.</p>
+            <p class="hint" id="fill-hint">Подставит общий взнос для максимального использования вычета по прибыли на каждом ИИС.</p>
           </div>
         </div>
         <fieldset>
@@ -96,7 +96,7 @@
       <section class="overview" id="overview" aria-labelledby="chart-title">
         <h2 id="chart-title">Сравнение ИИС</h2>
         <div id="comparison-panel">
-          <p class="compare-intro">Суммы на дату закрытия каждого счета. Масштаб одинаковый для всех полос.</p>
+          <p class="compare-intro">Суммы на дату закрытия каждого счета.</p>
           <div class="compare-key">
             <span><i class="limit-key"></i>30 млн ₽ — лимит вычета по прибыли</span>
             <span><i class="excess-key"></i>Прибыль сверх вычета</span>
