@@ -50,7 +50,8 @@
       openingYear,
       firstTerm: parseField($('term')),
       convention: $('convention').value,
-      taxScale: $('tax-scale').value
+      taxScale: $('tax-scale').value,
+      balance: $('balance-mode').value
     };
   }
 
@@ -80,10 +81,15 @@
     $('tax-hint').textContent = plan.taxScale === 'current'
       ? '13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.'
       : 'Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.';
+    $('balance-hint').textContent = plan.balance === 'profit'
+      ? 'На более короткий срок нужен больший взнос, чтобы прибыль была близкой.'
+      : 'Сохраняем взносы близкими, а излишек переносим на счета со свободным лимитом.';
 
     const adjustments = plan.accounts.filter((a) => a.contribution !== a.initialContribution);
     const distribution = adjustments.length
-      ? 'Взносы относительно равного деления: ' + adjustments.map((a) => {
+      ? (plan.balance === 'profit'
+        ? 'Для выравнивания прибыли, относительно равных взносов: '
+        : 'Взносы относительно равного деления: ') + adjustments.map((a) => {
         const delta = a.contribution - a.initialContribution;
         return 'ИИС ' + a.id + ' ' + (delta > 0 ? '+' : '−') + rub(Math.abs(delta));
       }).join('; ') + '.'

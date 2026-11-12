@@ -35,7 +35,7 @@
       : Math.expm1(years * Math.log1p(rate / 100));
   }
 
-  function allocate({ amount, rate, count, openingYear, firstTerm, convention = 'daily', taxScale = 'current' }) {
+  function allocate({ amount, rate, count, openingYear, firstTerm, convention = 'daily', taxScale = 'current', balance = 'contribution' }) {
     if (!Number.isInteger(amount) || amount < 0 || amount > MAX_AMOUNT) {
       throw new RangeError('Укажите сумму в целых рублях от 0 до 1 трлн ₽.');
     }
@@ -51,6 +51,7 @@
     }
     if (!['daily', 'effective'].includes(convention)) throw new RangeError('Неизвестный тип доходности.');
     if (!Object.hasOwn(TAX_SCALES, taxScale)) throw new RangeError('Неизвестная шкала НДФЛ.');
+    if (!['contribution', 'profit'].includes(balance)) throw new RangeError('Неизвестный режим распределения.');
 
     const equalShare = Math.floor(amount / count);
     const extraRubles = amount % count;
@@ -63,17 +64,29 @@
       return { id: i + 1, term, closeYear: openingYear + term, factor, maxContribution, initialContribution, contribution: initialContribution };
     });
 
-    // Keep the allocation as even as possible within the individual caps.
+    // Equal profit requires weights proportional to 1 / profit factor.
     // Re-split the unassigned budget whenever an account reaches its cap.
     let remaining = amount;
     let open = accounts;
     while (open.length) {
-      const share = Math.floor(remaining / open.length);
-      const extra = remaining % open.length;
-      const capped = open.filter((a, i) => a.maxContribution < share + (i < extra ? 1 : 0));
+      const weights = balance === 'profit' && open[0].factor > 0
+        ? open.map(a => open[0].factor / a.factor)
+        : open.map(() => 1);
+      const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
+      const quotas = open.map((a, i) => ({ a, share: remaining * (weights[i] / weightSum) }));
+      const capped = quotas.filter(({ a, share }) => share > a.maxContribution).map(({ a }) => a);
       if (capped.length === 0) {
-        open.forEach((a, i) => { a.contribution = share + (i < extra ? 1 : 0); });
-        remaining = 0;
+        for (const { a, share } of quotas) {
+          a.contribution = Math.floor(share);
+          remaining -= a.contribution;
+        }
+        quotas.sort((x, y) => (y.share - y.a.contribution) - (x.share - x.a.contribution) || x.a.id - y.a.id);
+        for (const { a } of quotas) {
+          if (remaining > 0 && a.contribution < a.maxContribution) {
+            a.contribution++;
+            remaining--;
+          }
+        }
         break;
       }
       for (const a of capped) {
@@ -103,7 +116,7 @@
     const maxWithoutExcess = accounts.reduce((total, a) => total + a.maxContribution, 0);
     const totalTax = accounts.reduce((total, account) => total + account.tax, 0);
     return {
-      openingYear, firstTerm, minTerm, rate, convention, taxScale, accounts,
+      openingYear, firstTerm, minTerm, rate, convention, taxScale, balance, accounts,
       invested: amount, overflow, totalProfit, totalCapital: amount + totalProfit,
       totalTax, totalNet: amount + totalProfit - totalTax,
       equalTax, equalNet: amount + equalProfit - equalTax,

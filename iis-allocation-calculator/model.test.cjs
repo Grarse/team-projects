@@ -4,6 +4,33 @@ const { allocate, valueAt, minimumTerm, LIMIT, MAX_AMOUNT } = require('./model.j
 
 const base = { amount: 30_000_000, rate: 15, count: 3, openingYear: 2026, firstTerm: 5 };
 
+test('profit mode balances the screenshot example across different closing terms', () => {
+  const plan = allocate({ ...base, amount: 70_000_000, rate: 11.9, balance: 'profit' });
+  assert.deepEqual(plan.accounts.map(a => a.contribution), [29_100_166, 22_702_836, 18_196_998]);
+  const profits = plan.accounts.map(a => a.profit);
+  assert.ok(Math.max(...profits) - Math.min(...profits) < 1);
+  assert.equal(plan.totalTax, 0);
+});
+
+test('profit mode preserves all caps and invests the remaining capital on the last account', () => {
+  const input = { ...base, balance: 'profit' };
+  const cap = allocate(input).maxWithoutExcess;
+  const full = allocate({ ...input, amount: cap });
+  assert.ok(full.accounts.every(a => a.contribution === a.maxContribution && a.profit <= LIMIT));
+  assert.equal(full.overflow, 0);
+  const above = allocate({ ...input, amount: cap + 1_000_000 });
+  assert.equal(above.overflow, 1_000_000);
+  assert.equal(above.accounts.at(-1).contribution, full.accounts.at(-1).contribution + 1_000_000);
+  assert.ok(above.totalTax > 0);
+});
+
+test('profit mode handles zero yield and indivisible whole rubles', () => {
+  const plan = allocate({ ...base, amount: 7, rate: 0, balance: 'profit' });
+  assert.deepEqual(plan.accounts.map(a => a.contribution), [3, 2, 2]);
+  assert.equal(plan.totalProfit, 0);
+  assert.equal(plan.totalTax, 0);
+});
+
 test('30 million at 15% is split equally when every account is under the threshold', () => {
   const plan = allocate(base);
   assert.deepEqual(plan.accounts.map(a => a.contribution), [10_000_000, 10_000_000, 10_000_000]);
@@ -133,7 +160,7 @@ test('range of valid inputs preserves capital and uses every cap before allowing
 });
 
 test('invalid values are rejected', () => {
-  for (const values of [{ count: 0 }, { count: 4 }, { amount: -1 }, { amount: 0.5 }, { rate: NaN }, { rate: 101 }, { openingYear: 2023 }, { firstTerm: 31 }, { taxScale: 'invalid' }]) {
+  for (const values of [{ count: 0 }, { count: 4 }, { amount: -1 }, { amount: 0.5 }, { rate: NaN }, { rate: 101 }, { openingYear: 2023 }, { firstTerm: 31 }, { taxScale: 'invalid' }, { balance: 'invalid' }]) {
     assert.throws(() => allocate({ ...base, ...values }), RangeError);
   }
 });
