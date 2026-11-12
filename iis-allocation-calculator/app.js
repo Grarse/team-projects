@@ -171,6 +171,8 @@
     }).join('');
     comparisonChart.innerHTML = '<div class="compare-axis" aria-hidden="true">' +
       '<span class="compare-axis-unit">Шкала, ₽</span><div class="compare-axis-plot">' + axis + '</div></div>' +
+      '<div class="compare-limit" aria-hidden="true"><div class="compare-limit-plot">' +
+      '<span class="compare-limit-label">Лимит вычета · ' + axisAmount(model.LIMIT) + ' ₽</span></div></div>' +
       '<div class="compare-groups"><div class="compare-grid" aria-hidden="true">' + grid +
       '<i class="compare-reference"></i></div>' + accounts + '</div>';
   }

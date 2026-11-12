@@ -13,7 +13,7 @@
   --accent-ink: #2a190c;
   --round: 18px;
   --track: #e8dfd3;
-  --limit: #6c543c;
+  --limit: #243961;
   --invested: #a6afbe;
   --profit: #647b9a;
   --gross: #8293ad;
@@ -93,7 +93,7 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .compare-key { display: flex; flex-wrap: wrap; gap: 5px 14px; color: var(--muted); font-size: .72rem; }
 .compare-key span { display: inline-flex; gap: 5px; align-items: center; }
 .compare-key i { display: inline-block; width: 14px; flex: none; }
-.limit-key { border-top: 2px dashed var(--limit); }
+.limit-key { border-top: 3px dashed var(--limit); }
 .excess-key { height: 8px; border-radius: 2px; background: var(--excess); }
 .comparison-chart {
   container-type: inline-size;
@@ -102,7 +102,7 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   --bar-gap: 10px;
   margin-top: 14px;
 }
-.compare-axis, .compare-row {
+.compare-axis, .compare-limit, .compare-row {
   display: grid;
   grid-template-columns: var(--label-col) minmax(0, 1fr) var(--value-col);
   align-items: center;
@@ -113,10 +113,34 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .compare-axis-plot span { position: absolute; left: var(--position); transform: translateX(-50%); white-space: nowrap; }
 .compare-axis-plot span:first-child { transform: none; }
 .compare-axis-plot span:last-child { transform: translateX(-100%); }
+.compare-limit-plot { grid-column: 2; position: relative; min-height: 32px; }
+.compare-limit-label {
+  --label-width: 10rem;
+  position: absolute;
+  left: clamp(0px, calc(var(--limit-position) - var(--label-width) / 2), calc(100% - var(--label-width)));
+  width: var(--label-width);
+  padding: 4px 6px;
+  border-radius: 5px;
+  background: var(--limit);
+  color: #fff;
+  text-align: center;
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.compare-limit-plot::after {
+  content: "";
+  position: absolute;
+  inset-block: 24px 0;
+  left: var(--limit-position);
+  width: 3px;
+  transform: translateX(-50%);
+  background: var(--limit);
+}
 .compare-groups { position: relative; }
 .compare-grid { position: absolute; z-index: 1; inset: 0 calc(var(--value-col) + var(--bar-gap)) 0 calc(var(--label-col) + var(--bar-gap)); pointer-events: none; }
 .compare-gridline, .compare-reference { position: absolute; top: 0; bottom: 0; left: var(--position); border-left: 1px solid color-mix(in srgb, var(--line), transparent 45%); }
-.compare-reference { left: var(--limit-position); border-left: 2px dashed var(--limit); }
+.compare-reference { left: var(--limit-position); border-left: 3px dashed var(--limit); transform: translateX(-50%); filter: drop-shadow(1px 0 var(--paper)); }
 .compare-group { padding: 10px 0; border-top: 1px solid var(--line); }
 .compare-group:last-child { padding-bottom: 2px; }
 .compare-group header { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
@@ -138,11 +162,16 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .compare-extra { display: block; margin-top: 2px; color: var(--excess-text); font-size: .69rem; font-weight: 650; }
 .compare-empty { padding: 24px 0; color: var(--muted); }
 @container (max-width: 510px) {
-  .compare-axis { grid-template-columns: minmax(0, 1fr); }
+  .compare-axis, .compare-limit { grid-template-columns: minmax(0, 1fr); }
   .compare-axis-unit, .compare-grid { display: none; }
+  .compare-limit-plot { grid-column: 1; }
+  .compare-limit-plot::after { bottom: 3px; }
   .compare-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); row-gap: 4px; padding: 4px 0; }
   .compare-track { grid-row: 2; grid-column: 1 / -1; height: 8px; }
-  .compare-profit .compare-track::after { content: ""; position: absolute; left: var(--limit-position); inset-block: -2px; border-left: 2px dashed var(--limit); }
+  .compare-profit .compare-track::after {
+    content: ""; position: absolute; left: var(--limit-position); inset-block: -4px;
+    border-left: 3px solid var(--limit); transform: translateX(-50%); filter: drop-shadow(1px 0 var(--paper));
+  }
   .compare-value { grid-row: 1; grid-column: 2; }
 }
 .summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--line); margin-top: 18px; border: 1px solid var(--line); overflow: hidden; }
