@@ -31,8 +31,7 @@ body { margin: 0; }
 button, input, select { font: inherit; }
 [hidden] { display: none !important; }
 .shell { width: min(1240px, calc(100% - 64px)); margin: 0 auto; padding: 24px 0 54px; }
-.topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-bottom: 14px; border-bottom: 1px solid var(--line); font-size: .87rem; }
-.topbar a, .method a { color: var(--strong); text-underline-offset: 4px; }
+.method a { color: var(--strong); text-underline-offset: 4px; }
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(245px, .49fr); align-items: center; gap: 15px 24px; padding: 26px 0 23px; }
 .eyebrow { color: var(--muted); margin: 0 0 8px; font-size: .72rem; font-weight: 750; letter-spacing: .105em; text-transform: uppercase; }
 .hero .eyebrow span { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--accent); }
