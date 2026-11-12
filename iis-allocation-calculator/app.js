@@ -4,6 +4,8 @@
   const model = window.IisAllocation;
   const $ = (id) => document.getElementById(id);
   const form = $('settings');
+  const rateInput = $('rate');
+  const rateSlider = $('rate-slider');
   const chart = $('chart');
   const comparisonChart = $('comparison-chart');
   const fmt = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
@@ -19,7 +21,7 @@
   function parseField(el, mode) {
     const raw = el.value.trim();
     const value = mode === 'amount' ? raw.replace(/\s/g, '') : raw.replace(',', '.');
-    if (mode === 'rate' ? !/^\d+(?:\.\d{1,4})?$/.test(value) : !/^\d+$/.test(value)) return NaN;
+    if (mode === 'rate' ? !/^\d+(?:\.\d)?$/.test(value) : !/^\d+$/.test(value)) return NaN;
     return Number(value);
   }
 
@@ -28,6 +30,14 @@
   }
 
   function readInputs(adjustTerm) {
+    const rate = parseField(rateInput, 'rate');
+    if (!Number.isFinite(rate) || rate < Number(rateSlider.min) || rate > Number(rateSlider.max)) {
+      rateInput.setAttribute('aria-invalid', 'true');
+      throw new RangeError('Укажите доходность от 5% до 30% с шагом 0,1 п. п.');
+    }
+    rateInput.removeAttribute('aria-invalid');
+    rateSlider.value = String(rate);
+    rateSlider.setAttribute('aria-valuetext', pct(rate) + ' годовых');
     const openingYear = parseField($('opening'));
     const min = model.minimumTerm(openingYear);
     $('term').min = String(min);
@@ -35,7 +45,7 @@
     $('term-hint').textContent = 'Минимальный срок для всех счетов: ' + yearsText(min) + '.';
     return {
       amount: parseField($('amount'), 'amount'),
-      rate: parseField($('rate'), 'rate'),
+      rate,
       count: Number(form.querySelector('[name="count"]:checked').value),
       openingYear,
       firstTerm: parseField($('term')),
@@ -265,7 +275,10 @@
   }
 
   form.addEventListener('submit', (event) => { event.preventDefault(); update(true); });
-  form.addEventListener('input', (event) => update(event.target.id === 'opening'));
+  form.addEventListener('input', (event) => {
+    if (event.target === rateSlider) rateInput.value = decimal.format(Number(rateSlider.value));
+    update(event.target.id === 'opening');
+  });
   $('amount').addEventListener('blur', () => {
     const value = parseField($('amount'), 'amount');
     if (Number.isInteger(value) && value <= model.MAX_AMOUNT) $('amount').value = fmt.format(value);
