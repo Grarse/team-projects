@@ -7,41 +7,50 @@ const base = { amount: 30_000_000, rate: 15, count: 3, openingYear: 2026, firstT
 test('30 million at 15% is split equally when every account is under the threshold', () => {
   const plan = allocate(base);
   assert.deepEqual(plan.accounts.map(a => a.contribution), [10_000_000, 10_000_000, 10_000_000]);
-  assert.deepEqual(plan.transfers, []);
   assert.deepEqual(plan.accounts.map(a => a.closeYear), [2031, 2032, 2033]);
   assert.equal(plan.invested, base.amount);
   assert.equal(plan.overflow, 0);
   assert.equal(plan.totalTax, 0);
 });
 
-test('no-excess button target respects equal shares and whole-ruble rounding', () => {
+test('no-excess button target fills the combined capacity of all accounts', () => {
   const { accounts, maxWithoutExcess } = allocate(base);
   assert.ok(accounts[0].maxContribution > accounts[1].maxContribution);
   assert.ok(accounts[1].maxContribution > accounts[2].maxContribution);
-  assert.equal(maxWithoutExcess, 48_464_360);
+  assert.equal(maxWithoutExcess, 63_580_221);
   const plan = allocate({ ...base, amount: maxWithoutExcess });
-  assert.deepEqual(plan.accounts.map(a => a.contribution), [16_154_787, 16_154_787, 16_154_786]);
+  assert.deepEqual(plan.accounts.map(a => a.contribution), [26_865_498, 20_559_937, 16_154_786]);
   assert.ok(plan.accounts.every((a) => a.profit <= LIMIT));
   assert.equal(plan.overflow, 0);
   assert.equal(plan.totalTax, 0);
   assert.equal(allocate({ ...base, amount: maxWithoutExcess + 1 }).overflow, 1);
 });
 
-test('excess from account 1 is added to account 2 before checking its cap', () => {
+test('when all caps are filled the remaining capital stays on the last account', () => {
   const plan = allocate({ ...base, amount: 90_000_000 });
   assert.deepEqual(plan.accounts.map(a => a.initialContribution), [30_000_000, 30_000_000, 30_000_000]);
-  assert.deepEqual(plan.transfers, [{ from: 1, to: 2, amount: 3_134_502 }, { from: 2, to: 3, amount: 12_574_565 }]);
   assert.deepEqual(plan.accounts.map(a => a.contribution), [26_865_498, 20_559_937, 42_574_565]);
   assert.equal(plan.overflow, 26_419_779);
   assert.deepEqual(plan.accounts.map(a => a.tax), [0, 0, 7_311_367]);
 });
 
-test('excess on the last account is taxed and not transferred backward', () => {
-  const plan = allocate({ ...base, amount: 50_000_000 });
-  assert.deepEqual(plan.transfers, []);
-  assert.deepEqual(plan.accounts.map(a => a.contribution), [16_666_667, 16_666_667, 16_666_666]);
-  assert.equal(plan.overflow, 511_880);
-  assert.equal(plan.totalTax, 123_575);
+test('60 million at 14% reallocates the last account excess to the two earlier accounts', () => {
+  const plan = allocate({ ...base, amount: 60_000_000, rate: 14, taxScale: 'scenario' });
+  assert.deepEqual(plan.accounts.map(a => a.initialContribution), [20_000_000, 20_000_000, 20_000_000]);
+  assert.deepEqual(plan.accounts.map(a => a.contribution), [20_985_337, 20_985_337, 18_029_326]);
+  assert.equal(plan.maxWithoutExcess, 70_426_690);
+  assert.equal(plan.overflow, 0);
+  assert.equal(plan.totalTax, 0);
+  assert.equal(plan.equalTax, 443_867);
+  assert.equal(Math.round(plan.equalNet), 139_424_774);
+  assert.equal(Math.round(plan.totalNet), 138_884_846);
+});
+
+test('reallocation can cap a second account and send the remaining budget to the first', () => {
+  const plan = allocate({ ...base, amount: 61_000_000 });
+  assert.deepEqual(plan.accounts.map(a => a.contribution), [24_285_277, 20_559_937, 16_154_786]);
+  assert.equal(plan.overflow, 0);
+  assert.equal(plan.totalTax, 0);
 });
 
 test('300 million uses the marginal 13/15 tax brackets and leaves no money idle', () => {
@@ -98,25 +107,26 @@ test('chart starts at principal and freezes values at closing', () => {
   assert.ok(valueAt(plan, a, 3).capital < a.capital);
 });
 
-test('range of valid inputs preserves cash and transfers only excess to the next account', () => {
+test('range of valid inputs preserves capital and uses every cap before allowing excess', () => {
   for (const count of [1, 2, 3]) for (const rate of [0, .0001, .01, 10, 15, 100]) {
     for (const firstTerm of [5, 10, 30]) for (const amount of [0, 1, 30_000_000, 100_000_000, MAX_AMOUNT]) {
       const result = allocate({ ...base, count, rate, firstTerm, amount });
       assert.equal(result.invested, amount);
       assert.equal(result.accounts.reduce((sum, a) => sum + a.contribution, 0), amount);
       assert.equal(result.accounts.length, count);
-      const incoming = new Map(result.transfers.map(t => [t.to, t.amount]));
-      const outgoing = new Map(result.transfers.map(t => [t.from, t.amount]));
-      for (const t of result.transfers) assert.equal(t.to, t.from + 1);
       result.accounts.forEach((a, i) => {
-        assert.equal(a.contribution, a.initialContribution + (incoming.get(a.id) ?? 0) - (outgoing.get(a.id) ?? 0));
         assert.ok(Math.abs(a.initialContribution - amount / count) < 1);
         assert.ok(a.profit >= 0 && a.deduction <= LIMIT);
         assert.ok(Number.isFinite(a.netCapital));
         assert.equal(a.netCapital, a.capital - a.tax);
-        if (i < count - 1) assert.ok(a.profit <= LIMIT + 1e-8);
-        if (outgoing.has(a.id)) assert.equal(a.contribution, a.maxContribution);
+        if (i < count - 1 || result.overflow === 0) assert.ok(a.profit <= LIMIT + 1e-8);
+        if (result.overflow > 0) assert.equal(a.contribution, a.maxContribution + (i === count - 1 ? result.overflow : 0));
       });
+      const free = result.accounts.filter(a => a.contribution < a.maxContribution);
+      if (free.length > 0) {
+        const smallestFree = Math.min(...free.map(a => a.contribution));
+        assert.ok(result.accounts.every(a => a.contribution <= smallestFree + 1));
+      }
       assert.equal(result.overflow === 0, amount <= result.maxWithoutExcess);
     }
   }

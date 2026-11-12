@@ -81,18 +81,25 @@
       ? '13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.'
       : 'Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.';
 
-    const distribution = plan.transfers.length
-      ? 'После равного деления переносим взносы: ' + plan.transfers.map((t) =>
-        'ИИС ' + t.from + ' → ИИС ' + t.to + ': ' + rub(t.amount)).join('; ') + '.'
+    const adjustments = plan.accounts.filter((a) => a.contribution !== a.initialContribution);
+    const distribution = adjustments.length
+      ? 'Взносы относительно равного деления: ' + adjustments.map((a) => {
+        const delta = a.contribution - a.initialContribution;
+        return 'ИИС ' + a.id + ' ' + (delta > 0 ? '+' : '−') + rub(Math.abs(delta));
+      }).join('; ') + '.'
       : plan.accounts.length === 1
         ? 'Вся сумма вложена на один ИИС.'
         : plan.invested % plan.accounts.length === 0
           ? 'Взнос разделен поровну: по ' + rub(plan.accounts[0].initialContribution) + ' на счет.'
           : 'Взнос разделен поровну с точностью до рубля.';
     $('allocation-note').textContent = distribution + (plan.overflow > 0
-      ? ' На ИИС ' + plan.accounts.length + ' осталось ' + rub(plan.overflow) +
-        ' взноса сверх расчетного порога. НДФЛ начисляется на прибыль сверх вычета, не на взнос.'
-      : '');
+      ? ' Все расчетные лимиты заполнены. Остаток ' + rub(plan.overflow) + ' вложен на ИИС ' + plan.accounts.length +
+        '. НДФЛ начисляется на прибыль сверх вычета, не на взнос.'
+      : adjustments.length ? ' Все счета остаются в пределах расчетного лимита прибыли.' : '');
+    $('equal-note').hidden = !adjustments.length ||
+      (plan.equalTax === plan.totalTax && Math.round(plan.equalNet) === Math.round(plan.totalNet));
+    $('equal-note').textContent = 'Для сравнения: при равных взносах НДФЛ составил бы ' + rub(plan.equalTax) +
+      ', а капитал после НДФЛ к датам закрытия — ' + rub(plan.equalNet) + '.';
     $('fill-limit').disabled = plan.maxWithoutExcess > model.MAX_AMOUNT;
     $('fill-hint').textContent = plan.rate === 0
       ? 'При нулевой доходности лимит прибыли не превышается.'
