@@ -6,7 +6,7 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#e9d9ca">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=15">
+  <link rel="stylesheet" href="./style.css?v=16">
   <script defer src="./model.js?v=6"></script>
   <script defer src="./app.js?v=16"></script>
 </head>
@@ -102,7 +102,7 @@
           <progress id="deduction-progress" max="100" value="0" aria-labelledby="deduction-title" aria-describedby="deduction-amounts"></progress>
           <p class="deduction-note" id="deduction-amounts"></p>
           <dl class="deduction-stats">
-            <div><dt>Экономия НДФЛ</dt><dd id="deduction-savings">—</dd></div>
+            <div class="deduction-stat-savings"><dt>Экономия НДФЛ</dt><dd id="deduction-savings">—</dd></div>
             <div><dt>Запас по прибыли</dt><dd id="deduction-remaining">—</dd></div>
             <div><dt>Добавить к исходному взносу</dt><dd id="deduction-additional">—</dd></div>
           </dl>
