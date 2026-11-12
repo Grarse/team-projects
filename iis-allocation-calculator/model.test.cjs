@@ -53,6 +53,26 @@ test('no-excess button target fills the combined capacity of all accounts', () =
   assert.equal(allocate({ ...base, amount: maxWithoutExcess + 1 }).overflow, 1);
 });
 
+test('deduction usage and savings combine accounts with different closing years', () => {
+  const input = { ...base, amount: 800_000, rate: 100, count: 2, convention: 'effective' };
+  const { deduction } = allocate(input);
+  assert.equal(deduction.limit, 60_000_000);
+  assert.equal(Math.round(deduction.used), 37_600_000);
+  assert.equal(Math.round(deduction.remainingProfit), 22_400_000);
+  assert.equal(deduction.additionalContribution, 643_931);
+  assert.equal(deduction.taxSavings, 5_544_000);
+  assert.equal(allocate({ ...input, taxScale: 'scenario' }).deduction.taxSavings, 6_476_000);
+});
+
+test('deduction savings subtract the tax on any profit that exceeds the limit', () => {
+  const plan = allocate({ ...base, amount: 1_000_000, rate: 100, count: 1, convention: 'effective' });
+  assert.equal(plan.totalTax, 130_000);
+  assert.deepEqual(plan.deduction, {
+    limit: 30_000_000, used: 30_000_000, remainingProfit: 0,
+    additionalContribution: 0, taxSavings: 4_472_000
+  });
+});
+
 test('when all caps are filled the remaining capital stays on the last account', () => {
   const plan = allocate({ ...base, amount: 90_000_000 });
   assert.deepEqual(plan.accounts.map(a => a.initialContribution), [30_000_000, 30_000_000, 30_000_000]);

@@ -64,6 +64,7 @@
     $('total-tax').textContent = rub(plan.totalTax);
     $('hero-net').textContent = $('total-net').textContent = rub(plan.totalNet);
     $('hero-total').hidden = false;
+    renderDeduction();
     $('balance-hint').textContent = plan.balance === 'profit'
       ? 'На более короткий срок нужен больший взнос, чтобы прибыль была близкой.'
       : 'Сохраняем взносы близкими, а излишек переносим на счета со свободным лимитом.';
@@ -101,6 +102,19 @@
     drawComparison();
   }
 
+  function renderDeduction() {
+    const { limit, used, remainingProfit, additionalContribution, taxSavings } = plan.deduction;
+    const utilization = Math.min(100, 100 * used / limit);
+    $('deduction-progress').value = utilization;
+    $('deduction-percent').textContent = pct(utilization);
+    $('deduction-amounts').textContent = 'Прибыль под вычетом: ' + rub(used) + ' из ' + rub(limit);
+    $('deduction-savings').textContent = rub(taxSavings);
+    $('deduction-remaining').textContent = rub(remainingProfit);
+    $('deduction-additional').textContent = Number.isFinite(additionalContribution) ? rub(additionalContribution) : '—';
+    $('deduction-rounding').hidden = additionalContribution !== 0 || Math.round(remainingProfit) === 0;
+    $('deduction-panel').hidden = false;
+  }
+
   function update(adjustTerm = false) {
     const taxScale = $('tax-scale');
     const showTaxHint = taxScale.value === 'current';
@@ -119,6 +133,7 @@
       $('error').hidden = false;
       $('results').hidden = true;
       $('hero-total').hidden = true;
+      $('deduction-panel').hidden = true;
       $('fill-limit').disabled = true;
       comparisonChart.innerHTML = '<p class="compare-empty">Исправьте параметры, чтобы пересчитать график.</p>';
     }

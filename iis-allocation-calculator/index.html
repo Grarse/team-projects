@@ -6,9 +6,9 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#e9d9ca">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=13">
-  <script defer src="./model.js?v=5"></script>
-  <script defer src="./app.js?v=15"></script>
+  <link rel="stylesheet" href="./style.css?v=14">
+  <script defer src="./model.js?v=6"></script>
+  <script defer src="./app.js?v=16"></script>
 </head>
 <body>
   <main class="shell">
@@ -94,6 +94,21 @@
       </form>
 
       <section class="overview" id="overview" aria-labelledby="chart-title">
+        <section class="deduction-panel" id="deduction-panel" aria-labelledby="deduction-title" hidden>
+          <div class="deduction-heading">
+            <h2 id="deduction-title">Использование вычета</h2>
+            <strong id="deduction-percent" aria-hidden="true">—</strong>
+          </div>
+          <progress id="deduction-progress" max="100" value="0" aria-labelledby="deduction-title" aria-describedby="deduction-amounts"></progress>
+          <p class="deduction-note" id="deduction-amounts"></p>
+          <dl class="deduction-stats">
+            <div><dt>Экономия НДФЛ</dt><dd id="deduction-savings">—</dd></div>
+            <div><dt>Запас по прибыли</dt><dd id="deduction-remaining">—</dd></div>
+            <div><dt>Добавить к исходному взносу</dt><dd id="deduction-additional">—</dd></div>
+          </dl>
+          <p class="deduction-note">Экономия — разница между НДФЛ с вычетом и без него по выбранной шкале.</p>
+          <p class="deduction-note" id="deduction-rounding" hidden>Остаток лимита связан с округлением взносов до целых рублей.</p>
+        </section>
         <h2 id="chart-title">Сравнение ИИС</h2>
         <div id="comparison-panel">
           <p class="compare-intro">Суммы на дату закрытия каждого счета.</p>

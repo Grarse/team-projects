@@ -100,6 +100,8 @@
     last.contribution += overflow;
     let equalTax = 0;
     let equalProfit = 0;
+    let taxWithoutDeduction = 0;
+    let deductionUsed = 0;
     for (const a of accounts) {
       a.profit = a.contribution * a.factor;
       a.capital = a.contribution + a.profit;
@@ -107,6 +109,8 @@
       a.taxable = a.profit - a.deduction;
       // Every closing is in a different calendar year by construction.
       a.tax = incomeTax(a.taxable, taxScale);
+      taxWithoutDeduction += incomeTax(a.profit, taxScale);
+      deductionUsed += a.deduction;
       a.netCapital = a.capital - a.tax;
       const initialProfit = a.initialContribution * a.factor;
       equalProfit += initialProfit;
@@ -115,10 +119,18 @@
     const totalProfit = accounts.reduce((total, account) => total + account.profit, 0);
     const maxWithoutExcess = accounts.reduce((total, a) => total + a.maxContribution, 0);
     const totalTax = accounts.reduce((total, account) => total + account.tax, 0);
+    const deductionLimit = count * LIMIT;
     return {
       openingYear, firstTerm, minTerm, rate, convention, taxScale, balance, accounts,
       invested: amount, overflow, totalProfit, totalCapital: amount + totalProfit,
       totalTax, totalNet: amount + totalProfit - totalTax,
+      deduction: {
+        limit: deductionLimit,
+        used: deductionUsed,
+        remainingProfit: Math.max(0, deductionLimit - deductionUsed),
+        additionalContribution: Math.max(0, maxWithoutExcess - amount),
+        taxSavings: taxWithoutDeduction - totalTax
+      },
       equalTax, equalNet: amount + equalProfit - equalTax,
       maxWithoutExcess, lastTerm: last.term
     };
