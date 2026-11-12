@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Распределите капитал между ИИС-3: взносы до лимита дохода, календарь закрытий и общий график.">
+  <meta name="theme-color" content="#101b2b">
+  <title>ИИС‑3 · Калькулятор распределения капитала</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./model.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar" aria-label="Навигация">
+      <a href="../">← Все проекты</a>
+      <a href="../tax-capital-structure-2026/#calculator">Общий калькулятор ↗</a>
+    </nav>
+
+    <header class="hero">
+      <p class="eyebrow"><span></span> ИИС‑3 / Планировщик</p>
+      <h1>Распределение капитала<br class="desktop"> по ИИС‑3</h1>
+      <p class="lead">Первый счет заполняется до расчетного лимита прибыли. Остаток переходит на следующий ИИС, который закрывается годом позже.</p>
+    </header>
+
+    <div class="workspace">
+      <form class="settings" id="settings" novalidate>
+        <p class="eyebrow muted">01 / Вводные</p>
+        <h2>Ваш сценарий</h2>
+        <div class="field">
+          <label for="amount">Общая сумма на все счета</label>
+          <div class="input-shell"><input id="amount" type="text" inputmode="numeric" value="30 000 000" autocomplete="off" aria-describedby="amount-hint"><span>₽</span></div>
+          <p class="hint" id="amount-hint">Единовременный взнос в начале срока.</p>
+        </div>
+        <div class="field">
+          <label for="rate">Ожидаемая доходность</label>
+          <div class="input-shell"><input id="rate" type="text" inputmode="decimal" value="15" autocomplete="off" aria-describedby="rate-hint"><span>% годовых</span></div>
+          <p class="hint" id="rate-hint">Номинальная ставка с ежедневной капитализацией.</p>
+        </div>
+        <fieldset>
+          <legend>Количество ИИС</legend>
+          <div class="segments">
+            <label><input type="radio" name="count" value="1"><span>1</span></label>
+            <label><input type="radio" name="count" value="2"><span>2</span></label>
+            <label><input type="radio" name="count" value="3" checked><span>3</span></label>
+          </div>
+        </fieldset>
+        <div class="schedule">
+          <div class="field"><label for="opening">Год открытия</label><input id="opening" type="number" min="2024" max="2100" step="1" value="2026"></div>
+          <div class="field"><label for="term">Первое закрытие, лет</label><input id="term" type="number" min="5" max="30" step="1" value="5"></div>
+        </div>
+        <p class="hint" id="term-hint">Минимум по сроку — 5 лет для всех счетов в этом сценарии.</p>
+        <details class="options">
+          <summary>Как задана доходность</summary>
+          <label for="convention" class="sr-only">Способ капитализации</label>
+          <select id="convention">
+            <option value="daily">Номинальная, капитализация ежедневно</option>
+            <option value="effective">Эффективная годовая ставка</option>
+          </select>
+        </details>
+        <div class="actions">
+          <button id="fill-limit" type="button">Заполнить лимиты</button>
+          <button id="reset-example" type="button" class="ghost">Пример: 30 млн ₽</button>
+        </div>
+        <p class="hint" id="fill-hint">Подставит общую сумму, рассчитанную для всех выбранных ИИС.</p>
+        <p id="error" class="error" role="alert" hidden></p>
+      </form>
+
+      <section class="overview" aria-labelledby="chart-title">
+        <div class="chart-head">
+          <div><p class="eyebrow">02 / Горизонт</p><h2 id="chart-title">Динамика по счетам</h2></div>
+          <fieldset class="view-switch">
+            <legend class="sr-only">Показатель графика</legend>
+            <div class="segments">
+              <label><input type="radio" name="view" value="profit" checked><span>Прибыль</span></label>
+              <label><input type="radio" name="view" value="capital"><span>Капитал</span></label>
+            </div>
+          </fieldset>
+        </div>
+        <div class="legend" id="legend"></div>
+        <div id="chart" class="chart"></div>
+        <div class="scrubber">
+          <label for="cursor">С момента открытия <output id="cursor-label" for="cursor"></output></label>
+          <input id="cursor" type="range" min="0" max="7" step="1" value="7">
+          <div id="readout" class="readout"></div>
+        </div>
+        <p class="chart-note">Линия каждого счета заканчивается на его плановом закрытии. Дальнейший рост выведенных денег не моделируется.</p>
+        <div class="close-plan" id="close-plan" aria-label="Плановые закрытия"></div>
+      </section>
+    </div>
+
+    <div id="results">
+      <section class="summary" aria-label="Итоги распределения">
+        <div><span>Распределено</span><strong id="invested">—</strong></div>
+        <div><span>Расчетная прибыль</span><strong id="profit">—</strong></div>
+        <div><span>Капитал к закрытиям</span><strong id="capital">—</strong></div>
+        <div id="remaining-block"><span>Не распределено</span><strong id="remaining">—</strong></div>
+      </section>
+      <p class="result-note" id="allocation-note" aria-live="polite"></p>
+
+      <section class="accounts-section" aria-labelledby="accounts-title">
+        <p class="eyebrow muted">03 / Раскладка</p>
+        <h2 id="accounts-title">Что на каждом ИИС</h2>
+        <div class="accounts" id="accounts"></div>
+      </section>
+    </div>
+
+    <details class="method">
+      <summary>Условия вычета и допущения</summary>
+      <p>Все счета в модели открываются и пополняются одновременно. Минимальный срок договора зависит от года открытия: 5 лет для 2024–2026 годов, 6 лет для 2027 года, затем по одному году до 10 лет с 2031 года. Закрытия через 5, 6 и 7 лет в исходном сценарии — выбор графика, а не разные минимальные сроки для трех счетов.</p>
+      <p>Лимит вычета по положительному финансовому результату — 30 млн ₽ на все ИИС, закрытые одним налогоплательщиком в одном календарном году. Счета в калькуляторе закрываются в разные годы. Модель предполагает, что на соответствующий год нет других закрытий ИИС и все остальные условия вычета соблюдены. См. <a href="https://www.nalog.gov.ru/rn77/taxation/taxes/ndfl/nalog_vichet/long_term_savings/" target="_blank" rel="noopener noreferrer">разъяснения ФНС</a> и <a href="https://www.nalog.gov.ru/rn49/news/activities_fts/16641677/" target="_blank" rel="noopener noreferrer">переходные сроки</a>.</p>
+      <p>Расчет: предельный взнос = 30 млн ₽ ÷ прирост на один рубль за срок до закрытия. Взнос округляется вниз до целого рубля, значения на экране — до ближайшего рубля. Общий итог считается до округления отдельных счетов. Для номинальной ставки используется условный год из 365 дней, для эффективной — сложный процент по годам. Весь расчетный прирост предполагается подходящим для вычета; отдельные виды доходов, комиссии, вычет на взносы и фактический НДФЛ не моделируются. Результаты не гарантированы: при доходности выше сценарной прибыль может превысить лимит.</p>
+    </details>
+  </main>
+</body>
+</html>

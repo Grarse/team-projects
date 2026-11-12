@@ -4,6 +4,8 @@
 
 ## Проекты
 
+- [Калькулятор: распределение капитала по ИИС-3](./iis-allocation-calculator/) · [Открыть страницу](https://grarse.github.io/team-projects/iis-allocation-calculator/)
+
 - [Личный фонд — архитектура капитала](./personal-fund-guide/) · [Открыть страницу](https://grarse.github.io/team-projects/personal-fund-guide/)
 
 - [Калькулятор: дополнительный доход на отложенном НДФЛ](./dividend-tax-effect/) · [Открыть страницу](https://grarse.github.io/team-projects/dividend-tax-effect/)
