@@ -9,7 +9,8 @@ test('30 million at 15% fills account 1, then account 2, leaves account 3 unfund
   assert.deepEqual(plan.accounts.map(a => a.contribution), [26_865_498, 3_134_502, 0]);
   assert.deepEqual(plan.accounts.map(a => a.closeYear), [2031, 2032, 2033]);
   assert.equal(plan.invested, base.amount);
-  assert.equal(plan.remaining, 0);
+  assert.equal(plan.overflow, 0);
+  assert.equal(plan.totalTax, 0);
 });
 
 test('later closing years require smaller maximum contributions at the same positive rate', () => {
@@ -22,16 +23,45 @@ test('later closing years require smaller maximum contributions at the same posi
     assert.ok(a.profit <= LIMIT && LIMIT - a.profit < a.profit / a.contribution);
   }
   assert.equal(plan.additional, 0);
-  assert.equal(plan.remaining, 0);
+  assert.equal(plan.overflow, 0);
+  assert.equal(plan.totalTax, 0);
 });
 
-test('cash over the combined cap stays unallocated and does not generate profit', () => {
+test('cash over the combined cap is invested on the last account and earns taxable profit', () => {
   const fullContribution = allocate(base).fullContribution;
   const capped = allocate({ ...base, amount: fullContribution });
   const overflow = allocate({ ...base, amount: fullContribution + 1_000_000 });
-  assert.equal(overflow.remaining, 1_000_000);
-  assert.equal(overflow.totalProfit, capped.totalProfit);
-  assert.equal(overflow.totalCapital, capped.totalCapital);
+  assert.equal(overflow.overflow, 1_000_000);
+  assert.equal(overflow.invested, fullContribution + 1_000_000);
+  assert.deepEqual(overflow.accounts.slice(0, 2), capped.accounts.slice(0, 2));
+  assert.equal(overflow.accounts[2].contribution, capped.accounts[2].contribution + 1_000_000);
+  assert.ok(overflow.totalProfit > capped.totalProfit);
+  assert.equal(overflow.totalTax, Math.round(overflow.accounts[2].taxable * .13));
+});
+
+test('300 million uses the marginal 13/15 tax brackets and leaves no money idle', () => {
+  const plan = allocate({ ...base, amount: 300_000_000 });
+  assert.deepEqual(plan.accounts.map(a => a.contribution), [26_865_498, 20_559_937, 252_574_565]);
+  assert.deepEqual(plan.accounts.map(a => a.tax), [0, 0, 65_807_964]);
+  assert.equal(Math.round(plan.accounts[2].taxable), 439_039_758);
+  assert.equal(Math.round(plan.totalNet), 763_231_794);
+});
+
+test('scenario scale changes tax but does not change allocation or gross profit', () => {
+  const input = { ...base, amount: 300_000_000 };
+  const current = allocate(input);
+  const scenario = allocate({ ...input, taxScale: 'scenario' });
+  assert.deepEqual(scenario.accounts.map(a => a.contribution), current.accounts.map(a => a.contribution));
+  assert.equal(scenario.totalProfit, current.totalProfit);
+  assert.equal(scenario.totalTax, 94_990_747);
+});
+
+test('with one account all capital is invested, including the taxable excess', () => {
+  const plan = allocate({ ...base, count: 1 });
+  assert.equal(plan.accounts[0].contribution, base.amount);
+  assert.ok(plan.overflow > 0);
+  assert.ok(plan.totalTax > 0);
+  assert.equal(plan.accounts[0].deduction, LIMIT);
 });
 
 test('effective rate uses annual compound growth rather than nominal daily accrual', () => {
@@ -67,10 +97,14 @@ test('range of valid inputs preserves cash and never funds a later account prema
   for (const count of [1, 2, 3]) for (const rate of [0, .0001, .01, 10, 15, 100]) {
     for (const firstTerm of [5, 10, 30]) for (const amount of [0, 1, 30_000_000, 100_000_000, MAX_AMOUNT]) {
       const result = allocate({ ...base, count, rate, firstTerm, amount });
-      assert.equal(result.invested + result.remaining, amount);
+      assert.equal(result.invested, amount);
+      assert.equal(result.accounts.reduce((sum, a) => sum + a.contribution, 0), amount);
       assert.equal(result.accounts.length, count);
       result.accounts.forEach((a, i) => {
-        assert.ok(a.profit >= 0 && a.profit <= LIMIT + 1e-8);
+        assert.ok(a.profit >= 0 && a.deduction <= LIMIT);
+        assert.ok(Number.isFinite(a.netCapital));
+        assert.equal(a.netCapital, a.capital - a.tax);
+        if (i < count - 1) assert.ok(a.profit <= LIMIT + 1e-8);
         if (i > 0 && a.contribution > 0) {
           assert.equal(result.accounts[i - 1].contribution, result.accounts[i - 1].maxContribution);
         }
@@ -80,7 +114,7 @@ test('range of valid inputs preserves cash and never funds a later account prema
 });
 
 test('invalid values are rejected', () => {
-  for (const values of [{ count: 0 }, { count: 4 }, { amount: -1 }, { amount: 0.5 }, { rate: NaN }, { rate: 101 }, { openingYear: 2023 }, { firstTerm: 31 }]) {
+  for (const values of [{ count: 0 }, { count: 4 }, { amount: -1 }, { amount: 0.5 }, { rate: NaN }, { rate: 101 }, { openingYear: 2023 }, { firstTerm: 31 }, { taxScale: 'invalid' }]) {
     assert.throws(() => allocate({ ...base, ...values }), RangeError);
   }
 });

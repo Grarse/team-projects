@@ -38,7 +38,8 @@
       count: Number(form.querySelector('[name="count"]:checked').value),
       openingYear,
       firstTerm: parseField($('term')),
-      convention: $('convention').value
+      convention: $('convention').value,
+      taxScale: $('tax-scale').value
     };
   }
 
@@ -47,16 +48,31 @@
       '<div class="bar-track ' + className + '" aria-hidden="true"><span style="width:' + Math.max(0, Math.min(100, ratio * 100)) + '%"></span></div></div>';
   }
 
+  function profitBar(account) {
+    const scale = Math.max(model.LIMIT, account.profit);
+    const split = model.LIMIT / scale * 100;
+    const covered = account.deduction / scale * 100;
+    const excess = account.taxable / scale * 100;
+    return '<div class="bar-block"><div class="bar-label"><span>Прибыль к закрытию</span><b>' + rub(account.profit) + '</b></div>' +
+      '<div class="bar-track limit" style="--split:' + split + '%" aria-hidden="true">' +
+      '<span style="width:' + covered + '%"></span><span class="taxable-fill" style="left:' + covered + '%;width:' + excess + '%"></span></div>' +
+      '<p class="bar-note limit-label"><span>Вычет до ' + rub(model.LIMIT) + '</span>' +
+      (account.taxable > 0 ? '<span class="over-limit">Сверх: ' + rub(account.taxable) + '</span>' : '') + '</p></div>';
+  }
+
   function render() {
-    const total = plan.invested + plan.remaining;
     $('invested').textContent = rub(plan.invested);
     $('profit').textContent = rub(plan.totalProfit);
     $('capital').textContent = rub(plan.totalCapital);
-    $('remaining').textContent = rub(plan.remaining);
-    $('remaining-block').classList.toggle('has-rest', plan.remaining > 0);
+    $('total-tax').textContent = rub(plan.totalTax);
+    $('total-net').textContent = rub(plan.totalNet);
+    $('tax-hint').textContent = plan.taxScale === 'current'
+      ? '13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.'
+      : 'Гипотеза: 13 / 15 / 18 / 20 / 22%. Не действующая шкала для этих доходов.';
 
-    $('allocation-note').textContent = plan.remaining > 0
-      ? rub(plan.remaining) + ' не вложено: расчетные лимиты выбранных ИИС заполнены. Остаток не включен в капитал и прибыль.'
+    $('allocation-note').textContent = plan.overflow > 0
+      ? 'Сверх взносов до расчетных лимитов: ' + rub(plan.overflow) + ' на ИИС ' + plan.accounts.length +
+        '. НДФЛ начисляется только на прибыль сверх вычета, не на сумму взноса.'
       : plan.rate === 0
         ? 'При нулевой доходности прибыль не возникает, поэтому вся сумма направляется на первый ИИС.'
         : 'Чтобы использовать расчетный лимит прибыли на всех выбранных ИИС, нужен общий взнос ' + rub(plan.fullContribution) +
@@ -66,7 +82,7 @@
       ? 'При нулевой доходности заполнить лимит прибыли невозможно.'
       : plan.fullContribution > model.MAX_AMOUNT
         ? 'Расчетный взнос для заполнения превышает предел ввода.'
-        : 'Подставит ' + rub(plan.fullContribution) + ' — предельный взнос на все выбранные ИИС.';
+        : 'Подставит ' + rub(plan.fullContribution) + ' — взнос без превышения расчетных лимитов прибыли.';
     $('rate-hint').textContent = plan.convention === 'daily'
       ? 'Номинальная ставка с ежедневной капитализацией.'
       : 'Эффективная ставка: годовой рост уже включает капитализацию.';
@@ -79,17 +95,17 @@
       '<strong>' + a.closeYear + '</strong><span>Через ' + yearsText(a.term) + (a.contribution ? '' : ' · без взноса') + '</span></div>'
     ).join('');
     $('accounts').innerHTML = plan.accounts.map((a, i) => {
-      const share = total ? a.contribution / total : 0;
-      const usage = a.profit / model.LIMIT;
-      const max = Number.isFinite(a.maxContribution) ? rub(a.maxContribution) : 'без ограничения в модели';
+      const share = plan.invested ? a.contribution / plan.invested : 0;
       return '<article class="account' + (a.contribution ? '' : ' unfunded') + '" style="--series:' + colors[i] + '">' +
         '<div class="account-head"><h3><i></i> ИИС ' + a.id + '</h3><span>' + yearsText(a.term) + ' · ' + a.closeYear + '</span></div>' +
-        '<p class="account-caption">' + (a.contribution ? 'Капитал к плановому закрытию' : 'Не задействован · остатка нет') + '</p>' +
-        '<strong class="account-capital">' + rub(a.capital) + '</strong>' +
+        '<p class="account-caption">' + (a.contribution ? 'Капитал после НДФЛ' : 'Не задействован · остатка нет') + '</p>' +
+        '<strong class="account-capital">' + rub(a.netCapital) + '</strong>' +
         bar('Вложено', rub(a.contribution), share, 'contribution') +
-        '<p class="bar-note">' + pct(share * 100) + ' от общей суммы · ' + (Number.isFinite(a.maxContribution) ? 'взнос до ' : 'взнос ') + max + '</p>' +
-        bar('Прибыль к закрытию', rub(a.profit), usage, 'limit') +
-        '<p class="bar-note limit-label"><span>0 ₽</span><span>Лимит ' + rub(model.LIMIT) + '</span></p></article>';
+        '<p class="bar-note">' + pct(share * 100) + ' от общей суммы' +
+        (Number.isFinite(a.maxContribution) ? ' · без превышения: ' + rub(a.maxContribution) : '') + '</p>' +
+        profitBar(a) +
+        '<dl class="account-tax"><div><dt>Капитал до НДФЛ</dt><dd>' + rub(a.capital) + '</dd></div>' +
+        '<div><dt>НДФЛ при закрытии</dt><dd>' + rub(a.tax) + '</dd></div></dl></article>';
     }).join('');
     $('cursor').max = String(plan.lastTerm);
     $('cursor').value = String(cursor);
@@ -124,6 +140,7 @@
   }
 
   function axisAmount(value) {
+    if (value >= 1e15) return value.toExponential(0);
     if (value >= 1e12) return decimal.format(value / 1e12) + ' трлн';
     if (value >= 1e9) return decimal.format(value / 1e9) + ' млрд';
     if (value >= 1e6) return decimal.format(value / 1e6) + ' млн';
@@ -139,7 +156,7 @@
     const left = 53, right = 17, top = 29, bottom = height - 29;
     const maxData = Math.max(1, ...plan.accounts.map((a) => a[view]));
     let step = 10_000_000, ceiling = 33_000_000;
-    if (view === 'capital') {
+    if (view === 'capital' || maxData > model.LIMIT) {
       const interval = maxData / 4;
       const power = 10 ** Math.floor(Math.log10(interval));
       step = [1, 2, 2.5, 5, 10].find((k) => k * power >= interval) * power;

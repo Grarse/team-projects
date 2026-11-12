@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Распределите капитал между ИИС-3: взносы до лимита дохода, календарь закрытий и общий график.">
+  <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#101b2b">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css">
-  <script defer src="./model.js"></script>
-  <script defer src="./app.js"></script>
+  <link rel="stylesheet" href="./style.css?v=2">
+  <script defer src="./model.js?v=2"></script>
+  <script defer src="./app.js?v=2"></script>
 </head>
 <body>
   <main class="shell">
@@ -20,7 +20,7 @@
     <header class="hero">
       <p class="eyebrow"><span></span> ИИС‑3 / Планировщик</p>
       <h1>Распределение капитала<br class="desktop"> по ИИС‑3</h1>
-      <p class="lead">Первый счет заполняется до расчетного лимита прибыли. Остаток переходит на следующий ИИС, который закрывается годом позже.</p>
+      <p class="lead">Сначала заполняем расчетные лимиты прибыли. Если денег больше, вкладываем остаток на последний ИИС и считаем НДФЛ с превышения.</p>
     </header>
 
     <div class="workspace">
@@ -58,8 +58,16 @@
             <option value="effective">Эффективная годовая ставка</option>
           </select>
         </details>
+        <div class="field">
+          <label for="tax-scale">Шкала НДФЛ</label>
+          <select id="tax-scale" aria-describedby="tax-hint">
+            <option value="current">13% / 15% — действующая</option>
+            <option value="scenario">13–22% — сценарий</option>
+          </select>
+          <p class="hint" id="tax-hint">13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.</p>
+        </div>
         <div class="actions">
-          <button id="fill-limit" type="button">Заполнить лимиты</button>
+          <button id="fill-limit" type="button">Взнос до лимитов</button>
           <button id="reset-example" type="button" class="ghost">Пример: 30 млн ₽</button>
         </div>
         <p class="hint" id="fill-hint">Подставит общую сумму, рассчитанную для всех выбранных ИИС.</p>
@@ -73,7 +81,7 @@
             <legend class="sr-only">Показатель графика</legend>
             <div class="segments">
               <label><input type="radio" name="view" value="profit" checked><span>Прибыль</span></label>
-              <label><input type="radio" name="view" value="capital"><span>Капитал</span></label>
+              <label><input type="radio" name="view" value="capital"><span>Капитал до НДФЛ</span></label>
             </div>
           </fieldset>
         </div>
@@ -93,8 +101,9 @@
       <section class="summary" aria-label="Итоги распределения">
         <div><span>Распределено</span><strong id="invested">—</strong></div>
         <div><span>Расчетная прибыль</span><strong id="profit">—</strong></div>
-        <div><span>Капитал к закрытиям</span><strong id="capital">—</strong></div>
-        <div id="remaining-block"><span>Не распределено</span><strong id="remaining">—</strong></div>
+        <div><span>Капитал до НДФЛ</span><strong id="capital">—</strong></div>
+        <div><span>НДФЛ при закрытии</span><strong id="total-tax">—</strong></div>
+        <div class="net-summary"><span>Капитал после НДФЛ</span><strong id="total-net">—</strong></div>
       </section>
       <p class="result-note" id="allocation-note" aria-live="polite"></p>
 
@@ -109,7 +118,8 @@
       <summary>Условия вычета и допущения</summary>
       <p>Все счета в модели открываются и пополняются одновременно. Минимальный срок договора зависит от года открытия: 5 лет для 2024–2026 годов, 6 лет для 2027 года, затем по одному году до 10 лет с 2031 года. Закрытия через 5, 6 и 7 лет в исходном сценарии — выбор графика, а не разные минимальные сроки для трех счетов.</p>
       <p>Лимит вычета по положительному финансовому результату — 30 млн ₽ на все ИИС, закрытые одним налогоплательщиком в одном календарном году. Счета в калькуляторе закрываются в разные годы. Модель предполагает, что на соответствующий год нет других закрытий ИИС и все остальные условия вычета соблюдены. См. <a href="https://www.nalog.gov.ru/rn77/taxation/taxes/ndfl/nalog_vichet/long_term_savings/" target="_blank" rel="noopener noreferrer">разъяснения ФНС</a> и <a href="https://www.nalog.gov.ru/rn49/news/activities_fts/16641677/" target="_blank" rel="noopener noreferrer">переходные сроки</a>.</p>
-      <p>Расчет: предельный взнос = 30 млн ₽ ÷ прирост на один рубль за срок до закрытия. Взнос округляется вниз до целого рубля, значения на экране — до ближайшего рубля. Общий итог считается до округления отдельных счетов. Для номинальной ставки используется условный год из 365 дней, для эффективной — сложный процент по годам. Весь расчетный прирост предполагается подходящим для вычета; отдельные виды доходов, комиссии, вычет на взносы и фактический НДФЛ не моделируются. Результаты не гарантированы: при доходности выше сценарной прибыль может превысить лимит.</p>
+      <p>Расчетный взнос без превышения = 30 млн ₽ ÷ прирост на один рубль за срок до закрытия. Взнос округляется вниз до целого рубля, суммы на экране — до ближайшего рубля. Общий итог считается до округления отдельных результатов. Для номинальной ставки используется условный год из 365 дней, для эффективной — сложный процент по годам.</p>
+      <p>Налоговая база — прибыль сверх доступного вычета, а не взнос. Налог для резидента РФ рассчитывается отдельно за каждый год закрытия. По умолчанию применяется шкала 13/15% для доходов от операций с ценными бумагами (<a href="https://www.nalog.gov.ru/nu/" target="_blank" rel="noopener noreferrer">ставки ФНС</a>); 13–22% — только сценарий. Другие доходы той же налоговой группы, комиссии и вычет на взносы не учтены. Модель предполагает, что весь прирост относится к подходящим для вычета операциям, и не прогнозирует изменение ставок или доходности.</p>
     </details>
   </main>
 </body>
