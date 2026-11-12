@@ -6,7 +6,7 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#e9d9ca">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=17">
+  <link rel="stylesheet" href="./style.css?v=18">
   <script defer src="./model.js?v=6"></script>
   <script defer src="./app.js?v=16"></script>
 </head>
@@ -25,8 +25,13 @@
       </div>
     </header>
 
+    <nav class="mobile-nav" aria-label="Разделы калькулятора">
+      <a href="#settings">К параметрам <span aria-hidden="true">↑</span></a>
+      <a href="#overview">К результатам <span aria-hidden="true">↓</span></a>
+    </nav>
+
     <div class="workspace">
-      <form class="settings" id="settings" novalidate>
+      <form class="settings" id="settings" tabindex="-1" novalidate>
         <header>
           <p class="eyebrow muted">Параметры</p>
           <h2>Ваш сценарий</h2>
@@ -88,7 +93,7 @@
         <p id="error" class="error" role="alert" hidden></p>
       </form>
 
-      <section class="overview" id="overview" aria-labelledby="chart-title">
+      <section class="overview" id="overview" tabindex="-1" aria-labelledby="chart-title">
         <section class="deduction-panel" id="deduction-panel" aria-labelledby="deduction-title" hidden>
           <div class="deduction-heading">
             <h2 id="deduction-title">Использование вычета</h2>
