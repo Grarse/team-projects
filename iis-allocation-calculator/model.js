@@ -7,9 +7,11 @@
   const LIMIT = 30_000_000;
   const MAX_AMOUNT = 1_000_000_000_000;
   const MAX_YEARS = 30;
+  const PROGRESSIVE_BRACKETS = [[2_400_000, .13], [5_000_000, .15], [20_000_000, .18], [50_000_000, .20], [Infinity, .22]];
   const TAX_SCALES = {
     current: [[2_400_000, .13], [Infinity, .15]],
-    scenario: [[2_400_000, .13], [5_000_000, .15], [20_000_000, .18], [50_000_000, .20], [Infinity, .22]]
+    scenario: PROGRESSIVE_BRACKETS,
+    combined: PROGRESSIVE_BRACKETS
   };
 
   function incomeTax(base, scale) {

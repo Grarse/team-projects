@@ -83,6 +83,17 @@ test('100 million of annual income puts all 90 million of deductible profit in t
   assert.equal(allocate({ ...input, amount, otherIncome: 0 }).deduction.taxSavings, 16_206_000);
 });
 
+test('full aggregation applies the 22% rate to 20 million above the deduction', () => {
+  const plan = allocate({
+    ...base, amount: 50_000_000, rate: 100 * Math.expm1(Math.log(2) / 5), count: 1,
+    convention: 'effective', taxScale: 'combined', otherIncome: 100_000_000
+  });
+  assert.equal(Math.round(plan.totalProfit), 50_000_000);
+  assert.equal(plan.deduction.used, 30_000_000);
+  assert.equal(plan.totalTax, 4_400_000);
+  assert.equal(plan.deduction.taxSavings, 6_600_000);
+});
+
 test('IIS tax uses only the part of combined tax attributable to the account', () => {
   const input = { ...base, amount: 1_000_000, rate: 100, count: 1, convention: 'effective' };
   const scenario = allocate({ ...input, taxScale: 'scenario', otherIncome: 49_500_000 });

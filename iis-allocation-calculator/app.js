@@ -7,10 +7,28 @@
   const rateInput = $('rate');
   const rateSlider = $('rate-slider');
   const taxScaleInput = $('tax-scale');
+  const taxHint = $('tax-hint');
   const otherIncomeInput = $('other-income');
   const otherIncomeSlider = $('other-income-slider');
+  const otherIncomeLabel = $('other-income-label');
   const otherIncomeHint = $('other-income-hint');
-  const scenarioIncomeHint = otherIncomeHint.textContent;
+  const taxDescriptions = {
+    current: {
+      tax: '13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.',
+      label: 'Другой инвестиционный доход за год',
+      income: 'Укажите доходы той же налоговой группы, например облагаемую прибыль на брокерском счёте и проценты по вкладам сверх необлагаемого минимума.'
+    },
+    scenario: {
+      tax: 'Сценарий по тексту законопроекта для первого чтения.',
+      label: 'Другой облагаемый доход за год',
+      income: 'Укажите, например, зарплату, доход ИП на ОСНО после учёта расходов и облагаемую прибыль на брокерском счёте. Дивиденды и проценты по вкладам в это поле не включайте.'
+    },
+    combined: {
+      tax: taxHint.textContent,
+      label: otherIncomeLabel.textContent,
+      income: otherIncomeHint.textContent
+    }
+  };
   const comparisonChart = $('comparison-chart');
   const fmt = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
   const decimal = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
@@ -24,7 +42,7 @@
     ['Капитал после НДФЛ', 'net', 'netCapital']
   ];
   let plan = null;
-  const otherIncomeByScale = { current: '0', scenario: '0' };
+  const otherIncomeByScale = { current: '0', scenario: '0', combined: '0' };
   let activeTaxScale = taxScaleInput.value;
 
   function parseField(el, mode) {
@@ -139,14 +157,10 @@
       activeTaxScale = taxScaleInput.value;
       otherIncomeInput.value = otherIncomeByScale[activeTaxScale];
     }
-    const showTaxHint = activeTaxScale === 'current';
-    $('tax-hint').hidden = !showTaxHint;
-    if (showTaxHint) taxScaleInput.setAttribute('aria-describedby', 'tax-hint');
-    else taxScaleInput.removeAttribute('aria-describedby');
-    $('other-income-label').textContent = showTaxHint ? 'Другой инвестиционный доход за год' : 'Другой облагаемый доход за год';
-    otherIncomeHint.textContent = showTaxHint
-      ? 'Укажите сумму доходов той же налоговой группы, например облагаемую прибыль на брокерском счёте и проценты по вкладам в российских банках сверх необлагаемого минимума. Зарплата и дивиденды учитываются отдельно.'
-      : scenarioIncomeHint;
+    const description = taxDescriptions[activeTaxScale];
+    taxHint.textContent = description.tax;
+    otherIncomeLabel.textContent = description.label;
+    otherIncomeHint.textContent = description.income;
 
     try {
       plan = model.allocate(readInputs(adjustTerm));
