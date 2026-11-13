@@ -19,11 +19,6 @@
       label: 'Другой инвестиционный доход за год',
       income: 'Укажите доходы той же налоговой группы, например облагаемую прибыль на брокерском счёте и проценты по вкладам сверх необлагаемого минимума.'
     },
-    scenario: {
-      tax: 'Сценарий по тексту законопроекта для первого чтения.',
-      label: 'Другой облагаемый доход за год',
-      income: 'Укажите, например, зарплату, доход ИП на ОСНО после учёта расходов и облагаемую прибыль на брокерском счёте. Дивиденды и проценты по вкладам в это поле не включайте.'
-    },
     combined: {
       tax: taxHint.textContent,
       label: otherIncomeLabel.textContent,
@@ -43,7 +38,7 @@
     ['Капитал после НДФЛ', 'net', 'netCapital']
   ];
   let plan = null;
-  const otherIncomeByScale = { current: '0', scenario: '0', combined: otherIncomeInput.defaultValue };
+  const otherIncomeByScale = { current: '0', combined: otherIncomeInput.defaultValue };
   let activeTaxScale = taxScaleInput.value;
 
   function parseField(el, mode) {
