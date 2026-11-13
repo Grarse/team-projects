@@ -6,7 +6,7 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#e9d9ca">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=22">
+  <link rel="stylesheet" href="./style.css?v=23">
   <script defer src="./model.js?v=8"></script>
   <script defer src="./app.js?v=22"></script>
 </head>
@@ -85,7 +85,7 @@
         <p id="error" class="error" role="alert" hidden></p>
       </form>
 
-      <section class="overview" id="overview" tabindex="-1" aria-labelledby="chart-title">
+      <div class="result-cards" id="overview" tabindex="-1">
         <section class="tax-panel" aria-label="Параметры НДФЛ">
           <div class="deduction-controls">
             <div class="field deduction-income">
@@ -123,16 +123,18 @@
           <p class="deduction-note" id="deduction-tax-comparison"></p>
           <p class="deduction-note" id="deduction-rounding" hidden>Остаток лимита связан с округлением взносов до целых рублей.</p>
         </section>
-        <h2 id="chart-title">Сравнение ИИС</h2>
-        <div id="comparison-panel">
-          <p class="compare-intro">Суммы на дату закрытия каждого счета.</p>
-          <div class="compare-key">
-            <span><i class="limit-key"></i>30 млн ₽ — лимит вычета по прибыли</span>
-            <span><i class="excess-key"></i>Прибыль сверх вычета</span>
+        <section class="overview" aria-labelledby="chart-title">
+          <h2 id="chart-title">Сравнение ИИС</h2>
+          <div id="comparison-panel">
+            <p class="compare-intro">Суммы на дату закрытия каждого счета.</p>
+            <div class="compare-key">
+              <span><i class="limit-key"></i>30 млн ₽ — лимит вычета по прибыли</span>
+              <span><i class="excess-key"></i>Прибыль сверх вычета</span>
+            </div>
+            <div id="comparison-chart" class="comparison-chart"></div>
           </div>
-          <div id="comparison-chart" class="comparison-chart"></div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
 
     <div id="results">

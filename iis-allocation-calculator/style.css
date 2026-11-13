@@ -88,10 +88,11 @@ button:hover:not(:disabled) { background: color-mix(in srgb, var(--accent), var(
 button:disabled { opacity: .55; cursor: not-allowed; }
 .error { margin: 12px 0 0; color: #9d342a; background: #fff0ee; padding: 10px; border-radius: 8px; font-size: .82rem; }
 
+.result-cards { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 14px; min-width: 0; }
 .overview { background: var(--paper); color: var(--ink); border: 1px solid var(--line); padding: 21px 23px; min-width: 0; }
 .tax-panel, .deduction-panel { padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; }
-.tax-panel { container: tax / inline-size; margin-bottom: 18px; }
-.deduction-panel { container: deduction / inline-size; margin-bottom: 22px; background: var(--input); }
+.tax-panel { container: tax / inline-size; background: var(--paper); }
+.deduction-panel { container: deduction / inline-size; background: var(--input); }
 .deduction-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
 .deduction-heading h2 { font-size: 1.12rem; }
 .deduction-heading strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
@@ -258,8 +259,6 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .options { margin-top: 10px; }
   .options summary, .method summary { padding-block: 12px; min-height: 44px; }
   .tax-panel, .deduction-panel { padding: 12px; }
-  .tax-panel { margin-bottom: 14px; }
-  .deduction-panel { margin-bottom: 17px; }
   .deduction-heading h2 { font-size: 1rem; }
   .deduction-panel progress { height: 12px; }
   .deduction-note, .deduction-stats dt { font-size: .8rem; }
