@@ -6,9 +6,9 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#e9d9ca">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=19">
+  <link rel="stylesheet" href="./style.css?v=20">
   <script defer src="./model.js?v=8"></script>
-  <script defer src="./app.js?v=19"></script>
+  <script defer src="./app.js?v=20"></script>
 </head>
 <body>
   <main class="shell">
@@ -30,7 +30,7 @@
       <a href="#overview">К результатам <span aria-hidden="true">↓</span></a>
     </nav>
 
-    <div class="workspace">
+    <div class="workspace" id="workspace">
       <form class="settings" id="settings" tabindex="-1" novalidate>
         <header>
           <p class="eyebrow muted">Параметры</p>
@@ -82,40 +82,47 @@
             <option value="effective">Эффективная годовая ставка</option>
           </select>
         </details>
-        <div class="field">
-          <label for="tax-scale">Шкала НДФЛ</label>
-          <select id="tax-scale" aria-describedby="tax-hint">
-            <option value="current">13% / 15%</option>
-            <option value="scenario">13–22% — проект в первом чтении</option>
-            <option value="combined" selected>13–22% — полное объединение</option>
-          </select>
-          <p class="hint" id="tax-hint">Гипотетический сценарий: все облагаемые доходы складываются, и к общей сумме применяется шкала 13–22%.</p>
-        </div>
-        <div class="field">
-          <label for="other-income" id="other-income-label">Облагаемый доход вне ИИС за год</label>
-          <div class="input-shell"><input id="other-income" type="text" inputmode="numeric" value="0" autocomplete="off" aria-describedby="other-income-hint other-income-period"><span>₽</span></div>
-          <input id="other-income-slider" class="field-slider" type="range" min="0" max="100000000" step="100000" value="0" aria-labelledby="other-income-label" aria-describedby="other-income-hint other-income-period" aria-valuetext="0 ₽ в год">
-          <p class="hint" id="other-income-hint">Укажите общий облагаемый доход вне ИИС. Например, дивиденды, облагаемую часть процентов по вкладам, зарплату, доход ИП на ОСНО после учёта расходов и прибыль на брокерском счёте.</p>
-          <p class="hint" id="other-income-period">Одинаковая сумма для каждого года закрытия ИИС.</p>
-        </div>
         <p id="error" class="error" role="alert" hidden></p>
       </form>
 
       <section class="overview" id="overview" tabindex="-1" aria-labelledby="chart-title">
-        <section class="deduction-panel" id="deduction-panel" aria-labelledby="deduction-title" hidden>
-          <div class="deduction-heading">
-            <h2 id="deduction-title">Использование вычета</h2>
-            <strong id="deduction-percent" aria-hidden="true">—</strong>
+        <section class="deduction-panel" aria-label="Вычет и параметры НДФЛ">
+          <div id="deduction-results" hidden>
+            <div class="deduction-heading">
+              <h2 id="deduction-title">Использование вычета</h2>
+              <strong id="deduction-percent" aria-hidden="true">—</strong>
+            </div>
+            <progress id="deduction-progress" max="100" value="0" aria-labelledby="deduction-title" aria-describedby="deduction-amounts"></progress>
+            <p class="deduction-note" id="deduction-amounts"></p>
+            <dl class="deduction-stats">
+              <div class="deduction-stat-savings"><dt>Экономия НДФЛ</dt><dd id="deduction-savings">—</dd></div>
+              <div><dt>Запас по прибыли</dt><dd id="deduction-remaining">—</dd></div>
+              <div><dt>Добавить к исходному взносу</dt><dd id="deduction-additional">—</dd></div>
+            </dl>
+            <p class="deduction-note" id="deduction-tax-comparison"></p>
+            <p class="deduction-note" id="deduction-rounding" hidden>Остаток лимита связан с округлением взносов до целых рублей.</p>
           </div>
-          <progress id="deduction-progress" max="100" value="0" aria-labelledby="deduction-title" aria-describedby="deduction-amounts"></progress>
-          <p class="deduction-note" id="deduction-amounts"></p>
-          <dl class="deduction-stats">
-            <div class="deduction-stat-savings"><dt>Экономия НДФЛ</dt><dd id="deduction-savings">—</dd></div>
-            <div><dt>Запас по прибыли</dt><dd id="deduction-remaining">—</dd></div>
-            <div><dt>Добавить к исходному взносу</dt><dd id="deduction-additional">—</dd></div>
-          </dl>
-          <p class="deduction-note" id="deduction-tax-comparison"></p>
-          <p class="deduction-note" id="deduction-rounding" hidden>Остаток лимита связан с округлением взносов до целых рублей.</p>
+          <div class="deduction-controls">
+            <div class="field deduction-income">
+              <label for="other-income" id="other-income-label">Облагаемый доход вне ИИС за год</label>
+              <div class="deduction-income-inputs">
+                <div class="input-shell"><input id="other-income" form="settings" type="text" inputmode="numeric" value="20 000 000" autocomplete="off" aria-describedby="other-income-hint other-income-period" aria-errormessage="other-income-error"><span>₽</span></div>
+                <input id="other-income-slider" form="settings" class="field-slider" type="range" min="0" max="100000000" step="100000" value="20000000" aria-label="Доход вне ИИС, ползунок" aria-describedby="other-income-hint other-income-period" aria-valuetext="20 млн ₽ в год">
+              </div>
+              <p id="other-income-error" class="error" role="alert" hidden></p>
+              <p class="hint" id="other-income-hint">Укажите общий облагаемый доход вне ИИС. Например, дивиденды, облагаемую часть процентов по вкладам, зарплату, доход ИП на ОСНО после учёта расходов и прибыль на брокерском счёте.</p>
+              <p class="hint" id="other-income-period">Одинаковая сумма для каждого года закрытия ИИС.</p>
+            </div>
+            <div class="field">
+              <label for="tax-scale">Шкала НДФЛ</label>
+              <select id="tax-scale" form="settings" aria-describedby="tax-hint">
+                <option value="current">13% / 15%</option>
+                <option value="scenario">13–22% — первое чтение</option>
+                <option value="combined" selected>13–22% — полное объединение</option>
+              </select>
+              <p class="hint" id="tax-hint">Гипотетический сценарий: все облагаемые доходы складываются, и к общей сумме применяется шкала 13–22%.</p>
+            </div>
+          </div>
         </section>
         <h2 id="chart-title">Сравнение ИИС</h2>
         <div id="comparison-panel">

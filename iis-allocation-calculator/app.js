@@ -9,6 +9,7 @@
   const taxScaleInput = $('tax-scale');
   const taxHint = $('tax-hint');
   const otherIncomeInput = $('other-income');
+  const otherIncomeError = $('other-income-error');
   const otherIncomeSlider = $('other-income-slider');
   const otherIncomeLabel = $('other-income-label');
   const otherIncomeHint = $('other-income-hint');
@@ -42,7 +43,7 @@
     ['Капитал после НДФЛ', 'net', 'netCapital']
   ];
   let plan = null;
-  const otherIncomeByScale = { current: '0', scenario: '0', combined: '0' };
+  const otherIncomeByScale = { current: '0', scenario: '0', combined: otherIncomeInput.defaultValue };
   let activeTaxScale = taxScaleInput.value;
 
   function parseField(el, mode) {
@@ -65,14 +66,6 @@
     rateInput.removeAttribute('aria-invalid');
     rateSlider.value = String(rate);
     rateSlider.setAttribute('aria-valuetext', pct(rate) + ' годовых');
-    const otherIncome = otherIncomeInput.value.trim() === '' ? 0 : parseField(otherIncomeInput, 'amount');
-    if (!Number.isInteger(otherIncome) || otherIncome > model.MAX_AMOUNT) {
-      otherIncomeInput.setAttribute('aria-invalid', 'true');
-      throw new RangeError('Укажите другой годовой доход в целых рублях от 0 до 1 трлн ₽.');
-    }
-    otherIncomeInput.removeAttribute('aria-invalid');
-    otherIncomeSlider.value = String(otherIncome);
-    otherIncomeSlider.setAttribute('aria-valuetext', rub(Number(otherIncomeSlider.value)) + ' в год');
     const openingYear = parseField($('opening'));
     const min = model.minimumTerm(openingYear);
     $('term').min = String(min);
@@ -86,8 +79,7 @@
       firstTerm: parseField($('term')),
       convention: $('convention').value,
       taxScale: taxScaleInput.value,
-      balance: $('balance-mode').value,
-      otherIncome
+      balance: $('balance-mode').value
     };
   }
 
@@ -148,7 +140,7 @@
     $('deduction-remaining').textContent = rub(remainingProfit);
     $('deduction-additional').textContent = Number.isFinite(additionalContribution) ? rub(additionalContribution) : '—';
     $('deduction-rounding').hidden = additionalContribution !== 0 || Math.round(remainingProfit) === 0;
-    $('deduction-panel').hidden = false;
+    $('deduction-results').hidden = false;
   }
 
   function update(adjustTerm = false) {
@@ -162,18 +154,34 @@
     otherIncomeLabel.textContent = description.label;
     otherIncomeHint.textContent = description.income;
 
+    const otherIncome = otherIncomeInput.value.trim() === '' ? 0 : parseField(otherIncomeInput, 'amount');
+    const incomeIsValid = Number.isInteger(otherIncome) && otherIncome <= model.MAX_AMOUNT;
+    otherIncomeError.hidden = incomeIsValid;
+    if (incomeIsValid) {
+      otherIncomeInput.removeAttribute('aria-invalid');
+      otherIncomeSlider.value = String(otherIncome);
+      otherIncomeSlider.setAttribute('aria-valuetext', rub(Number(otherIncomeSlider.value)) + ' в год');
+    } else {
+      otherIncomeInput.setAttribute('aria-invalid', 'true');
+      otherIncomeError.textContent = 'Укажите доход в целых рублях от 0 до 1 трлн ₽.';
+    }
+
     try {
-      plan = model.allocate(readInputs(adjustTerm));
+      const inputs = readInputs(adjustTerm);
+      plan = incomeIsValid ? model.allocate({ ...inputs, otherIncome }) : null;
       $('error').hidden = true;
-      $('results').hidden = false;
-      render();
     } catch (error) {
       plan = null;
       $('error').textContent = error.message;
       $('error').hidden = false;
+    }
+    if (plan) {
+      $('results').hidden = false;
+      render();
+    } else {
       $('results').hidden = true;
       $('hero-total').hidden = true;
-      $('deduction-panel').hidden = true;
+      $('deduction-results').hidden = true;
       $('fill-limit').disabled = true;
       comparisonChart.innerHTML = '<p class="compare-empty">Исправьте параметры, чтобы пересчитать график.</p>';
     }
@@ -236,7 +244,7 @@
   }
 
   form.addEventListener('submit', (event) => { event.preventDefault(); update(true); });
-  form.addEventListener('input', (event) => {
+  $('workspace').addEventListener('input', (event) => {
     if (event.target === rateSlider) rateInput.value = decimal.format(Number(rateSlider.value));
     if (event.target === otherIncomeSlider) otherIncomeInput.value = fmt.format(Number(otherIncomeSlider.value));
     update(event.target.id === 'opening');
