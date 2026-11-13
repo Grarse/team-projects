@@ -226,14 +226,14 @@
         const excess = taxable
           ? '<small class="compare-extra">Сверх вычета: ' + rub(a.taxable) + '</small>'
           : '';
-        return '<div class="compare-row compare-' + kind + '"><dt>' + label + '</dt>' +
-          '<dd class="compare-track" aria-hidden="true">' + fill + '</dd>' +
-          '<dd class="compare-value">' + rub(amount) + excess + '</dd></div>';
+        return '<div class="compare-row compare-' + kind + '"><dl class="compare-metric"><dt>' + label + '</dt>' +
+          '<dd class="compare-value">' + rub(amount) + excess + '</dd></dl>' +
+          '<div class="compare-track" aria-hidden="true">' + fill + '</div></div>';
       }).join('');
       return '<section class="compare-group" aria-label="ИИС ' + a.id + '">' +
         '<header><h3><i aria-hidden="true"></i>ИИС ' + a.id + '</h3>' +
         '<span>' + a.closeYear + ' · ' + yearsText(a.term) + (a.contribution ? '' : ' · без взноса') + '</span></header>' +
-        '<dl>' + rows + '</dl></section>';
+        rows + '</section>';
     }).join('');
     comparisonChart.innerHTML = '<div class="compare-limit" aria-hidden="true"><div class="compare-limit-plot">' +
       '<span class="compare-limit-label">Лимит вычета · ' + axisAmount(model.LIMIT) + ' ₽</span></div></div>' +
