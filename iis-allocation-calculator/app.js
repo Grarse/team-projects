@@ -9,6 +9,8 @@
   const taxScaleInput = $('tax-scale');
   const otherIncomeInput = $('other-income');
   const otherIncomeSlider = $('other-income-slider');
+  const otherIncomeHint = $('other-income-hint');
+  const scenarioIncomeHint = otherIncomeHint.textContent;
   const comparisonChart = $('comparison-chart');
   const fmt = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
   const decimal = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
@@ -142,9 +144,9 @@
     if (showTaxHint) taxScaleInput.setAttribute('aria-describedby', 'tax-hint');
     else taxScaleInput.removeAttribute('aria-describedby');
     $('other-income-label').textContent = showTaxHint ? 'Другой инвестиционный доход за год' : 'Другой облагаемый доход за год';
-    $('other-income-hint').textContent = showTaxHint
-      ? 'Укажите доход той же налоговой группы, например облагаемую прибыль на брокерском счете. Зарплата сюда не входит.'
-      : 'Укажите налоговую базу, которая суммируется с прибылью ИИС, например зарплату до НДФЛ или доход ИП на ОСНО за вычетом учитываемых расходов.';
+    otherIncomeHint.textContent = showTaxHint
+      ? 'Укажите сумму доходов той же налоговой группы, например облагаемую прибыль на брокерском счёте и проценты по вкладам в российских банках сверх необлагаемого минимума. Зарплата и дивиденды учитываются отдельно.'
+      : scenarioIncomeHint;
 
     try {
       plan = model.allocate(readInputs(adjustTerm));
