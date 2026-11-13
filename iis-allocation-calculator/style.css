@@ -89,7 +89,9 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .error { margin: 12px 0 0; color: #9d342a; background: #fff0ee; padding: 10px; border-radius: 8px; font-size: .82rem; }
 
 .overview { background: var(--paper); color: var(--ink); border: 1px solid var(--line); padding: 21px 23px; min-width: 0; }
-.deduction-panel { container: deduction / inline-size; margin-bottom: 22px; padding: 14px 16px; background: var(--input); border: 1px solid var(--line); border-radius: 12px; }
+.tax-panel, .deduction-panel { padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; }
+.tax-panel { container: tax / inline-size; margin-bottom: 18px; }
+.deduction-panel { container: deduction / inline-size; margin-bottom: 22px; background: var(--input); }
 .deduction-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
 .deduction-heading h2 { font-size: 1.12rem; }
 .deduction-heading strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
@@ -112,18 +114,19 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .deduction-stat-savings dd { font-size: 1.35rem; line-height: 1.15; font-weight: 800; }
 .deduction-controls {
   display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 12px 20px;
-  margin-top: 12px; padding: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 9px;
 }
 .deduction-controls .field { min-width: 0; margin: 0; }
 .deduction-income-inputs { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(0, 1fr); align-items: center; gap: 12px; }
 .deduction-income-inputs .field-slider { margin: 0; }
-@container deduction (max-width: 570px) {
+@container tax (max-width: 570px) {
   .deduction-controls { grid-template-columns: minmax(0, 1fr); }
+}
+@container tax (max-width: 420px) {
+  .deduction-income-inputs { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
 @container deduction (max-width: 420px) {
   .deduction-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .deduction-stat-savings { grid-column: 1 / -1; }
-  .deduction-income-inputs { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
 .compare-intro { margin: 11px 0 9px; color: var(--muted); font-size: .84rem; line-height: 1.45; }
 .compare-key { display: flex; flex-wrap: wrap; gap: 5px 14px; color: var(--muted); font-size: .72rem; }
@@ -254,7 +257,9 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .segments span { display: grid; place-items: center; min-height: 44px; font-size: .95rem; }
   .options { margin-top: 10px; }
   .options summary, .method summary { padding-block: 12px; min-height: 44px; }
-  .deduction-panel { padding: 12px; margin-bottom: 17px; }
+  .tax-panel, .deduction-panel { padding: 12px; }
+  .tax-panel { margin-bottom: 14px; }
+  .deduction-panel { margin-bottom: 17px; }
   .deduction-heading h2 { font-size: 1rem; }
   .deduction-panel progress { height: 12px; }
   .deduction-note, .deduction-stats dt { font-size: .8rem; }
