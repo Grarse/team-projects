@@ -186,7 +186,7 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .compare-group h3 { font-size: 1rem; }
 .compare-group h3 i { display: inline-block; vertical-align: .08em; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--profit); }
 .compare-group header > span { color: var(--muted); font-size: .73rem; }
-.compare-metric { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; margin: 0; }
+.compare-metric { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 7px; margin: 0; }
 .compare-row { min-height: 24px; padding: 3px 0; font-size: .74rem; line-height: 1.25; }
 .compare-row dt { color: var(--muted); }
 .compare-track { position: relative; height: 9px; background: var(--track); border-radius: 2px; }
@@ -197,7 +197,10 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .compare-tax { --fill: var(--tax); }
 .compare-net { --fill: var(--net); font-weight: 750; }
 .compare-fill.compare-excess { background: var(--excess); border-radius: 0 2px 2px 0; }
-.compare-value { min-width: 0; margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.compare-value {
+  min-width: 0; margin: 0; padding-inline-start: 7px; border-inline-start: 1px solid var(--gross);
+  font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
 .compare-extra { display: block; margin-top: 2px; color: var(--excess-text); font-size: .69rem; font-weight: 650; }
 .compare-empty { padding: 24px 0; color: var(--muted); }
 @container (max-width: 510px) {
