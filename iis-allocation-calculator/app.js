@@ -6,6 +6,9 @@
   const form = $('settings');
   const rateInput = $('rate');
   const rateSlider = $('rate-slider');
+  const taxScaleInput = $('tax-scale');
+  const otherIncomeInput = $('other-income');
+  const otherIncomeSlider = $('other-income-slider');
   const comparisonChart = $('comparison-chart');
   const fmt = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
   const decimal = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
@@ -19,6 +22,8 @@
     ['Капитал после НДФЛ', 'net', 'netCapital']
   ];
   let plan = null;
+  const otherIncomeByScale = { current: '0', scenario: '0' };
+  let activeTaxScale = taxScaleInput.value;
 
   function parseField(el, mode) {
     const raw = el.value.trim();
@@ -40,6 +45,14 @@
     rateInput.removeAttribute('aria-invalid');
     rateSlider.value = String(rate);
     rateSlider.setAttribute('aria-valuetext', pct(rate) + ' годовых');
+    const otherIncome = otherIncomeInput.value.trim() === '' ? 0 : parseField(otherIncomeInput, 'amount');
+    if (!Number.isInteger(otherIncome) || otherIncome > model.MAX_AMOUNT) {
+      otherIncomeInput.setAttribute('aria-invalid', 'true');
+      throw new RangeError('Укажите другой годовой доход в целых рублях от 0 до 1 трлн ₽.');
+    }
+    otherIncomeInput.removeAttribute('aria-invalid');
+    otherIncomeSlider.value = String(otherIncome);
+    otherIncomeSlider.setAttribute('aria-valuetext', rub(Number(otherIncomeSlider.value)) + ' в год');
     const openingYear = parseField($('opening'));
     const min = model.minimumTerm(openingYear);
     $('term').min = String(min);
@@ -52,8 +65,9 @@
       openingYear,
       firstTerm: parseField($('term')),
       convention: $('convention').value,
-      taxScale: $('tax-scale').value,
-      balance: $('balance-mode').value
+      taxScale: taxScaleInput.value,
+      balance: $('balance-mode').value,
+      otherIncome
     };
   }
 
@@ -109,6 +123,8 @@
     $('deduction-percent').textContent = pct(utilization);
     $('deduction-amounts').textContent = 'Прибыль под вычетом: ' + rub(used) + ' из ' + rub(limit);
     $('deduction-savings').textContent = rub(taxSavings);
+    $('deduction-tax-comparison').textContent = 'НДФЛ на прибыль ИИС без вычета — ' +
+      rub(plan.totalTax + taxSavings) + ', с вычетом — ' + rub(plan.totalTax) + '.';
     $('deduction-remaining').textContent = rub(remainingProfit);
     $('deduction-additional').textContent = Number.isFinite(additionalContribution) ? rub(additionalContribution) : '—';
     $('deduction-rounding').hidden = additionalContribution !== 0 || Math.round(remainingProfit) === 0;
@@ -116,11 +132,19 @@
   }
 
   function update(adjustTerm = false) {
-    const taxScale = $('tax-scale');
-    const showTaxHint = taxScale.value === 'current';
+    if (taxScaleInput.value !== activeTaxScale) {
+      otherIncomeByScale[activeTaxScale] = otherIncomeInput.value;
+      activeTaxScale = taxScaleInput.value;
+      otherIncomeInput.value = otherIncomeByScale[activeTaxScale];
+    }
+    const showTaxHint = activeTaxScale === 'current';
     $('tax-hint').hidden = !showTaxHint;
-    if (showTaxHint) taxScale.setAttribute('aria-describedby', 'tax-hint');
-    else taxScale.removeAttribute('aria-describedby');
+    if (showTaxHint) taxScaleInput.setAttribute('aria-describedby', 'tax-hint');
+    else taxScaleInput.removeAttribute('aria-describedby');
+    $('other-income-label').textContent = showTaxHint ? 'Другой инвестиционный доход за год' : 'Другой облагаемый доход за год';
+    $('other-income-hint').textContent = showTaxHint
+      ? 'Укажите доход той же налоговой группы, например облагаемую прибыль на брокерском счете. Зарплата сюда не входит.'
+      : 'Укажите налоговую базу, которая суммируется с прибылью ИИС, например зарплату до НДФЛ или доход ИП на ОСНО за вычетом учитываемых расходов.';
 
     try {
       plan = model.allocate(readInputs(adjustTerm));
@@ -198,12 +222,15 @@
   form.addEventListener('submit', (event) => { event.preventDefault(); update(true); });
   form.addEventListener('input', (event) => {
     if (event.target === rateSlider) rateInput.value = decimal.format(Number(rateSlider.value));
+    if (event.target === otherIncomeSlider) otherIncomeInput.value = fmt.format(Number(otherIncomeSlider.value));
     update(event.target.id === 'opening');
   });
-  $('amount').addEventListener('blur', () => {
-    const value = parseField($('amount'), 'amount');
-    if (Number.isInteger(value) && value <= model.MAX_AMOUNT) $('amount').value = fmt.format(value);
-  });
+  for (const input of [$('amount'), otherIncomeInput]) {
+    input.addEventListener('blur', () => {
+      const value = parseField(input, 'amount');
+      if (Number.isInteger(value) && value <= model.MAX_AMOUNT) input.value = fmt.format(value);
+    });
+  }
   $('fill-limit').addEventListener('click', () => {
     if (!plan || plan.maxWithoutExcess > model.MAX_AMOUNT) return;
     $('amount').value = fmt.format(plan.maxWithoutExcess);

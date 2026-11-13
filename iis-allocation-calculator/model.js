@@ -35,9 +35,15 @@
       : Math.expm1(years * Math.log1p(rate / 100));
   }
 
-  function allocate({ amount, rate, count, openingYear, firstTerm, convention = 'daily', taxScale = 'current', balance = 'contribution' }) {
+  function allocate({
+    amount, rate, count, openingYear, firstTerm, convention = 'daily', taxScale = 'current',
+    balance = 'contribution', otherIncome = 0
+  }) {
     if (!Number.isInteger(amount) || amount < 0 || amount > MAX_AMOUNT) {
       throw new RangeError('Укажите сумму в целых рублях от 0 до 1 трлн ₽.');
+    }
+    if (!Number.isInteger(otherIncome) || otherIncome < 0 || otherIncome > MAX_AMOUNT) {
+      throw new RangeError('Укажите другой годовой доход в целых рублях от 0 до 1 трлн ₽.');
     }
     if (!Number.isFinite(rate) || rate < 0 || rate > 100) {
       throw new RangeError('Укажите годовую доходность от 0 до 100%.');
@@ -102,19 +108,21 @@
     let equalProfit = 0;
     let taxWithoutDeduction = 0;
     let deductionUsed = 0;
+    const taxOnOtherIncome = incomeTax(otherIncome, taxScale);
+    const taxOnIis = (profit) => incomeTax(otherIncome + profit, taxScale) - taxOnOtherIncome;
     for (const a of accounts) {
       a.profit = a.contribution * a.factor;
       a.capital = a.contribution + a.profit;
       a.deduction = Math.min(a.profit, LIMIT);
       a.taxable = a.profit - a.deduction;
-      // Every closing is in a different calendar year by construction.
-      a.tax = incomeTax(a.taxable, taxScale);
-      taxWithoutDeduction += incomeTax(a.profit, taxScale);
+      // Each closing has its own calendar year and the same assumed other income.
+      a.tax = taxOnIis(a.taxable);
+      taxWithoutDeduction += taxOnIis(a.profit);
       deductionUsed += a.deduction;
       a.netCapital = a.capital - a.tax;
       const initialProfit = a.initialContribution * a.factor;
       equalProfit += initialProfit;
-      equalTax += incomeTax(Math.max(0, initialProfit - LIMIT), taxScale);
+      equalTax += taxOnIis(Math.max(0, initialProfit - LIMIT));
     }
     const totalProfit = accounts.reduce((total, account) => total + account.profit, 0);
     const maxWithoutExcess = accounts.reduce((total, a) => total + a.maxContribution, 0);

@@ -6,9 +6,9 @@
   <meta name="description" content="Распределите весь капитал между ИИС-3 и оцените НДФЛ при закрытии счетов.">
   <meta name="theme-color" content="#e9d9ca">
   <title>ИИС‑3 · Калькулятор распределения капитала</title>
-  <link rel="stylesheet" href="./style.css?v=18">
-  <script defer src="./model.js?v=6"></script>
-  <script defer src="./app.js?v=16"></script>
+  <link rel="stylesheet" href="./style.css?v=19">
+  <script defer src="./model.js?v=7"></script>
+  <script defer src="./app.js?v=17"></script>
 </head>
 <body>
   <main class="shell">
@@ -44,7 +44,7 @@
         <div class="field">
           <label for="rate">Ожидаемая доходность</label>
           <div class="input-shell"><input id="rate" type="text" inputmode="decimal" value="15" autocomplete="off" aria-describedby="rate-hint"><span>% годовых</span></div>
-          <input id="rate-slider" class="rate-slider" type="range" min="5" max="30" step="0.1" value="15" aria-label="Ожидаемая доходность, ползунок" aria-valuetext="15% годовых">
+          <input id="rate-slider" class="field-slider" type="range" min="5" max="30" step="0.1" value="15" aria-label="Ожидаемая доходность, ползунок" aria-valuetext="15% годовых">
           <p class="hint" id="rate-hint">Номинальная ставка с ежедневной капитализацией.</p>
           <div class="limit-action">
             <button id="fill-limit" type="button" aria-describedby="fill-hint">Подставить взнос для полного вычета</button>
@@ -90,6 +90,13 @@
           </select>
           <p class="hint" id="tax-hint" hidden>13% до 2,4 млн ₽ налоговой базы за год, 15% с превышения.</p>
         </div>
+        <div class="field">
+          <label for="other-income" id="other-income-label">Другой облагаемый доход за год</label>
+          <div class="input-shell"><input id="other-income" type="text" inputmode="numeric" value="0" autocomplete="off" aria-describedby="other-income-hint other-income-period"><span>₽</span></div>
+          <input id="other-income-slider" class="field-slider" type="range" min="0" max="100000000" step="100000" value="0" aria-label="Другой облагаемый доход за год, ползунок" aria-describedby="other-income-hint other-income-period" aria-valuetext="0 ₽ в год">
+          <p class="hint" id="other-income-hint">Укажите налоговую базу, которая суммируется с прибылью ИИС, например зарплату до НДФЛ или доход ИП на ОСНО за вычетом учитываемых расходов.</p>
+          <p class="hint" id="other-income-period">Одинаковая сумма для каждого года закрытия ИИС.</p>
+        </div>
         <p id="error" class="error" role="alert" hidden></p>
       </form>
 
@@ -106,7 +113,7 @@
             <div><dt>Запас по прибыли</dt><dd id="deduction-remaining">—</dd></div>
             <div><dt>Добавить к исходному взносу</dt><dd id="deduction-additional">—</dd></div>
           </dl>
-          <p class="deduction-note">Экономия — разница между НДФЛ с вычетом и без него по выбранной шкале.</p>
+          <p class="deduction-note" id="deduction-tax-comparison"></p>
           <p class="deduction-note" id="deduction-rounding" hidden>Остаток лимита связан с округлением взносов до целых рублей.</p>
         </section>
         <h2 id="chart-title">Сравнение ИИС</h2>
@@ -138,7 +145,8 @@
       <p>Все счета в модели открываются и пополняются одновременно. Минимальный срок договора зависит от года открытия: 5 лет для 2024–2026 годов, 6 лет для 2027 года, затем по одному году до 10 лет с 2031 года. Закрытия через 5, 6 и 7 лет в исходном сценарии — выбор графика, а не разные минимальные сроки для трех счетов.</p>
       <p>Лимит вычета по положительному финансовому результату — 30 млн ₽ на все ИИС, закрытые одним налогоплательщиком в одном календарном году. Счета в калькуляторе закрываются в разные годы. Модель предполагает, что на соответствующий год нет других закрытий ИИС и все остальные условия вычета соблюдены. См. <a href="https://www.nalog.gov.ru/rn77/taxation/taxes/ndfl/nalog_vichet/long_term_savings/" target="_blank" rel="noopener noreferrer">разъяснения ФНС</a> и <a href="https://www.nalog.gov.ru/rn49/news/activities_fts/16641677/" target="_blank" rel="noopener noreferrer">переходные сроки</a>.</p>
       <p>Для каждого счета расчетный порог взноса равен 30 млн ₽, деленным на прирост одного рубля за срок до закрытия. Режим «Прибыль к закрытию» распределяет взносы обратно пропорционально этому приросту; из-за округления взносов до целого рубля прибыль может немного различаться. Режим «Взносы с учетом лимитов» распределяет деньги как можно равномернее между счетами, где есть свободный лимит. Если все лимиты заполнены, остаток в обоих режимах добавляется к последнему ИИС, поэтому его прибыль может оказаться выше. Суммы на экране округляются до ближайшего рубля; результаты на разные даты не сопоставляются как выплаты в один день. Для номинальной ставки используется условный год из 365 дней, для эффективной — сложный процент по годам.</p>
-      <p>Налоговая база — прибыль сверх доступного вычета, а не взнос. Налог для резидента РФ рассчитывается отдельно за каждый год закрытия. По умолчанию выбран гипотетический сценарий 13–22%. Для расчета налога на доходы от операций с ценными бумагами выберите 13% / 15% (<a href="https://www.nalog.gov.ru/nu/" target="_blank" rel="noopener noreferrer">ставки ФНС</a>). Другие доходы той же налоговой группы, комиссии и вычет на взносы не учтены. Модель предполагает, что весь прирост относится к подходящим для вычета операциям, и не прогнозирует изменение ставок или доходности.</p>
+      <p>Налог для резидента РФ рассчитывается отдельно за каждый год закрытия. НДФЛ по ИИС — разница между налогом с общей базы и налогом с других доходов. В общую базу входит другой доход и прибыль ИИС сверх вычета. Экономия — разница между НДФЛ по ИИС без вычета и с ним. Комиссии и вычет на взносы в расчет не входят. Модель предполагает, что вся прибыль относится к операциям, на которые распространяется вычет.</p>
+      <p>Для каждой шкалы указывается своя сумма другого дохода. В режиме 13% / 15% учитывается, например, облагаемый результат по ценным бумагам на обычном брокерском счете. Зарплата и доход ИП на ОСНО облагаются по отдельной шкале. В сценарии 13–22% их можно прибавить к прибыли ИИС. Дивиденды, проценты по вкладам, выручку компании и доходы на УСН в этот сценарий не включайте. См. <a href="https://www.nalog.gov.ru/rn77/taxation/taxes/ndfl/" target="_blank" rel="noopener noreferrer">ставки ФНС</a> и <a href="https://sozd.duma.gov.ru/bill/617-9" target="_blank" rel="noopener noreferrer">законопроект № 617-9</a>.</p>
     </details>
   </main>
 </body>

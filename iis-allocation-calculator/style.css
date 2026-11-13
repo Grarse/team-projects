@@ -64,7 +64,8 @@ h2 { font-size: 1.5rem; letter-spacing: -.03em; }
   background: var(--input); color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums;
 }
 .field select { font-size: .84rem; }
-.rate-slider { display: block; width: 100%; height: 24px; margin: 5px 0 0; accent-color: var(--accent); cursor: pointer; }
+.field-slider { display: block; width: 100%; height: 24px; margin: 5px 0 0; accent-color: var(--accent); cursor: pointer; }
+.field .input-shell :is(#amount, #other-income) { padding-right: 35px; }
 .limit-action { margin-top: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--input); }
 .limit-action button { width: 100%; min-height: 44px; font-size: .82rem; line-height: 1.3; text-wrap: balance; }
 .limit-action .hint { margin-top: 8px; }
@@ -240,9 +241,7 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .settings .field, .settings fieldset { margin-top: 12px; }
   .settings .hint { font-size: .8rem; }
   .field input:not([type="range"]), .field select, .options select { height: 46px; min-width: 0; font-size: 1rem; }
-  .field .input-shell input { padding-right: 82px; }
-  .field .input-shell #amount { padding-right: 35px; }
-  .rate-slider { height: 44px; margin-top: 1px; }
+  .field-slider { height: 44px; margin-top: 1px; }
   .segments span { display: grid; place-items: center; min-height: 44px; font-size: .95rem; }
   .options { margin-top: 10px; }
   .options summary, .method summary { padding-block: 12px; min-height: 44px; }

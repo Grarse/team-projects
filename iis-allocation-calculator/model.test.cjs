@@ -73,6 +73,26 @@ test('deduction savings subtract the tax on any profit that exceeds the limit', 
   });
 });
 
+test('100 million of annual income puts all 90 million of deductible profit in the 22% bracket', () => {
+  const input = { ...base, balance: 'profit', taxScale: 'scenario', otherIncome: 100_000_000 };
+  const amount = allocate(input).maxWithoutExcess;
+  const plan = allocate({ ...input, amount });
+  assert.deepEqual(plan.accounts.map(a => a.closeYear), [2031, 2032, 2033]);
+  assert.equal(plan.totalTax, 0);
+  assert.equal(plan.deduction.taxSavings, 19_800_000);
+  assert.equal(allocate({ ...input, amount, otherIncome: 0 }).deduction.taxSavings, 16_206_000);
+});
+
+test('IIS tax uses only the part of combined tax attributable to the account', () => {
+  const input = { ...base, amount: 1_000_000, rate: 100, count: 1, convention: 'effective' };
+  const scenario = allocate({ ...input, taxScale: 'scenario', otherIncome: 49_500_000 });
+  assert.equal(scenario.totalTax, 210_000);
+  assert.equal(scenario.deduction.taxSavings, 6_600_000);
+  const current = allocate({ ...input, otherIncome: 3_000_000 });
+  assert.equal(current.totalTax, 150_000);
+  assert.equal(current.deduction.taxSavings, 4_500_000);
+});
+
 test('when all caps are filled the remaining capital stays on the last account', () => {
   const plan = allocate({ ...base, amount: 90_000_000 });
   assert.deepEqual(plan.accounts.map(a => a.initialContribution), [30_000_000, 30_000_000, 30_000_000]);
@@ -180,7 +200,7 @@ test('range of valid inputs preserves capital and uses every cap before allowing
 });
 
 test('invalid values are rejected', () => {
-  for (const values of [{ count: 0 }, { count: 4 }, { amount: -1 }, { amount: 0.5 }, { rate: NaN }, { rate: 101 }, { openingYear: 2023 }, { firstTerm: 31 }, { taxScale: 'invalid' }, { balance: 'invalid' }]) {
+  for (const values of [{ count: 0 }, { count: 4 }, { amount: -1 }, { amount: 0.5 }, { rate: NaN }, { rate: 101 }, { openingYear: 2023 }, { firstTerm: 31 }, { taxScale: 'invalid' }, { balance: 'invalid' }, { otherIncome: -1 }, { otherIncome: 2.5 }, { otherIncome: MAX_AMOUNT + 1 }]) {
     assert.throws(() => allocate({ ...base, ...values }), RangeError);
   }
 });
