@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ec2738">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' blob:; style-src 'self' blob: 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' blob: data:; connect-src 'self' https://iss.moex.com; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>Индивидуальное предложение · Вход</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./access.css">
+  <script type="module" src="./access.mjs"></script>
+</head>
+<body>
+  <main id="gate">
+    <div class="halo halo-one" aria-hidden="true"></div><div class="halo halo-two" aria-hidden="true"></div>
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="lock-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="7" y="13" width="18" height="15" rx="5"/><path d="M11 13V9a5 5 0 0 1 10 0v4m-5 7v3"/></svg></div>
+      <p class="eyebrow">Индивидуальное предложение</p>
+      <h1 id="login-title">Доступ к&nbsp;предложению</h1>
+      <p class="intro">Введите логин и пароль, чтобы открыть материалы.</p>
+      <form id="login-form" method="post" action="#">
+        <label for="login">Логин</label><input id="login" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="128" required>
+        <label for="password">Пароль</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" maxlength="512" required><button id="show-password" type="button" aria-label="Показать пароль" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+        <p id="login-error" role="alert" hidden></p>
+        <button class="open-button" id="open-button" type="submit">Открыть предложение</button>
+        <p id="login-status" role="status" aria-live="polite"></p>
+      </form>
+      <p class="case-note">Регистр букв в логине и пароле не важен.</p>
+    </section>
+  </main>
+  <div id="proposal" hidden><iframe id="proposal-frame" title="Индивидуальное предложение" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads" referrerpolicy="no-referrer"></iframe><button id="lock-proposal" type="button" aria-label="Выйти и закрыть предложение"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 8V6a3 3 0 0 1 6 0v2m-8 0h10v12H7V8Z"/></svg><span>Выйти</span></button></div>
+  <noscript>Для открытия зашифрованного предложения включите JavaScript.</noscript>
+</body>
+</html>

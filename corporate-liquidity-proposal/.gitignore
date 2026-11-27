@@ -1,0 +1,4 @@
+.workspace/
+.env*
+!.env.example
+node_modules/
